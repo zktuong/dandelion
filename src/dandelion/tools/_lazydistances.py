@@ -265,13 +265,11 @@ def _compute_multicol_distances_streaming(
         dat_seq.replace("[.]", "", regex=True).fillna("").replace("None", "")
     )
 
-    seqs = dat_seq_clean.to_numpy(dtype=object)
+    seqs_np = dat_seq_clean.to_numpy(dtype=object)
+    seqs = da.from_delayed(
+        dask.delayed(lambda x: x)(seqs_np), shape=seqs_np.shape, dtype=object
+    )
     m = len(seqs)
-
-    if client is not None:
-        # Persist seqs once before task creation
-        seqs = client.persist(seqs)
-
     if m <= 1:
         return None
 
@@ -287,16 +285,28 @@ def _compute_multicol_distances_streaming(
         group_idx_flat = np.array(
             [index_map[cell] for group in membership.values() for cell in group]
         )
+        # Convert to dask array
+        group_idx_flat_da = da.from_delayed(
+            dask.delayed(lambda x: x)(group_idx_flat),
+            shape=group_idx_flat.shape,
+            dtype=group_idx_flat.dtype,
+        )
         group_lengths = np.fromiter(
             (len(v) for v in membership.values()), dtype=int
         )
         boundaries = np.cumsum(group_lengths[:-1])
 
-        # Reorder seqs contiguously
-        seqs_reordered = seqs[group_idx_flat]
+        # Reorder seqs contiguously - convert result to dask array
+        seqs_reordered_np = seqs_np[group_idx_flat]
+        seqs_reordered = da.from_delayed(
+            dask.delayed(lambda x: x)(seqs_reordered_np),
+            shape=seqs_reordered_np.shape,
+            dtype=object,
+        )
 
         if client is not None:
             seqs_reordered = client.persist(seqs_reordered)
+            group_idx_flat_da = client.persist(group_idx_flat_da)
 
         # Now each membership group is a contiguous slice (a view)
         seqs_m = np.split(seqs_reordered, boundaries)
@@ -398,7 +408,23 @@ def _compute_multicol_distances_streaming(
         n_chunks = max(1, math.ceil(m / chunk_size))
         if n_chunks < num_cores:
             n_chunks = num_cores
-        chunks_list = np.array_split(seqs, n_chunks)
+        # Work with numpy for splitting, then convert chunks to dask arrays
+        seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
+        chunks_list = np.array_split(seqs_computed, n_chunks)
+
+        # Convert each chunk to a dask array if client is provided
+        if client is not None:
+            chunks_list = [
+                client.persist(
+                    da.from_delayed(
+                        dask.delayed(lambda x: x)(chunk),
+                        shape=chunk.shape,
+                        dtype=object,
+                    )
+                )
+                for chunk in chunks_list
+            ]
+
         chunk_sizes = [len(c) for c in chunks_list]
         cum_sizes = np.cumsum([0] + chunk_sizes)
         for i in range(len(chunks_list)):
