@@ -268,6 +268,10 @@ def _compute_multicol_distances_streaming(
     seqs = dat_seq_clean.to_numpy(dtype=object)
     m = len(seqs)
 
+    if client is not None:
+        # Persist seqs once before task creation
+        seqs = client.persist(seqs)
+
     if m <= 1:
         return None
 
@@ -290,6 +294,9 @@ def _compute_multicol_distances_streaming(
 
         # Reorder seqs contiguously
         seqs_reordered = seqs[group_idx_flat]
+
+        if client is not None:
+            seqs_reordered = client.persist(seqs_reordered)
 
         # Now each membership group is a contiguous slice (a view)
         seqs_m = np.split(seqs_reordered, boundaries)
