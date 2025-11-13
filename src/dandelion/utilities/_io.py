@@ -171,7 +171,10 @@ def decode(df):
     return df
 
 
-def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
+def read_h5ddl(
+    filename: Path | str = "dandelion_data.h5ddl",
+    distance_zarr_array: Path | str | None = None,
+) -> Dandelion:
     """
     Read in and returns a Dandelion class from .h5ddl format.
 
@@ -179,6 +182,8 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     ----------
     filename : Path | str, optional
         path to `.h5ddl` file
+    distance_zarr_array : Path | str | None, optional
+        path to Zarr array for distances if computed lazy.
 
     Returns
     -------
@@ -212,6 +217,11 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
         distances = _read_h5_csr_matrix(
             filename, group="distances", as_df=False
         )
+        if distance_zarr_array is not None:
+            # read in the zarr array as a dask array
+            import dask.array as da
+
+            distances = da.from_zarr(distance_zarr_array)
     except:
         pass
 
@@ -229,12 +239,6 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
     except:
 
         pass
-
-    try:
-        with h5py.File(filename, "r") as hf:
-            threshold = float(np.array(hf["threshold"]))
-    except:
-        threshold = None
 
     constructor = {}
     constructor["data"] = data
