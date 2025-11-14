@@ -1659,6 +1659,7 @@ def vj_usage_pca(
         AnnData object with obs as groups and V/J genes as features.
     """
     start = logg.info("Computing PCA for V/J gene usage")
+    # filtering
     if allowed_chain_status is not None:
         adata_ = adata[
             adata.obs["chain_status"].isin(allowed_chain_status)
@@ -1666,147 +1667,106 @@ def vj_usage_pca(
 
     if groups is not None:
         adata_ = adata_[adata_.obs[groupby].isin(groups)].copy()
-
-    if not use_vj_v and not use_vj_j and not use_vdj_v and not use_vdj_j:
+    # build config
+    gene_config = {
+        "vdj_v": dict(
+            enabled=use_vdj_v,
+            main=f"v_call_{mode}_VDJ_main",
+            full=f"v_call_{mode}_VDJ",
+        ),
+        "vdj_j": dict(
+            enabled=use_vdj_j,
+            main=f"j_call_{mode}_VDJ_main",
+            full=f"j_call_{mode}_VDJ",
+        ),
+        "vj_v": dict(
+            enabled=use_vj_v,
+            main=f"v_call_{mode}_VJ_main",
+            full=f"v_call_{mode}_VJ",
+        ),
+        "vj_j": dict(
+            enabled=use_vj_j,
+            main=f"j_call_{mode}_VJ_main",
+            full=f"j_call_{mode}_VJ",
+        ),
+    }
+    if not any(cfg["enabled"] for cfg in gene_config.values()):
         raise ValueError("At least one of the use_vj/vdj_v/j must be True.")
 
-    df1 = pd.DataFrame(
-        {
-            groupby: Counter(adata_.obs[groupby]).keys(),
-            "cellcount": Counter(adata_.obs[groupby]).values(),
-        }
-    )
-    new_list = df1.loc[df1["cellcount"] >= min_size, groupby]
+    # Determine which groups to keep
+    cell_counts = adata_.obs[groupby].value_counts()
+    keep_groups = cell_counts[cell_counts >= min_size].index
 
-    if use_vj_v:
-        vj_v_list = [
-            x
-            for x in list(set(adata_.obs["v_call_" + mode + "_VJ_main"]))
-            if x not in ["None", "No_contig"]
-        ]
-    else:
-        vj_v_list = []
-    if use_vj_j:
-        vj_j_list = [
-            x
-            for x in list(set(adata_.obs["j_call_" + mode + "_VJ_main"]))
-            if x not in ["None", "No_contig"]
-        ]
-    else:
-        vj_j_list = []
-    if use_vdj_v:
-        vdj_v_list = [
-            x
-            for x in list(set(adata_.obs["v_call_" + mode + "_VDJ_main"]))
-            if x not in ["None", "No_contig"]
-        ]
-    else:
-        vdj_v_list = []
-    if use_vdj_j:
-        vdj_j_list = [
-            x
-            for x in list(set(adata_.obs["j_call_" + mode + "_VDJ_main"]))
-            if x not in ["None", "No_contig"]
-        ]
-    else:
-        vdj_j_list = []
+    # collect gene lists
+    gene_lists = {}
+    for key, cfg in gene_config.items():
+        if cfg["enabled"]:
+            uniq = adata_.obs[cfg["main"]].unique().tolist()
+            gene_lists[key] = [
+                g for g in uniq if g not in ("None", "No_contig")
+            ]
+        else:
+            gene_lists[key] = []
 
-    new_list = df1.loc[
-        df1["cellcount"] >= min_size, groupby
-    ]  # smp_celltype of at least 20 cells
-    vdj_list = vj_v_list + vj_j_list + vdj_v_list + vdj_j_list
+    all_genes = [g for genes in gene_lists.values() for g in genes]
 
-    vdj_df = pd.DataFrame(columns=vdj_list, index=new_list)
-    # this is a bit slow
-    for i in tqdm(
-        range(vdj_df.shape[0]),
+    # initialise results df
+    vdj_df = pd.DataFrame(
+        index=keep_groups, columns=all_genes, dtype=float
+    ).fillna(0)
+
+    # count genes per group
+    for group in tqdm(
+        vdj_df.index,
         desc="Tabulating V/J gene usage",
-        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         disable=not verbose,
     ):
-        cell = vdj_df.index[i]
-        if use_vj_v:
-            counter1 = Counter(
-                adata_.obs.loc[
-                    adata_.obs[groupby] == cell, "v_call_" + mode + "_VJ"
-                ]
-            )
-            for vj_v in vj_v_list:
-                vdj_df.loc[cell, vj_v] = counter1[vj_v]
-        if use_vj_j:
-            counter2 = Counter(
-                adata_.obs.loc[
-                    adata_.obs[groupby] == cell, "j_call_" + mode + "_VJ"
-                ]
-            )
-            for vj_j in vj_j_list:
-                vdj_df.loc[cell, vj_j] = counter2[vj_j]
-        if use_vdj_v:
-            counter3 = Counter(
-                adata_.obs.loc[
-                    adata_.obs[groupby] == cell, "v_call_" + mode + "_VDJ"
-                ]
-            )
-            for vdj_v in vdj_v_list:
-                vdj_df.loc[cell, vdj_v] = counter3[vdj_v]
-        if use_vdj_j:
-            counter5 = Counter(
-                adata_.obs.loc[
-                    adata_.obs[groupby] == cell, "j_call_" + mode + "_VDJ"
-                ]
-            )
-            for vdj_j in vdj_j_list:
-                vdj_df.loc[cell, vdj_j] = counter5[vdj_j]
-        # normalise
-        if use_vdj_v:
-            vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)])
-                * 100
-            )
-        if use_vdj_j:
-            vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)])
-                * 100
-            )
-        if use_vj_v:
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
-                * 100
-            )
-        if use_vj_j:
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
-                * 100
-            )
+        group_mask = adata_.obs[groupby] == group
+        obs_group = adata_.obs.loc[group_mask]
 
-    df2 = pd.DataFrame(index=vdj_df.index, columns=["cell_type"])
-    df2["cell_type"] = list(vdj_df.index)
-    vdj_df_adata = AnnData(
-        X=vdj_df.values, obs=df2, var=pd.DataFrame(index=vdj_df.columns)
+        for key, cfg in gene_config.items():
+            if not cfg["enabled"]:
+                continue
+
+            counts = Counter(obs_group[cfg["full"]])
+            for gene in gene_lists[key]:
+                vdj_df.loc[group, gene] = counts.get(gene, 0)
+
+    # normalize each chain separately
+    for key, cfg in gene_config.items():
+        if not cfg["enabled"]:
+            continue
+
+        cols = gene_lists[key]
+        colsum = vdj_df[cols].sum(axis=1)
+        vdj_df.loc[:, cols] = vdj_df[cols].div(colsum, axis=0) * 100
+
+    # Create new AnnData + PCA
+    obs_df = pd.DataFrame(index=vdj_df.index)
+    obs_df["cell_type"] = vdj_df.index
+    obs_df["cell_count"] = cell_counts.loc[vdj_df.index]
+
+    vdj_adata = AnnData(
+        X=vdj_df.values,
+        obs=obs_df,
+        var=pd.DataFrame(index=vdj_df.columns),
     )
-    vdj_df_adata.obs["cell_count"] = pd.Series(
-        dict(zip(df1[groupby], df1["cellcount"]))
-    )
-    sc.pp.pca(
-        vdj_df_adata, n_comps=n_comps, use_highly_variable=False, **kwargs
-    )
+
+    sc.pp.pca(vdj_adata, n_comps=n_comps, use_highly_variable=False, **kwargs)
+
+    # Transfer old obs columns to new AnnData
     if transfer_mapping is not None:
-        collapsed_obs = adata_.obs.drop_duplicates(subset=groupby)
+        collapsed = adata_.obs.drop_duplicates(subset=groupby)
         for to in transfer_mapping:
-            transfer_dict = dict(zip(collapsed_obs[groupby], collapsed_obs[to]))
-            vdj_df_adata.obs[to] = [
-                transfer_dict[x] for x in vdj_df_adata.obs_names
-            ]
+            mapping = dict(zip(collapsed[groupby], collapsed[to]))
+            vdj_adata.obs[to] = vdj_adata.obs.index.map(mapping)
+
     logg.info(
         " finished",
         time=start,
         deep=("Returned AnnData: \n" "   'obsm', X_pca for V/J gene usage"),
     )
-    return vdj_df_adata
+    return vdj_adata
 
 
 def group_sequences(
