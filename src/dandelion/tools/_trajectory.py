@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 # @author: chenqu, kp9, kelvin
+from __future__ import annotations
+
 import re
-import numpy as np
-import pandas as pd
-import scanpy as sc
-import scipy as sp
 
 from anndata import AnnData
-from typing import Literal
+import numpy as np
+import pandas as pd
+import scipy as sp
 
-from dandelion.utilities._utilities import bh, PResults
+from scanpy import logging as logg
+from typing import Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from palantir.presults import PResults
+
+from dandelion.utilities._utilities import bh
 
 
 def _filter_cells(
@@ -137,15 +143,10 @@ def setup_vdj_pseudobulk(
 
     if extract_cols is None:
         if not any([re.search("_VDJ_main|_VJ_main", i) for i in adata.obs]):
-            v_call = (
-                "v_call_genotyped_"
-                if "v_call_genotyped_VDJ" in adata.obs
-                else "v_call_"
-            )
             if mode is not None:
                 adata.obs["v_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VDJ"]
+                    for x in adata.obs["v_call_" + mode + "_VDJ"]
                 ]
                 adata.obs["d_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -157,7 +158,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VJ"]
+                    for x in adata.obs["v_call_" + mode + "_VJ"]
                 ]
                 adata.obs["j_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -166,7 +167,7 @@ def setup_vdj_pseudobulk(
             else:
                 adata.obs["v_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VDJ"]
+                    for x in adata.obs["v_call_VDJ"]
                 ]
                 adata.obs["d_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -178,7 +179,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VJ"]
+                    for x in adata.obs["v_call_VJ"]
                 ]
                 adata.obs["j_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -442,7 +443,7 @@ def vdj_pseudobulk(
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata)
 
     # store our feature space and derived metadata into an AnnData
-    pb_adata = sc.AnnData(
+    pb_adata = AnnData(
         np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
     )
     # store the pseudobulk assignments, as a sparse for storage efficiency
@@ -468,7 +469,7 @@ def pseudotime_transfer(
     Returns
     -------
     AnnData
-        transferred `AnnData`.
+        transferred AnnData.
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 
@@ -506,7 +507,7 @@ def project_pseudotime_to_cell(
     # leave out cells that don't belong to any neighbourhood
     nhoodsum = np.sum(nhoods, axis=1)
     cdata = adata[nhoodsum > 0].copy()
-    print(
+    logg.info(
         "number of cells removed due to not belonging to any neighbourhood",
         sum(nhoodsum == 0),
     )  # print how many cells removed
@@ -575,7 +576,7 @@ def pseudobulk_gex(
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata_raw)
 
     ## Make new anndata object
-    pb_adata = sc.AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
+    pb_adata = AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
     # store the pseudobulk assignments, as a sparse for storage efficiency
     # transpose as the original matrix is cells x pseudobulks
     pb_adata.obsm["pbs"] = sp.sparse.csr_matrix(pbs.T)

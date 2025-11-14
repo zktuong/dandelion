@@ -9,7 +9,6 @@ Preprocessing: `pp`
    assign_isotypes
    check_contigs
    create_germlines
-   filter_contigs
    format_fasta
    format_fastas
    reannotate_genes

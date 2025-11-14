@@ -46,11 +46,11 @@ def test_plot_bar(create_testfolder, sort, norm):
     """test_plot_bar"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    ax = ddl.pl.barplot(vdj, color="v_call_genotyped_VDJ")
+    ax = ddl.pl.barplot(vdj, color="v_call_VDJ")
     assert ax is not None
-    ax = ddl.pl.barplot(vdj, color="v_call_genotyped_VDJ", sort_descending=sort)
+    ax = ddl.pl.barplot(vdj, color="v_call_VDJ", sort_descending=sort)
     assert ax is not None
-    ax = ddl.pl.barplot(vdj, color="v_call_genotyped_VDJ", normalize=norm)
+    ax = ddl.pl.barplot(vdj, color="v_call_VDJ", normalize=norm)
     assert ax is not None
 
 
@@ -63,14 +63,14 @@ def test_plot_bar2(create_testfolder):
     adata = sc.read_h5ad(f)
     ax = ddl.pl.barplot(
         vdj,
-        color="v_call_genotyped_VDJ",
+        color="v_call_VDJ",
         min_clone_size=2,
         clone_key="clone_id",
         title="test",
         xtick_rotation=90,
     )
     assert ax is not None
-    ax = ddl.pl.barplot(adata, color="v_call_genotyped_VDJ")
+    ax = ddl.pl.barplot(adata, color="v_call_VDJ")
     assert ax is not None
 
 
@@ -81,7 +81,7 @@ def test_plot_stackedbar(create_testfolder, norm):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ax = ddl.pl.stackedbarplot(
-        vdj, color="v_call_genotyped_VDJ", groupby="isotype", normalize=norm
+        vdj, color="v_call_VDJ", groupby="isotype", normalize=norm
     )
     assert ax is not None
 
@@ -96,7 +96,7 @@ def test_plot_stackedbar2(create_testfolder, norm):
     adata = sc.read_h5ad(f)
     ax = ddl.pl.stackedbarplot(
         vdj,
-        color="v_call_genotyped_VDJ",
+        color="v_call_VDJ",
         groupby="isotype",
         min_clone_size=2,
         clone_key="clone_id",
@@ -107,7 +107,7 @@ def test_plot_stackedbar2(create_testfolder, norm):
     assert ax is not None
     ax = ddl.pl.stackedbarplot(
         adata,
-        color="v_call_genotyped_VDJ",
+        color="v_call_VDJ",
         groupby="isotype",
         normalize=norm,
     )

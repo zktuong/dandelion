@@ -140,7 +140,6 @@ def identical_clones(
     df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_key,
         retrieve=clone_key,
         retrieve_mode="merge and unique only",
@@ -285,7 +284,6 @@ def hierarchical_clones(
     df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_id,
         retrieve=clone_id,
         retrieve_mode="merge and unique only",
@@ -454,7 +452,6 @@ def spectral_clones(
     df = safe_rpy2py(results_dataframe)
     vdj_data.data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_id,
         retrieve=clone_id,
         retrieve_mode="merge and unique only",

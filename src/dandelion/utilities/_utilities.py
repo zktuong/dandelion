@@ -1,7 +1,7 @@
-#!/usr/bin/env python
 import h5py
 import os
 import re
+import unicodedata
 import warnings
 
 import numpy as np
@@ -9,6 +9,7 @@ import pandas as pd
 
 from airr import RearrangementSchema
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from subprocess import run
 from typing import (
@@ -21,9 +22,8 @@ from typing import (
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
 
 F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
-MuData = TypeVar("mudata._core.mudata.MuData")
-PResults = TypeVar("palantir.presults.PResults")
 
+RECEPTOR_SET = {"B", "abT", "gdT"}
 TRUES = ["T", "t", "True", "true", "TRUE", True, "1"]
 FALSES = ["F", "f", "False", "false", "FALSE", False, "0"]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
@@ -48,22 +48,22 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
-EMPTIES = [
-    None,
-    np.nan,
-    pd.NA,
+EMPTIES_STR = [
     "nan",
     "NaN",
     "",
+    "None",
+    "none",
 ]
+EMPTIES = EMPTIES_STR + [
+    None,
+    np.nan,
+    pd.NA,
+]
+
+
 DEFAULT_PREFIX = "all"
 BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
-
-# for compatibility with python>=3.10
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections.abc import Iterable
 
 
 class Tree(defaultdict):
@@ -432,15 +432,16 @@ def sanitize_data_for_saving(
     Parameters
     ----------
     data : pd.DataFrame
-        input dataframe.
+        Input dataframe.
 
     Returns
     -------
     tuple[pd.DataFrame, dict[str, str]]
-        dataframe and corresponding numpy structured dtype.
+        DataFrame and corresponding NumPy structured dtype.
     """
     tmp = data.copy()
     dtype_dict = {}
+
     for col in tmp:
         if col in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[col]["type"]
@@ -450,7 +451,13 @@ def sanitize_data_for_saving(
             tmp[col] = sanitize_column(tmp[col], dtype)
         else:
             tmp[col] = try_numeric_conversion(tmp[col])
+
         dtype_dict[col] = get_numpy_dtype(tmp[col])
+
+        # 🔧 Fix: ensure string columns use Unicode dtype, not ASCII bytes
+        if tmp[col].dtype == object or tmp[col].dtype == "string":
+            dtype_dict[col] = h5py.string_dtype(encoding="utf-8")
+
     dtypes = [(key, record) for key, record in dtype_dict.items()]
     return tmp, dtypes
 
@@ -501,15 +508,27 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
         return series.apply(sanitize_boolean)
     elif dtype == "string":
         series = series.apply(lambda x: "" if pd.isna(x) else x)
-        return series.replace(
-            [None, np.nan, "nan", "na", "NaN", ""], ""
-        ).astype(str)
+        return (
+            series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+            .astype(str)
+            .apply(clean_unicode)
+        )
     elif dtype in ["integer", "number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
         # for dtype to be float
         return series.astype("float64").fillna(np.nan)
     return series
+
+
+def clean_unicode(x: str) -> str:
+    """Normalize and ensure valid UTF-8 text."""
+    if not isinstance(x, str):
+        return ""
+    # Normalize to NFKC form (handles Greek/Unicode nicely)
+    x = unicodedata.normalize("NFKC", x)
+    # Remove invalid or unencodable characters safely
+    return x.encode("utf-8", "ignore").decode("utf-8")
 
 
 def try_numeric_conversion(series: pd.Series) -> pd.Series:
@@ -716,15 +735,12 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
     """
     if obj is not None:
         if os.path.isfile(str(obj)):
-            try:
-                obj_ = pd.read_csv(obj, sep="\t")
-            except FileNotFoundError as e:
-                print(e)
+            obj_ = pd.read_csv(obj, sep="\t")
         elif isinstance(obj, pd.DataFrame):
             obj_ = obj.copy()
         else:
-            raise FileNotFoundError(
-                "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
+            raise ValueError(
+                "Either input is not of pandas DataFrame or AIRR file does not exist."
             )
 
         if "sequence_id" in obj_.columns:
@@ -733,7 +749,8 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
             obj_.set_index("sequence_id", drop=False, inplace=True)
             if "cell_id" not in obj_.columns:
                 obj_["cell_id"] = [
-                    c.split("_contig")[0] for c in obj_["sequence_id"]
+                    c.split("_contig")[0] if "_contig" in c else c
+                    for c in obj_["sequence_id"]
                 ]
             # assert that cell_id is string
             obj_["cell_id"] = obj_["cell_id"].astype(str)
@@ -1349,3 +1366,80 @@ def write_output(out: str, file: Path | str) -> None:
     fh = open(file, "a")
     fh.write(out)
     fh.close()
+
+
+def get_vcall_key(data: dict, v_call_key: str) -> str:
+    """
+    Determine which V-call key to use based on the provided data and key.
+
+    Parameters
+    ----------
+    data : dict
+        The data dictionary containing possible keys.
+    v_call_key : str
+        The requested key to check (e.g. "v_call" or "v_call_genotyped").
+
+    Returns
+    -------
+    str
+        The best matching V-call key, following this priority:
+        1. "v_call_genotyped" if it exists in data and matches v_call_key
+        2. "v_call" if it exists in data and matches v_call_key
+        3. v_call_key if it exists in data
+        4. "v_call" as a default fallback
+    """
+    if "v_call_genotyped" in data and v_call_key == "v_call_genotyped":
+        return "v_call_genotyped"
+    elif "v_call" in data and v_call_key == "v_call":
+        return "v_call"
+    elif v_call_key in data:
+        return v_call_key
+    else:
+        return "v_call"
+
+
+def dist_func_long_sep(
+    x: list[str],
+    y: list[str],
+    func: Callable,
+    pad_to_max: bool = False,
+    sep: str = "#",
+) -> float:
+    """
+    Concatenate two sequences column-wise with a separator that is
+    guaranteed to be longer than any individual column.
+    """
+    if pad_to_max:
+        max_len = [max(len(a), len(b)) for a, b in zip(x, y)]
+        s1_parts, s2_parts = [], []
+
+        for s1, s2, le in zip(x, y, max_len):
+            # Pad each element
+            s1_parts.append(s1.ljust(le + 1, sep))
+            s2_parts.append(s2.ljust(le + 1, sep))
+
+        # Join with per-column separators
+        # Each separator is longer than its corresponding column's padded length
+        s1_result, s2_result = [], []
+        for i, (s1_part, s2_part, le) in enumerate(
+            zip(s1_parts, s2_parts, max_len)
+        ):
+            s1_result.append(s1_part)
+            s2_result.append(s2_part)
+
+            # Add separator between columns (but not after the last one)
+            if i < len(max_len) - 1:
+                col_sep = sep * (le + 2)  # Longer than padded length (le + 1)
+                s1_result.append(col_sep)
+                s2_result.append(col_sep)
+
+        s1 = "".join(s1_result)
+        s2 = "".join(s2_result)
+    else:
+        # Dynamically choose separator length: longer than the max column
+        max_len = max(max(len(s) for s in x), max(len(s) for s in y))
+        long_sep = sep * (max_len + 1)
+        s1 = long_sep.join(x)
+        s2 = long_sep.join(y)
+    # print(s1, s2)
+    return func(s1, s2)

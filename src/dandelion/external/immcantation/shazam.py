@@ -52,7 +52,7 @@ def quantify_mutations(
     Parameters
     ----------
     data : Dandelion | str
-        `Dandelion` object, file path to AIRR file.
+        Dandelion object, file path to AIRR file.
     split_locus : bool, optional
         whether to return the results for heavy chain and light chain separately.
     sequence_column : str | None, optional
@@ -246,7 +246,6 @@ def calculate_threshold(
     mode: Literal["single-cell", "heavy"] = "single-cell",
     manual_threshold: float | None = None,
     VJthenLen: bool = False,
-    onlyHeavy: bool = False,
     model: (
         Literal[
             "ham",
@@ -276,7 +275,7 @@ def calculate_threshold(
     save_plot: str | None = None,
     ncpu: int = 1,
     **kwargs,
-) -> Dandelion:
+) -> float:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
 
@@ -310,9 +309,6 @@ def calculate_threshold(
         If False, perform partition as a 1-stage process during which V gene, J gene, and junction length
         are used to create partitions simultaneously.
         Defaults to False.
-    onlyHeavy : bool, optional
-        use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
-        See groupGenes for further details.
     model : Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat", ] | None, optional
         underlying SHM model, which must be one of "ham","aa","hh_s1f","hh_s5f","mk_rs1nf","hs1f_compat","m1n_compat".
     normalize_method : Literal["len"] | None, optional
@@ -354,15 +350,15 @@ def calculate_threshold(
 
     Returns
     -------
-    Dandelion
-        Dandelion object with `.threshold` slot filled.
+    float
+        threshold value for clonal assignment in DefineClones.
 
     Raises
     ------
     ValueError
         if automatic thresholding failed.
     """
-    start = logg.info("Calculating threshold")
+    logg.info("Calculating threshold")
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
@@ -407,7 +403,6 @@ def calculate_threshold(
                 locusColumn="locus",
                 VJthenLen=VJthenLen,
                 vCallColumn=v_call,
-                onlyHeavy=onlyHeavy,
                 normalize=norm_,
                 model=model_,
                 nproc=ncpu,
@@ -418,6 +413,8 @@ def calculate_threshold(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+            # drop "cell_id" column as it causes issues
+            dat_h = dat_h.drop("cell_id", axis=1)
             dat_h_r = safe_py2rpy(dat_h)
 
             dist_ham = sh.distToNearest(
@@ -551,27 +548,8 @@ def calculate_threshold(
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()
-    else:
-        logg.info(
-            "Automatic Threshold : "
-            + str(np.around(threshold, decimals=2))
-            + "\n method = "
-            + str(threshold_method_)
-        )
-    if isinstance(data, Dandelion):
-        data.threshold = tr
-        logg.info(
-            " finished",
-            time=start,
-            deep=(
-                "Updated Dandelion object: \n"
-                "   'threshold', threshold value for tuning clonal assignment\n"
-            ),
-        )
-    else:
-        output = Dandelion(dat)
-        output.threshold = tr
-        return output
+
+    return tr
 
 
 def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":
