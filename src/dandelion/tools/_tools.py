@@ -1712,7 +1712,7 @@ def vj_usage_pca(
         vdj_j_list = []
 
     new_list = df1.loc[
-        df1["cellcount"] > min_size, groupby
+        df1["cellcount"] >= min_size, groupby
     ]  # smp_celltype of at least 20 cells
     vdj_list = vj_v_list + vj_j_list + vdj_v_list + vdj_j_list
 
@@ -1759,27 +1759,27 @@ def vj_usage_pca(
                 vdj_df.loc[cell, vdj_j] = counter5[vdj_j]
         # normalise
         if use_vdj_v:
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
-                * 100
-            )
-        if use_vdj_j:
-            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
-                vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
-                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
-                * 100
-            )
-        if use_vj_v:
             vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)] = (
                 vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)]
                 / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_v_list)])
                 * 100
             )
-        if use_vj_j:
+        if use_vdj_j:
             vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)] = (
                 vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)]
                 / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vdj_j_list)])
+                * 100
+            )
+        if use_vj_v:
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_v_list)])
+                * 100
+            )
+        if use_vj_j:
+            vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)] = (
+                vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)]
+                / np.sum(vdj_df.loc[cell, vdj_df.columns.isin(vj_j_list)])
                 * 100
             )
 
