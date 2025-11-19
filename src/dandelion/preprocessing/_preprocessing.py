@@ -3062,6 +3062,8 @@ def check_contigs(
         dat_ = load_data(data.data)
     else:
         dat_ = load_data(data)
+    # ensure that "unknown" are switched to blanks
+    dat_.replace("unknown", "", inplace=True)
 
     if library_type is not None:
         acceptable = lib_type(library_type)
