@@ -111,7 +111,7 @@ def calculate_distance_matrix_zarr(
 
     # Determine computation chunk size
     if chunk_size is None:
-        chunk_size, _ = _auto_chunk_size(
+        chunk_size, _, mem_per_core = _auto_chunk_size(
             n,
             num_cores=num_cores,
             memory_limit_gb=memory_limit_gb,
@@ -174,7 +174,7 @@ def calculate_distance_matrix_zarr(
         logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
-    client = _setup_dask_client(num_cores, memory_limit_gb)
+    client = _setup_dask_client(num_cores, mem_per_core)
 
     try:
         # Compute distances and write blocks as they complete
@@ -662,6 +662,7 @@ def _auto_chunk_size(
         )
     available_mem = psutil.virtual_memory().available / (1024**3)
 
+    max_mem_per_core = available_mem / num_cores
     if memory_limit_gb is None:
         memory_limit_gb = available_mem * safety_fraction / num_cores
 
@@ -676,7 +677,7 @@ def _auto_chunk_size(
 
     n_chunks = max(1, math.ceil(n / chunk_size))
 
-    return chunk_size, n_chunks
+    return chunk_size, n_chunks, max_mem_per_core
 
 
 def _setup_dask_client(
