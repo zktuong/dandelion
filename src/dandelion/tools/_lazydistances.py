@@ -662,6 +662,7 @@ def _auto_chunk_size(
         )
     available_mem = psutil.virtual_memory().available / (1024**3)
 
+    max_mem_per_core = available_mem / num_cores
     if memory_limit_gb is None:
         memory_limit_gb = available_mem * safety_fraction / num_cores
 
@@ -676,7 +677,7 @@ def _auto_chunk_size(
 
     n_chunks = max(1, math.ceil(n / chunk_size))
 
-    return chunk_size, n_chunks, mem_per_core
+    return chunk_size, n_chunks, max_mem_per_core
 
 
 def _setup_dask_client(
