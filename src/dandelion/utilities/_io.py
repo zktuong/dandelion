@@ -668,6 +668,8 @@ def read_10x_vdj(
     # quick check if locus is malformed
     if remove_malformed:
         res = res[~res["locus"].str.contains("[|]")]
+    # change all unknowns to blanks
+    res.replace("unknown", "", inplace=True)
     vdj = Dandelion(res, verbose=False)
     if suffix is not None:
         vdj.add_sequence_suffix(
