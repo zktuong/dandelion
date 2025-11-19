@@ -1609,7 +1609,7 @@ def reassign_alleles(
             heavy = load_data(
                 out_dir / (out_dir.stem + "_heavy" + germpass_dict[fileformat])
             )
-        except FileNotFoundError:
+        except ValueError:
             # print error message and return
             warnings.warn(
                 "Processing has failed for {}. Please check the error message for what went wrong.".format(
