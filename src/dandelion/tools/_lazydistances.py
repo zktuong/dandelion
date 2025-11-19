@@ -174,7 +174,7 @@ def calculate_distance_matrix_zarr(
         logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
-    client = _setup_dask_client(num_cores, mem_per_core)
+    client = _setup_dask_client(num_cores, mem_per_core / 1000)  # convert to GB
 
     try:
         # Compute distances and write blocks as they complete
