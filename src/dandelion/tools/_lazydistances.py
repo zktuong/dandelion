@@ -160,8 +160,6 @@ def calculate_distance_matrix_zarr(
             fill_value=0.0,
         )
 
-    zarr_lock = Lock("zarr_distance_matrix_lock") if num_cores > 1 else None
-
     # Store metadata
     z_array.attrs["n_sequences"] = n
     z_array.attrs["chunk_size"] = chunk_size
@@ -182,7 +180,6 @@ def calculate_distance_matrix_zarr(
             metric=metric,
             pad_to_max=pad_to_max,
             z_array=z_array,
-            lock=zarr_lock,
             chunk_size=chunk_size,
             num_cores=num_cores,
             chunk_batch_limit=max_clones_per_chunk,
@@ -241,7 +238,6 @@ def _compute_multicol_distances_streaming(
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
-    lock: Lock | None,
     chunk_size: int,
     num_cores: int,
     chunk_batch_limit: int | None = None,
@@ -364,7 +360,12 @@ def _compute_multicol_distances_streaming(
         avg_clonotypes_per_batch = sum(len(b) for b in batched_seqs_m) / len(
             batched_idx_m
         )
-
+        # lock per group
+        membership_locks = (
+            [Lock(f"membership-{i}") for i in range(len(batched_idx_m))]
+            if num_cores > 1
+            else None
+        )
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
@@ -378,7 +379,7 @@ def _compute_multicol_distances_streaming(
                         metric=metric,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
-                        lock=lock,
+                        locks=membership_locks,
                     )
                 )
             else:
@@ -390,7 +391,7 @@ def _compute_multicol_distances_streaming(
                         metric=metric,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
-                        lock=lock,
+                        locks=membership_locks,
                     )
                 )
     else:
@@ -401,6 +402,17 @@ def _compute_multicol_distances_streaming(
         # Work with numpy for splitting, then convert chunks to dask arrays
         seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
         chunks_list = np.array_split(seqs_computed, n_chunks)
+        block_locks = (
+            [
+                [
+                    Lock(f"block-{i}-{j}") if j >= i else None
+                    for j in range(n_chunks)
+                ]
+                for i in range(n_chunks)
+            ]
+            if num_cores > 1
+            else None
+        )
 
         # Convert each chunk to a dask array if client is provided
         if client is not None:
@@ -437,7 +449,11 @@ def _compute_multicol_distances_streaming(
                             start_j=start_j,
                             end_j=end_j,
                             is_diagonal=is_diagonal,
-                            lock=lock,
+                            block_lock=(
+                                block_locks[i][j]
+                                if block_locks is not None
+                                else None
+                            ),
                         )
                     )
                 else:
@@ -453,7 +469,11 @@ def _compute_multicol_distances_streaming(
                             start_j=start_j,
                             end_j=end_j,
                             is_diagonal=is_diagonal,
-                            lock=lock,
+                            block_lock=(
+                                block_locks[i][j]
+                                if block_locks is not None
+                                else None
+                            ),
                         )
                     )
 
@@ -513,28 +533,28 @@ def _compute_and_write_block(
     start_j: int,
     end_j: int,
     is_diagonal: bool,
-    lock: Lock | None,
+    block_lock: Lock | None,
 ):
     """
     Compute a single block and write it directly to Zarr.
     """
     block = _compute_block_multicol(chunk_i, chunk_j, metric, pad_to_max)
 
-    if lock is not None:
-        with lock:
+    if block_lock is not None:
+        with block_lock:
             # Write to Zarr immediately
-            z_array[start_i:end_i, start_j:end_j] = block
+            z_array[start_i:end_i, start_j:end_j] += block
 
             # If not diagonal block, write transpose too
             if not is_diagonal:
-                z_array[start_j:end_j, start_i:end_i] = block.T
+                z_array[start_j:end_j, start_i:end_i] += block.T
     else:
         # Write to Zarr immediately
-        z_array[start_i:end_i, start_j:end_j] = block
+        z_array[start_i:end_i, start_j:end_j] += block
 
         # If not diagonal block, write transpose too
         if not is_diagonal:
-            z_array[start_j:end_j, start_i:end_i] = block.T
+            z_array[start_j:end_j, start_i:end_i] += block.T
 
     return True  # Just return success flag
 
@@ -546,7 +566,7 @@ def _process_batch(
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
-    lock: Lock | None,
+    locks: Lock | None,
 ):
     """
     Process a batch of membership groups.
@@ -559,7 +579,7 @@ def _process_batch(
             metric=metric,
             pad_to_max=pad_to_max,
             z_array=z_array,
-            lock=lock,
+            locks=locks,
         )
 
 
@@ -570,7 +590,7 @@ def _compute_and_write_membership(
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
-    lock: Lock | None,
+    locks: list[Lock] | None,
 ):
     """
     Compute blocks with internal chunking if needed and write to Zarr.
@@ -597,24 +617,34 @@ def _compute_and_write_membership(
                 )
 
                 # Write to Zarr
-                if lock is not None:
-                    with lock:
-                        z_array[np.ix_(idxs_i, idxs_j)] = block
-                        if not is_diagonal:
-                            z_array[np.ix_(idxs_j, idxs_i)] = block.T
+                if locks is not None:
+                    # Use locks per subchunk (always acquire in consistent order)
+                    i_lock = locks[i]
+                    j_lock = locks[j]
+                    if i == j:
+                        with i_lock:
+                            z_array[np.ix_(idxs_i, idxs_j)] += block
+                    else:
+                        first_lock, second_lock = (
+                            (i_lock, j_lock) if i < j else (j_lock, i_lock)
+                        )
+                        with first_lock:
+                            with second_lock:
+                                z_array[np.ix_(idxs_i, idxs_j)] += block
+                                z_array[np.ix_(idxs_j, idxs_i)] += block.T
                 else:
-                    z_array[np.ix_(idxs_i, idxs_j)] = block
+                    z_array[np.ix_(idxs_i, idxs_j)] += block
                     if not is_diagonal:
-                        z_array[np.ix_(idxs_j, idxs_i)] = block.T
+                        z_array[np.ix_(idxs_j, idxs_i)] += block.T
     else:
         # No chunking needed
         block = _compute_block_multicol(seqs, seqs, metric, pad_to_max)
 
-        if lock is not None:
-            with lock:
-                z_array[np.ix_(idxs, idxs)] = block
+        if locks is not None:
+            with locks[0]:
+                z_array[np.ix_(idxs, idxs)] += block
         else:
-            z_array[np.ix_(idxs, idxs)] = block
+            z_array[np.ix_(idxs, idxs)] += block
 
 
 def _auto_chunk_size(
