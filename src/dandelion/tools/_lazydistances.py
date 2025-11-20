@@ -1,5 +1,7 @@
 from __future__ import annotations
 import math
+import tempfile
+import shutil
 import zarr
 import zarr.storage
 
@@ -294,12 +296,6 @@ def _compute_multicol_distances_streaming(
         seqs_m = np.split(seqs_reordered_np, boundaries)
         idx_m = np.split(group_idx_flat, boundaries)
 
-        # seqs_reordered = [da.from_array(s, chunks=s.shape) for s in seqs_m]
-        # group_idx_flat_da = [da.from_array(i, chunks=i.shape) for i in idx_m]
-        # if client is not None:
-        #     seqs_reordered = client.persist(seqs_reordered)
-        #     group_idx_flat_da = client.persist(group_idx_flat_da)
-
         batched_idx_m = []
         batched_seqs_m = []
 
@@ -362,12 +358,6 @@ def _compute_multicol_distances_streaming(
         avg_clonotypes_per_batch = sum(len(b) for b in batched_seqs_m) / len(
             batched_idx_m
         )
-        # # lock per group
-        # membership_locks = (
-        #     [Lock(f"membership-{i}") for i in range(len(batched_idx_m))]
-        #     if num_cores > 1
-        #     else None
-        # )
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
@@ -435,11 +425,14 @@ def _compute_multicol_distances_streaming(
     if client is not None:
         futures = client.compute(delayed_blocks)
         progress(futures)
-        client.gather(futures)
+        tmp_results = client.gather(futures)
     else:
         with ProgressBar():
-            compute(*delayed_blocks, scheduler="threads")
+            tmp_results = compute(*delayed_blocks, scheduler="threads")
 
+    tmp_results = [d for d in tmp_results if d is not None]
+    # Merge all temporary arrays into the main array
+    merge_tmp_arrays(z_array, tmp_results)
     return True
 
 
@@ -473,6 +466,42 @@ def dask_safe_slice_square(arr: da.Array, pos: list) -> da.Array:
         return arr[np.ix_(pos, pos)]
 
 
+# def _compute_and_write_block(
+#     chunk_i: np.ndarray,
+#     chunk_j: np.ndarray,
+#     metric: Metric,
+#     pad_to_max: bool,
+#     z_array: zarr.Array,
+#     start_i: int,
+#     end_i: int,
+#     start_j: int,
+#     end_j: int,
+#     is_diagonal: bool,
+#     lock: Lock | None,
+# ):
+#     """
+#     Compute a single block and write it directly to Zarr.
+#     """
+#     block = _compute_block_multicol(chunk_i, chunk_j, metric, pad_to_max)
+
+#     if lock is not None:
+#         with lock:
+#             # Write to Zarr immediately
+#             z_array[start_i:end_i, start_j:end_j] = block
+
+#             # If not diagonal block, write transpose too
+#             if not is_diagonal:
+#                 z_array[start_j:end_j, start_i:end_i] = block.T
+#     else:
+#         # Write to Zarr immediately
+#         z_array[start_i:end_i, start_j:end_j] = block
+
+#         # If not diagonal block, write transpose too
+#         if not is_diagonal:
+#             z_array[start_j:end_j, start_i:end_i] = block.T
+#     return True  # Just return success flag
+
+
 def _compute_and_write_block(
     chunk_i: np.ndarray,
     chunk_j: np.ndarray,
@@ -490,23 +519,32 @@ def _compute_and_write_block(
     Compute a single block and write it directly to Zarr.
     """
     block = _compute_block_multicol(chunk_i, chunk_j, metric, pad_to_max)
-
+    tmp_dir = tempfile.mkdtemp()
+    tmp_array = zarr.open(
+        tmp_dir + "/tmp.zarr",
+        mode="w",
+        shape=z_array.shape,
+        chunks=z_array.chunks,
+        dtype=z_array.dtype,
+    )
     if lock is not None:
         with lock:
             # Write to Zarr immediately
-            z_array[start_i:end_i, start_j:end_j] = block
+            # Write only the block this worker is responsible for
+            tmp_array[start_i:end_i, start_j:end_j] = block
 
             # If not diagonal block, write transpose too
             if not is_diagonal:
-                z_array[start_j:end_j, start_i:end_i] = block.T
+                tmp_array[start_j:end_j, start_i:end_i] = block.T
     else:
         # Write to Zarr immediately
-        z_array[start_i:end_i, start_j:end_j] = block
+        tmp_array[start_i:end_i, start_j:end_j] = block
 
         # If not diagonal block, write transpose too
         if not is_diagonal:
-            z_array[start_j:end_j, start_i:end_i] = block.T
-    return True  # Just return success flag
+            tmp_array[start_j:end_j, start_i:end_i] = block.T
+
+    return tmp_dir
 
 
 def _process_batch(
@@ -524,7 +562,7 @@ def _process_batch(
     boundaries = np.cumsum(lengths)
     boundaries = np.insert(boundaries, 0, 0)
 
-    _compute_and_write_membership_cat(
+    results = _compute_and_write_membership_cat(
         seqs_cat=seqs_cat,
         idxs_cat=idxs_cat,
         boundaries=boundaries,
@@ -533,6 +571,40 @@ def _process_batch(
         z_array=z_array,
         lock=lock,
     )
+    return results
+
+
+# def _compute_and_write_membership_cat(
+#     seqs_cat: np.ndarray,
+#     idxs_cat: np.ndarray,
+#     boundaries: np.ndarray,
+#     metric: Metric,
+#     pad_to_max: bool,
+#     z_array: zarr.Array,
+#     lock: list[Lock] | None,
+# ):
+#     """
+#     Compute distances within each membership group only.
+#     """
+#     # Compute full block once
+#     block = _compute_block_multicol(seqs_cat, seqs_cat, metric, pad_to_max)
+
+#     n_groups = len(boundaries) - 1
+
+#     # Only process diagonal blocks (within each group)
+#     for g in range(n_groups):
+#         s, e = boundaries[g], boundaries[g + 1]
+#         idx = idxs_cat[s:e]
+
+#         # Extract subblock for this group only
+#         subblock = block[s:e, s:e]
+
+#         # Write to zarr
+#         if lock is not None:
+#             with lock:
+#                 z_array[np.ix_(idx, idx)] = subblock
+#         else:
+#             z_array[np.ix_(idx, idx)] = subblock
 
 
 def _compute_and_write_membership_cat(
@@ -551,7 +623,14 @@ def _compute_and_write_membership_cat(
     block = _compute_block_multicol(seqs_cat, seqs_cat, metric, pad_to_max)
 
     n_groups = len(boundaries) - 1
-
+    tmp_dir = tempfile.mkdtemp()
+    tmp_array = zarr.open(
+        tmp_dir + "/tmp.zarr",
+        mode="w",
+        shape=z_array.shape,
+        chunks=z_array.chunks,
+        dtype=z_array.dtype,
+    )
     # Only process diagonal blocks (within each group)
     for g in range(n_groups):
         s, e = boundaries[g], boundaries[g + 1]
@@ -563,9 +642,10 @@ def _compute_and_write_membership_cat(
         # Write to zarr
         if lock is not None:
             with lock:
-                z_array[np.ix_(idx, idx)] = subblock
+                tmp_array[np.ix_(idx, idx)] = subblock
         else:
-            z_array[np.ix_(idx, idx)] = subblock
+            tmp_array[np.ix_(idx, idx)] = subblock
+    return tmp_dir
 
 
 def _auto_chunk_size(
@@ -661,3 +741,21 @@ def _setup_dask_client(
     logg.info(f"Dask client started: {client.dashboard_link}")
 
     return client
+
+
+def merge_tmp_arrays(main_array: zarr.Array, tmp_results: list[str]) -> None:
+    """
+    Function to merge all the temporary zarr arays after computation.
+
+    Parameters
+    ----------
+    main_array : zarr.Array
+        Main zarr array to which temporary arrays will be merged.
+    tmp_results : list[str]
+        List of temporary directory paths containing zarr arrays to merge.
+    """
+    for tmp_dir in tmp_results:
+        tmp_array = zarr.open(tmp_dir + "/tmp.zarr", mode="r")
+        main_array[:] += tmp_array[:]
+        # Clean up temporary directory
+        shutil.rmtree(tmp_dir)
