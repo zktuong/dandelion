@@ -18,6 +18,7 @@ from tqdm import tqdm
 from zarr.codecs import BloscCodec
 
 from dandelion.utilities._distances import dist_func_long_sep, Metric
+from dandelion.utilities._utilities import running_on_hpc
 
 
 def calculate_distance_matrix_zarr(
@@ -364,36 +365,37 @@ def _compute_multicol_distances_streaming(
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
-        if client is not None:
-            # Persist batches as lists of dask arrays, one array per element
-            batched_seqs_m = [
-                [
-                    client.persist(
-                        da.from_delayed(
-                            dask.delayed(seq),
-                            shape=(seq.shape[0], seq.shape[1]),
-                            dtype=object,
+        if running_on_hpc():
+            if client is not None:
+                # Persist batches as lists of dask arrays, one array per element
+                batched_seqs_m = [
+                    [
+                        client.persist(
+                            da.from_delayed(
+                                dask.delayed(seq),
+                                shape=(seq.shape[0], seq.shape[1]),
+                                dtype=object,
+                            )
                         )
-                    )
-                    for seq in batch
+                        for seq in batch
+                    ]
+                    for batch in batched_seqs_m
                 ]
-                for batch in batched_seqs_m
-            ]
 
-            # Indices are usually small, can remain as NumPy arrays, but if you want:
-            batched_idx_m = [
-                [
-                    client.persist(
-                        da.from_delayed(
-                            dask.delayed(idx),
-                            shape=(len(idx),),
-                            dtype=object,
+                # Indices are usually small, can remain as NumPy arrays, but if you want:
+                batched_idx_m = [
+                    [
+                        client.persist(
+                            da.from_delayed(
+                                dask.delayed(idx),
+                                shape=(len(idx),),
+                                dtype=object,
+                            )
                         )
-                    )
-                    for idx in batch
+                        for idx in batch
+                    ]
+                    for batch in batched_idx_m
                 ]
-                for batch in batched_idx_m
-            ]
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
@@ -414,17 +416,18 @@ def _compute_multicol_distances_streaming(
         seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
         chunks_list = np.array_split(seqs_computed, n_chunks)
         # Convert each chunk to a dask array if client is provided
-        if client is not None:
-            chunks_list = [
-                client.persist(
-                    da.from_delayed(
-                        dask.delayed(lambda x: x)(chunk),
-                        shape=chunk.shape,
-                        dtype=object,
+        if running_on_hpc():
+            if client is not None:
+                chunks_list = [
+                    client.persist(
+                        da.from_delayed(
+                            dask.delayed(lambda x: x)(chunk),
+                            shape=chunk.shape,
+                            dtype=object,
+                        )
                     )
-                )
-                for chunk in chunks_list
-            ]
+                    for chunk in chunks_list
+                ]
 
         chunk_sizes = [len(c) for c in chunks_list]
         cum_sizes = np.cumsum([0] + chunk_sizes)
