@@ -4,7 +4,6 @@ import multiprocessing
 import re
 import time
 
-from humanize import metric
 import networkx as nx
 import numpy as np
 import pandas as pd
