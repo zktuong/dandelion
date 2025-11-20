@@ -14,6 +14,7 @@ from dask.diagnostics import ProgressBar
 from dask.distributed import Client, progress, Lock
 from pathlib import Path
 from scanpy import logging as logg
+from tqdm import tqdm
 from zarr.codecs import BloscCodec
 
 from dandelion.utilities._distances import dist_func_long_sep, Metric
@@ -189,7 +190,8 @@ def calculate_distance_matrix_zarr(
             chunk_batch_limit=max_clones_per_chunk,
             client=client,
             membership=membership,
-            lock=zarr_lock,
+            lock=None,
+            verbose=verbose,
         )
 
         # Set diagonal to NaN
@@ -248,6 +250,7 @@ def _compute_multicol_distances_streaming(
     client: Client | None = None,
     membership: dict | None = None,
     lock: Lock | None = None,
+    verbose: bool = True,
 ):
     """
     Compute distance matrix using concatenation across all columns,
@@ -430,9 +433,9 @@ def _compute_multicol_distances_streaming(
         with ProgressBar():
             tmp_results = compute(*delayed_blocks, scheduler="threads")
 
-    tmp_results = [d for d in tmp_results if d is not None]
+    logg.info("Merging temporary results into final Zarr array...")
     # Merge all temporary arrays into the main array
-    merge_tmp_arrays(z_array, tmp_results)
+    merge_tmp_arrays(z_array, tmp_results, verbose=verbose)
     return True
 
 
@@ -743,7 +746,9 @@ def _setup_dask_client(
     return client
 
 
-def merge_tmp_arrays(main_array: zarr.Array, tmp_results: list[str]) -> None:
+def merge_tmp_arrays(
+    main_array: zarr.Array, tmp_results: list[str], verbose: bool = True
+) -> None:
     """
     Function to merge all the temporary zarr arays after computation.
 
@@ -753,8 +758,14 @@ def merge_tmp_arrays(main_array: zarr.Array, tmp_results: list[str]) -> None:
         Main zarr array to which temporary arrays will be merged.
     tmp_results : list[str]
         List of temporary directory paths containing zarr arrays to merge.
+    verbose : bool
+        Whether to show progress bar.
     """
-    for tmp_dir in tmp_results:
+    for tmp_dir in tqdm(
+        tmp_results,
+        disable=not verbose,
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
         tmp_array = zarr.open(tmp_dir + "/tmp.zarr", mode="r")
         main_array[:] += tmp_array[:]
         # Clean up temporary directory
