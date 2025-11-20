@@ -47,7 +47,15 @@ def dist_func_long_sep(
         s2 = "".join(s2_result)
     else:
         # Dynamically choose separator length: longer than the max column
-        max_len = max(max(len(s) for s in x), max(len(s) for s in y))
+        try:
+            max_x = max(len(s) for s in x)
+        except ValueError:
+            max_x = 0
+        try:
+            max_y = max(len(s) for s in y)
+        except ValueError:
+            max_y = 0
+        max_len = max(max_x, max_y)
         long_sep = sep * (max_len + 1)
         s1 = long_sep.join(x)
         s2 = long_sep.join(y)
@@ -86,8 +94,17 @@ class LevenshteinMetric:
 class SubstitutionMatrixMetric:
     """
     Metric that uses a substitution matrix (e.g. BLOSUM62).
-    Similarity = sum(matrix[a,b]) + gap penalties.
-    Returns distance = -similarity.
+
+    Distance is computed as:
+        distance = max_possible_score - actual_score
+    Optionally normalized to [0, 1].
+
+    Parameters
+    ----------
+    matrix_name : str
+        Name of the Biopython substitution matrix (e.g., "BLOSUM62").
+    gap_penalty : float, default=-4.0
+        Penalty for gaps or characters not in the matrix.
     """
 
     def __init__(
@@ -102,32 +119,41 @@ class SubstitutionMatrixMetric:
             bio_mat = _submat.load(matrix_name)
         except Exception as e:
             raise ValueError(
-                f"Could not load substitution matrix '{matrix_name}'. Please ensure it is a valid matrix name supported by Biopython."
+                f"Could not load substitution matrix '{matrix_name}'. "
+                "Please ensure it is a valid matrix name supported by Biopython."
             ) from e
 
-        # Convert to dict for quick lookup
+        # Convert to dict for fast lookup
         self.matrix: dict[tuple[str, str], float] = {}
         for a in bio_mat.alphabet:
             for b in bio_mat.alphabet:
                 v = float(bio_mat[a, b])
                 self.matrix[(a, b)] = v
-                self.matrix[(b, a)] = v  # ensure symmetric access
+                self.matrix[(b, a)] = v  # symmetric access
 
     def compute(self, s1: str, s2: str) -> float:
+        """Compute distance between two sequences based on substitution matrix."""
+
         min_len = min(len(s1), len(s2))
         score = 0.0
 
+        # Sum substitution matrix scores for aligned positions
         for i in range(min_len):
             a, b = s1[i], s2[i]
             score += self.matrix.get((a, b), self.gap_penalty)
 
-        # Gap penalty for length differences
+        # Apply gap penalties for unequal lengths
         len_diff = abs(len(s1) - len(s2))
-        if len_diff > 0:
-            score += len_diff * self.gap_penalty
+        score += len_diff * self.gap_penalty
 
-        # Convert similarity → distance, clamp at 0
-        return max(0.0, -score)
+        # Compute max possible score for s1 (perfect self-alignment)
+        max_score = sum(self.matrix.get((c, c), 0.0) for c in s1)
+        max_score += len_diff * self.gap_penalty  # consider gaps
+
+        # Distance = max_score - actual_score, clamped at 0
+        distance = max(0.0, max_score - score)
+
+        return distance
 
 
 # -------------------------

@@ -279,6 +279,7 @@ def generate_network(
                         dat_seq,
                         membership,
                         metric=metric,
+                        pad_to_max=pad_to_max,
                         verbose=verbose,
                     )
                 else:
@@ -315,6 +316,7 @@ def generate_network(
                     total_dist = calculate_distance_matrix_original_full(
                         dat_seq,
                         metric=metric,
+                        pad_to_max=pad_to_max,
                         num_cores=num_cores,
                         verbose=verbose,
                     )
@@ -398,7 +400,7 @@ def generate_network(
             )
 
     logg.info(
-        " finished. Updated Dandelion object: \n",
+        " finished.\n   Updated Dandelion object\n",
         time=start,
         deep=(
             "   'layout', graph layout\n"
@@ -466,7 +468,7 @@ def mst(
     mat : dict
         Dictionary containing numpy ndarrays.
     num_cores: int, optional
-        Number of cores to run this step. Parallelise using joblib if more than 1.
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1..
     verbose : bool, optional
         Whether or not to show logging information.
 
@@ -666,6 +668,7 @@ def calculate_distance_matrix_original(
     dat_seq: pd.DataFrame,
     membership: dict,
     metric: Metric,
+    pad_to_max: bool = False,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -679,6 +682,8 @@ def calculate_distance_matrix_original(
         Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
     metric : Metric
         Distance metric to use.
+    pad_to_max : bool, optional
+        Whether to pad sequences to maximum length before distance calculation.
     verbose : bool, optional
         Whether to show progress.
 
@@ -712,7 +717,11 @@ def calculate_distance_matrix_original(
                         tdarray,
                         lambda x, y: (
                             dist_func_long_sep(
-                                x[0], y[0], metric=metric, sep=""
+                                x[0],
+                                y[0],
+                                metric=metric,
+                                pad_to_max=pad_to_max,
+                                sep="" if not pad_to_max else "#",
                             )
                             if (pd.notnull(x[0]) and pd.notnull(y[0]))
                             else 0
@@ -751,6 +760,7 @@ def calculate_distance_matrix_original(
 def calculate_distance_matrix_original_full(
     dat_seq: pd.DataFrame,
     metric: Metric,
+    pad_to_max: bool = False,
     num_cores: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
@@ -763,8 +773,10 @@ def calculate_distance_matrix_original_full(
         DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
     metric : Metric
         Distance metric to use.
+    pad_to_max : bool, optional
+        Whether to pad sequences to maximum length before distance calculation.
     num_cores : int, optional
-        Number of cores to run this step. Parallelise using joblib if more than 1
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1.
     verbose : bool, optional
         Whether to show progress.
 
@@ -793,7 +805,13 @@ def calculate_distance_matrix_original_full(
             results = pairwise_distances(
                 seqs,
                 metric=lambda x, y: (
-                    dist_func_long_sep(x, y, metric=metric, sep="")
+                    dist_func_long_sep(
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep="" if not pad_to_max else "#",
+                    )
                 ),
                 n_jobs=num_cores,
             )
@@ -802,7 +820,13 @@ def calculate_distance_matrix_original_full(
                 pdist(
                     seqs.reshape(-1, 1),
                     lambda x, y: (
-                        dist_func_long_sep(x[0], y[0], metric=metric, sep="")
+                        dist_func_long_sep(
+                            x[0],
+                            y[0],
+                            metric=metric,
+                            pad_to_max=pad_to_max,
+                            sep="" if not pad_to_max else "#",
+                        )
                         if (pd.notnull(x[0]) and pd.notnull(y[0]))
                         else 0
                     ),
@@ -824,7 +848,6 @@ def calculate_distance_matrix_long(
     membership: dict | None,
     metric: Metric,
     pad_to_max: bool = False,
-    sep: str = "#",
     num_cores: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
@@ -846,7 +869,7 @@ def calculate_distance_matrix_long(
         allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
         may increase memory usage and computation time.
     num_cores : int, optional
-        Number of cores to run this step. Parallelise using joblib if more than 1.
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1..
     verbose : bool, optional
         Whether to show progress.
 
@@ -872,10 +895,12 @@ def calculate_distance_matrix_long(
                 seqs,
                 metric=lambda x, y: (
                     dist_func_long_sep(
-                        x, y, metric=metric, pad_to_max=pad_to_max, sep=sep
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep="#",  # always pad with some sep
                     )
-                    if (pd.notnull(x) and pd.notnull(y))
-                    else 0
                 ),
                 n_jobs=num_cores,
             )
@@ -888,11 +913,11 @@ def calculate_distance_matrix_long(
                         y,
                         metric=metric,
                         pad_to_max=pad_to_max,
-                        sep=sep,
+                        sep="#",  # always pad with some sep
                     ),
                 )
             )
-            total_dist += results
+        total_dist += results
     else:
         # Step 3: iterate over clone memberships
         for clone in tqdm(
@@ -911,7 +936,7 @@ def calculate_distance_matrix_long(
                             y,
                             metric=metric,
                             pad_to_max=pad_to_max,
-                            sep=sep,
+                            sep="#",  # always pad with some sep
                         ),
                     )
                 )
