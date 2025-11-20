@@ -799,7 +799,7 @@ class Contig:
                 self._contig[key] = ""
 
     @property
-    def contig(self) -> "ContigDict":
+    def contig(self) -> ContigDict:
         """Contig slot."""
         return self._contig
 
