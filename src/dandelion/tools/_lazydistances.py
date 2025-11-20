@@ -367,15 +367,28 @@ def _compute_multicol_distances_streaming(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
+            # Convert to dask arrays
+            seq_batch_dask = da.from_array(
+                np.concatenate(seq),
+                chunks=(sum(len(s) for s in seq), seq[0].shape[1]),
+            )
+            idx_batch_dask = da.from_array(
+                np.concatenate(idx), chunks=(sum(len(i) for i in idx),)
+            )
+
+            # Persist **this batch only**
+            if running_on_hpc() and client is not None:
+                seq_batch_dask = client.persist(seq_batch_dask)
+                idx_batch_dask = client.persist(idx_batch_dask)
+
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
-                    batch_seqs_m=seq,
-                    batch_idx_m=idx,
+                    batch_seqs_m=seq_batch_dask,
+                    batch_idx_m=idx_batch_dask,
                     metric=metric,
                     pad_to_max=pad_to_max,
                     z_array=z_array,
                     lock=lock,
-                    client=client,
                 )
             )
     else:
@@ -561,20 +574,11 @@ def _process_batch(
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,  # Single lock for this batch
-    client: Client | None,
 ):
-    if running_on_hpc() and client is not None:
-        # persist each sequence in each batch
-        batch_seqs_m = [
-            [client.persist(dask.delayed(seq)) for seq in batch]
-            for batch in batch_seqs_m
-        ]
-
-        # persist each idx array
-        batch_idx_m = [
-            [client.persist(dask.delayed(idx)) for idx in batch]
-            for batch in batch_idx_m
-        ]
+    if isinstance(batch_seqs_m, da.Array):
+        batch_seqs_m = batch_seqs_m.compute()
+    if isinstance(batch_idx_m, da.Array):
+        batch_idx_m = batch_idx_m.compute()
     seqs_cat = np.concatenate(batch_seqs_m, axis=0)
     idxs_cat = np.concatenate(batch_idx_m, axis=0)
 
