@@ -278,7 +278,6 @@ def generate_network(
                         dat_seq,
                         membership,
                         metric=metric,
-                        pad_to_max=pad_to_max,
                         verbose=verbose,
                     )
                 else:
@@ -315,7 +314,6 @@ def generate_network(
                     total_dist = calculate_distance_matrix_original_full(
                         dat_seq,
                         metric=metric,
-                        pad_to_max=pad_to_max,
                         num_cores=num_cores,
                         verbose=verbose,
                     )
@@ -713,7 +711,7 @@ def calculate_distance_matrix_original(
                     pdist(
                         tdarray,
                         lambda x, y: (
-                            metric(x[0], y[0])
+                            metric.compute(x[0], y[0])
                             if (pd.notnull(x[0]) and pd.notnull(y[0]))
                             else 0
                         ),
@@ -808,7 +806,7 @@ def calculate_distance_matrix_original_full(
                 pdist(
                     seqs.reshape(-1, 1),
                     lambda x, y: (
-                        func(x[0], y[0])
+                        metric.compute(x[0], y[0])
                         if (pd.notnull(x[0]) and pd.notnull(y[0]))
                         else 0
                     ),
