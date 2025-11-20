@@ -178,7 +178,9 @@ def calculate_distance_matrix_zarr(
         logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
-    client = _setup_dask_client(num_cores, memory_limit_gb)
+    client = _setup_dask_client(
+        num_cores, memory_limit_gb, hpc=running_on_hpc()
+    )
 
     try:
         # Compute distances and write blocks as they complete
@@ -739,7 +741,7 @@ def _auto_chunk_size(
 
 
 def _setup_dask_client(
-    num_cores: int, memory_limit_gb: float | None = None
+    num_cores: int, memory_limit_gb: float | None = None, hpc: bool = False
 ) -> Client | None:
     """
     Setup Dask distributed client.
@@ -750,6 +752,8 @@ def _setup_dask_client(
         Number of workers
     memory_limit_gb : float, optional
         Memory limit per worker
+    hpc : bool
+        Whether running on HPC (affects client setup)
 
     Returns
     -------
@@ -766,9 +770,13 @@ def _setup_dask_client(
         return None
 
     client_kwargs = {
-        "n_workers": num_cores,
-        "threads_per_worker": 1,  # for simplicity and to avoid GIL issues
-        "processes": True,  # Critical for memory isolation
+        "n_workers": num_cores if not hpc else 1,
+        "threads_per_worker": (
+            1 if not hpc else num_cores
+        ),  # for simplicity and to avoid GIL issues
+        "processes": (
+            True if not hpc else False
+        ),  # Critical for memory isolation
     }
 
     if memory_limit_gb is not None:
