@@ -366,21 +366,43 @@ def _compute_multicol_distances_streaming(
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
+        # Persist batches as lists of dask arrays, one array per element
+        if running_on_hpc() and client is not None:
+            batched_seqs_m = [
+                [
+                    client.persist(
+                        da.from_delayed(
+                            dask.delayed(seq),
+                            shape=(seq.shape[0], seq.shape[1]),
+                            dtype=object,
+                        )
+                    )
+                    for seq in batch
+                ]
+                for batch in batched_seqs_m
+            ]
+
+            # Indices are usually small, can remain as NumPy arrays, but if you want:
+            batched_idx_m = [
+                [
+                    client.persist(
+                        da.from_delayed(
+                            dask.delayed(idx),
+                            shape=(len(idx),),
+                            dtype=object,
+                        )
+                    )
+                    for idx in batch
+                ]
+                for batch in batched_idx_m
+            ]
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
             # Convert to dask arrays
             seq_lengths = [len(s) for s in seq]
-            seqs_cat = np.concatenate(seq, axis=0)
-            idxs_cat = np.concatenate(idx, axis=0)
-
-            # Persist **this batch only**
-            if running_on_hpc() and client is not None:
-                seqs_cat = client.scatter(seqs_cat)
-                idxs_cat = client.scatter(idxs_cat)
-
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
-                    batch_seqs_m=seqs_cat,
-                    batch_idx_m=idxs_cat,
+                    batch_seqs_m=seq,
+                    batch_idx_m=idx,
                     seq_lengths=seq_lengths,
                     metric=metric,
                     pad_to_max=pad_to_max,
@@ -573,12 +595,14 @@ def _process_batch(
     z_array: zarr.Array,
     lock: Lock | None,  # Single lock for this batch
 ):
+    seq_cat = np.concatenate(batch_seqs_m, axis=0)
+    idx_cat = np.concatenate(batch_idx_m, axis=0)
     boundaries = np.cumsum(seq_lengths)
     boundaries = np.insert(boundaries, 0, 0)
 
     results = _compute_and_write_membership_cat(
-        seqs_cat=batch_seqs_m,
-        idxs_cat=batch_idx_m,
+        seqs_cat=seq_cat,
+        idxs_cat=idx_cat,
         boundaries=boundaries,
         metric=metric,
         pad_to_max=pad_to_max,
