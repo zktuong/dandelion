@@ -15,12 +15,12 @@ from scanpy import logging as logg
 from typing import Callable
 from zarr.codecs import BloscCodec
 
-from dandelion.utilities._utilities import dist_func_long_sep
+from dandelion.utilities._utilities import dist_func_long_sep, Metric
 
 
 def calculate_distance_matrix_zarr(
     dat_seq: pd.DataFrame,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool = False,
     membership: dict | None = None,
     zarr_path: Path | str | None = None,
@@ -50,8 +50,8 @@ def calculate_distance_matrix_zarr(
     dat_seq : pd.DataFrame
         DataFrame of sequences (rows=samples, columns=different sequence types).
         Row order determines the order of the distance matrix.
-    func : Callable
-        Function to compute distance between two sequences.
+    metric : Metric
+        Distance metric to use.
     pad_to_max : bool, optional
         Whether to pad sequences to maximum length before distance calculation.
     zarr_path : str, optional
@@ -180,7 +180,7 @@ def calculate_distance_matrix_zarr(
         # Compute distances and write blocks as they complete
         _compute_multicol_distances_streaming(
             dat_seq=dat_seq,
-            func=func,
+            metric=metric,
             pad_to_max=pad_to_max,
             z_array=z_array,
             lock=zarr_lock,
@@ -239,7 +239,7 @@ def calculate_distance_matrix_zarr(
 
 def _compute_multicol_distances_streaming(
     dat_seq: pd.DataFrame,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,
@@ -285,12 +285,7 @@ def _compute_multicol_distances_streaming(
         group_idx_flat = np.array(
             [index_map[cell] for group in membership.values() for cell in group]
         )
-        # Convert to dask array
-        group_idx_flat_da = da.from_delayed(
-            dask.delayed(lambda x: x)(group_idx_flat),
-            shape=group_idx_flat.shape,
-            dtype=group_idx_flat.dtype,
-        )
+
         group_lengths = np.fromiter(
             (len(v) for v in membership.values()), dtype=int
         )
@@ -298,19 +293,15 @@ def _compute_multicol_distances_streaming(
 
         # Reorder seqs contiguously - convert result to dask array
         seqs_reordered_np = seqs_np[group_idx_flat]
-        seqs_reordered = da.from_delayed(
-            dask.delayed(lambda x: x)(seqs_reordered_np),
-            shape=seqs_reordered_np.shape,
-            dtype=object,
-        )
+        # Now each membership group is a contiguous slice (a view)
+        seqs_m = np.split(seqs_reordered_np, boundaries)
+        idx_m = np.split(group_idx_flat, boundaries)
 
+        seqs_reordered = [da.from_array(s, chunks=s.shape) for s in seqs_m]
+        group_idx_flat_da = [da.from_array(i, chunks=i.shape) for i in idx_m]
         if client is not None:
             seqs_reordered = client.persist(seqs_reordered)
             group_idx_flat_da = client.persist(group_idx_flat_da)
-
-        # Now each membership group is a contiguous slice (a view)
-        seqs_m = np.split(seqs_reordered, boundaries)
-        idx_m = np.split(group_idx_flat, boundaries)
 
         batched_idx_m = []
         batched_seqs_m = []
@@ -385,7 +376,7 @@ def _compute_multicol_distances_streaming(
                         batch_seqs_m=seq,
                         batch_idx_m=idx,
                         chunk_size=chunk_size,
-                        func=func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
                         lock=lock,
@@ -397,7 +388,7 @@ def _compute_multicol_distances_streaming(
                         batch_seqs_m=seq,
                         batch_idx_m=idx,
                         chunk_size=chunk_size,
-                        func=func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         z_array=z_array,
                         lock=lock,
@@ -439,7 +430,7 @@ def _compute_multicol_distances_streaming(
                         _compute_and_write_block(
                             chunk_i=chunks_list[i],
                             chunk_j=chunks_list[j],
-                            func=func,
+                            metric=metric,
                             pad_to_max=pad_to_max,
                             z_array=z_array,
                             start_i=start_i,
@@ -455,7 +446,7 @@ def _compute_multicol_distances_streaming(
                         dask.delayed(_compute_and_write_block)(
                             chunk_i=chunks_list[i],
                             chunk_j=chunks_list[j],
-                            func=func,
+                            metric=metric,
                             pad_to_max=pad_to_max,
                             z_array=z_array,
                             start_i=start_i,
@@ -485,7 +476,7 @@ def _compute_multicol_distances_streaming(
 def _compute_block_multicol(
     seqs_i: np.ndarray,
     seqs_j: np.ndarray,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool,
 ):
     """
@@ -498,7 +489,7 @@ def _compute_block_multicol(
     for i, row_i in enumerate(seqs_i):
         for j, row_j in enumerate(seqs_j):
             dist_block[i, j] = dist_func_long_sep(
-                row_i, row_j, func=func, pad_to_max=pad_to_max
+                row_i, row_j, metric=metric, pad_to_max=pad_to_max
             )
 
     return dist_block
@@ -515,7 +506,7 @@ def dask_safe_slice_square(arr: da.Array, pos: list) -> da.Array:
 def _compute_and_write_block(
     chunk_i: np.ndarray,
     chunk_j: np.ndarray,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     start_i: int,
@@ -528,7 +519,7 @@ def _compute_and_write_block(
     """
     Compute a single block and write it directly to Zarr.
     """
-    block = _compute_block_multicol(chunk_i, chunk_j, func, pad_to_max)
+    block = _compute_block_multicol(chunk_i, chunk_j, metric, pad_to_max)
 
     if lock is not None:
         with lock:
@@ -553,7 +544,7 @@ def _process_batch(
     batch_seqs_m: list[np.ndarray],
     batch_idx_m: list[list[int]],
     chunk_size: int,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,
@@ -566,7 +557,7 @@ def _process_batch(
             seqs=seq,
             idxs=idx,
             chunk_size=chunk_size,
-            func=func,
+            metric=metric,
             pad_to_max=pad_to_max,
             z_array=z_array,
             lock=lock,
@@ -577,7 +568,7 @@ def _compute_and_write_membership(
     seqs: np.ndarray,
     idxs: list[int],
     chunk_size: int,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,
@@ -603,7 +594,7 @@ def _compute_and_write_membership(
 
                 # Compute the block
                 block = _compute_block_multicol(
-                    seqs_i, seqs_j, func, pad_to_max
+                    seqs_i, seqs_j, metric, pad_to_max
                 )
 
                 # Write to Zarr
@@ -618,7 +609,7 @@ def _compute_and_write_membership(
                         z_array[np.ix_(idxs_j, idxs_i)] = block.T
     else:
         # No chunking needed
-        block = _compute_block_multicol(seqs, seqs, func, pad_to_max)
+        block = _compute_block_multicol(seqs, seqs, metric, pad_to_max)
 
         if lock is not None:
             with lock:

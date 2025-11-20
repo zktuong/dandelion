@@ -4,6 +4,7 @@ import multiprocessing
 import re
 import time
 
+from humanize import metric
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -28,9 +29,11 @@ from dandelion.utilities._core import Dandelion, Query
 from dandelion.utilities._utilities import (
     present,
     sanitize_data,
+    Metric,
     Tree,
     FALSES,
     dist_func_long_sep,
+    resolve_metric,
 )
 
 
@@ -51,7 +54,7 @@ def generate_network(
     num_cores: int = 1,
     sequential_chain: bool = False,
     distance_mode: Literal["clone", "full"] = "clone",
-    dist_func: Callable | None = None,
+    dist_func: Callable | str | None = None,
     pad_to_max: bool = False,
     lazy: bool = False,
     zarr_path: Path | str | None = None,
@@ -111,8 +114,11 @@ def generate_network(
     distance_mode : Literal["clone", "full"], optional
         method to compute distance matrix. 'clone' refers to the original membership-based distance calculation where
         only distances within clones are calculated. Whereas 'full' computes the full pairwise distance matrix.
-    dist_func : Callable, optional
-        distance function to use. If None, `polyleven.levenshtein` is used.
+    dist_func : Callable | str | None, optional
+        distance function to use. If None, `polyleven.levenshtein` is used. If a string is provided, it will use Bio.Align's
+        substitution matrices (e.g., 'BLOSUM62', 'PAM250'). See `Bio.Align.substitution_matrices.load` for available options.
+    blosom_matrix : str | None, optional
+        If provided, dist_func is ignored and this substitution matrix from Bio.Align is used instead.
     pad_to_max : bool, optional
         whether or not to pad sequences to the maximum length in the dataset before distance calculation. This will
         allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
@@ -156,6 +162,7 @@ def generate_network(
 
     clone_key = clone_key if clone_key is not None else "clone_id"
     dist_func = levenshtein if dist_func is None else dist_func
+    metric = resolve_metric(dist_func)
     if not compute_graph:
         compute_layout = False
 
@@ -251,7 +258,7 @@ def generate_network(
 
                 total_dist = calculate_distance_matrix_zarr(
                     dat_seq,
-                    func=dist_func,
+                    metric=metric,
                     pad_to_max=pad_to_max,
                     membership=membership,
                     zarr_path=zarr_path,
@@ -269,7 +276,7 @@ def generate_network(
                     total_dist = calculate_distance_matrix_original(
                         dat_seq,
                         membership,
-                        func=dist_func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         verbose=verbose,
                     )
@@ -277,7 +284,7 @@ def generate_network(
                     total_dist = calculate_distance_matrix_long(
                         dat_seq,
                         membership=membership,
-                        func=dist_func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         num_cores=num_cores,
                         verbose=verbose,
@@ -290,7 +297,7 @@ def generate_network(
 
                 total_dist = calculate_distance_matrix_zarr(
                     dat_seq,
-                    func=dist_func,
+                    metric=metric,
                     pad_to_max=pad_to_max,
                     membership=None,
                     zarr_path=zarr_path,
@@ -306,7 +313,7 @@ def generate_network(
                 if sequential_chain:
                     total_dist = calculate_distance_matrix_original_full(
                         dat_seq,
-                        func=dist_func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         num_cores=num_cores,
                         verbose=verbose,
@@ -315,7 +322,7 @@ def generate_network(
                     total_dist = calculate_distance_matrix_long(
                         dat_seq,
                         membership=None,
-                        func=dist_func,
+                        metric=metric,
                         pad_to_max=pad_to_max,
                         num_cores=num_cores,
                         verbose=verbose,
@@ -391,15 +398,21 @@ def generate_network(
             )
 
     logg.info(
-        " finished",
+        " finished. Updated Dandelion object: \n",
         time=start,
         deep=(
-            "Updated Dandelion object: \n"
-            "   'data', contig-indexed AIRR table\n"
-            "   'metadata', cell-indexed observations table\n"
             "   'layout', graph layout\n"
-            "   'graph', network constructed from distance matrices of VDJ- and VJ- chains\n"
-            "   'distances', VDJ + VJ distance matrix\n"
+            if compute_layout
+            else (
+                ""
+                "   'graph', network constructed from distance matrices of VDJ- and VJ- chains\n"
+                if compute_graph
+                else (
+                    "" "   'distances', VDJ + VJ distance matrix\n"
+                    if regenerate
+                    else ""
+                )
+            )
         ),
     )
 
@@ -652,7 +665,7 @@ def clone_centrality(vdj_data: Dandelion):
 def calculate_distance_matrix_original(
     dat_seq: pd.DataFrame,
     membership: dict,
-    func: Callable,
+    metric: Metric,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -664,8 +677,8 @@ def calculate_distance_matrix_original(
         DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
     membership : dict
         Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
-    func : Callable
-        Distance function to use.
+    metric : Metric
+        Distance metric to use.
     verbose : bool, optional
         Whether to show progress.
 
@@ -699,7 +712,7 @@ def calculate_distance_matrix_original(
                     pdist(
                         tdarray,
                         lambda x, y: (
-                            func(x[0], y[0])
+                            metric(x[0], y[0])
                             if (pd.notnull(x[0]) and pd.notnull(y[0]))
                             else 0
                         ),
@@ -736,7 +749,7 @@ def calculate_distance_matrix_original(
 
 def calculate_distance_matrix_original_full(
     dat_seq: pd.DataFrame,
-    func: Callable,
+    metric: Metric,
     num_cores: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
@@ -747,8 +760,8 @@ def calculate_distance_matrix_original_full(
     ----------
     dat_seq : pd.DataFrame
         DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
-    func : Callable
-        Distance function to use.
+    metric : Metric
+        Distance metric to use.
     num_cores : int, optional
         Number of cores to run this step. Parallelise using joblib if more than 1
     verbose : bool, optional
@@ -778,7 +791,7 @@ def calculate_distance_matrix_original_full(
         m = len(seqs)
         if num_cores > 1:
             results = Parallel(n_jobs=num_cores)(
-                delayed(_compute_row)(i, seqs, m, func)
+                delayed(_compute_row)(i, seqs, m, metric)
                 for i in tqdm(
                     range(n), disable=not verbose, leave=False, position=0
                 )
@@ -814,8 +827,9 @@ def calculate_distance_matrix_original_full(
 def calculate_distance_matrix_long(
     dat_seq: pd.DataFrame,
     membership: dict | None,
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool = False,
+    sep: str = "#",
     num_cores: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
@@ -830,8 +844,8 @@ def calculate_distance_matrix_long(
     membership : dict | None
         Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
         None indicates full pairwise distance calculation.
-    func : Callable
-        Distance function to use.
+    metric : Metric
+        Distance metric to use.
     pad_to_max : bool, optional
         whether or not to pad sequences to the maximum length in the dataset before distance calculation. This will
         allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
@@ -860,7 +874,7 @@ def calculate_distance_matrix_long(
         seqs = dat_seq_clean.values
         if num_cores > 1:
             results = Parallel(n_jobs=num_cores)(
-                delayed(_compute_row)(i, seqs, n, func)
+                delayed(_compute_row)(i, seqs, n, metric)
                 for i in tqdm(
                     range(n), disable=not verbose, leave=False, position=0
                 )
@@ -876,7 +890,11 @@ def calculate_distance_matrix_long(
                 pdist(
                     seqs,
                     metric=lambda x, y: dist_func_long_sep(
-                        x, y, func=func, pad_to_max=pad_to_max
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep=sep,
                     ),
                 )
             )
@@ -896,7 +914,11 @@ def calculate_distance_matrix_long(
                     pdist(
                         seqs,
                         metric=lambda x, y: dist_func_long_sep(
-                            x, y, func=func, pad_to_max=pad_to_max
+                            x,
+                            y,
+                            metric=metric,
+                            pad_to_max=pad_to_max,
+                            sep=sep,
                         ),
                     )
                 )
@@ -920,13 +942,18 @@ def _compute_distance(
     i: int,
     j: int,
     sequences: np.ndarray,
-    func: Callable,
+    metric: Metric,
+    sep: str = "#",
     pad_to_max: bool = False,
 ) -> tuple:
     """Helper to compute distance between two sequences at indices i and j."""
     return (
         dist_func_long_sep(
-            sequences[i], sequences[j], func=func, pad_to_max=pad_to_max
+            sequences[i],
+            sequences[j],
+            metric=metric,
+            sep=sep,
+            pad_to_max=pad_to_max,
         )
         if (pd.notnull(sequences[i]) and pd.notnull(sequences[j]))
         else 0
@@ -937,13 +964,21 @@ def _compute_row(
     i: int,
     sequences: np.ndarray,
     n: int,
-    func: Callable,
+    metric: Metric,
+    sep: str = "#",
     pad_to_max: bool = False,
 ) -> list:
     """Helper to compute a row of the distance matrix."""
     row_distances = [
         (
-            _compute_distance(i, j, sequences, func, pad_to_max=pad_to_max)
+            _compute_distance(
+                i,
+                j,
+                sequences,
+                metric=metric,
+                sep=sep,
+                pad_to_max=pad_to_max,
+            )
             if j > i
             else 0
         )

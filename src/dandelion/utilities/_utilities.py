@@ -1,3 +1,4 @@
+from __future__ import annotations
 import h5py
 import os
 import re
@@ -8,14 +9,18 @@ import numpy as np
 import pandas as pd
 
 from airr import RearrangementSchema
+from Bio.Align import substitution_matrices as _submat
 from collections import defaultdict
 from collections.abc import Iterable
 from pathlib import Path
+from polyleven import levenshtein
 from subprocess import run
 from typing import (
     TypeVar,
     Literal,
     Callable,
+    Protocol,
+    runtime_checkable,
 )
 
 # help silence the dtype warning?
@@ -728,7 +733,7 @@ def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
 
     Raises
     ------
-    FileNotFoundError
+    ValueError
         if input is not found.
     KeyError
         if `sequence_id` not found in input.
@@ -1401,15 +1406,19 @@ def get_vcall_key(data: dict, v_call_key: str) -> str:
 def dist_func_long_sep(
     x: list[str],
     y: list[str],
-    func: Callable,
+    metric: Metric,
     pad_to_max: bool = False,
     sep: str = "#",
 ) -> float:
     """
-    Concatenate two sequences column-wise with a separator that is
-    guaranteed to be longer than any individual column.
+    Concatenate column-wise with long separators and apply the metric.
     """
-    if pad_to_max:
+    # If the metric is a substitution matrix, skip sep padding
+    if isinstance(metric, SubstitutionMatrixMetric):
+        # Just concatenate without adding separators
+        s1 = "".join(x)
+        s2 = "".join(y)
+    elif pad_to_max:
         max_len = [max(len(a), len(b)) for a, b in zip(x, y)]
         s1_parts, s2_parts = [], []
 
@@ -1419,7 +1428,6 @@ def dist_func_long_sep(
             s2_parts.append(s2.ljust(le + 1, sep))
 
         # Join with per-column separators
-        # Each separator is longer than its corresponding column's padded length
         s1_result, s2_result = [], []
         for i, (s1_part, s2_part, le) in enumerate(
             zip(s1_parts, s2_parts, max_len)
@@ -1441,5 +1449,116 @@ def dist_func_long_sep(
         long_sep = sep * (max_len + 1)
         s1 = long_sep.join(x)
         s2 = long_sep.join(y)
-    # print(s1, s2)
-    return func(s1, s2)
+
+    return metric.compute(s1, s2)
+
+
+@runtime_checkable
+class Metric(Protocol):
+    """
+    Protocol for metric objects used to compute distance between two strings.
+
+    Implementors must provide `compute(s1: str, s2: str) -> float`.
+    """
+
+    def compute(self, s1: str, s2: str) -> float: ...
+
+
+class CallableMetric:
+    """Wraps a callable f(s1, s2) into a Metric object."""
+
+    def __init__(self, func: Callable[[str, str], float]):
+        self.func = func
+
+    def compute(self, s1: str, s2: str) -> float:
+        return float(self.func(s1, s2))
+
+
+class LevenshteinMetric:
+    """Metric that computes edit distance using the polyleven implementation."""
+
+    def compute(self, s1: str, s2: str) -> float:
+        return float(levenshtein(s1, s2))
+
+
+class SubstitutionMatrixMetric:
+    """
+    Metric that uses a substitution matrix (e.g. BLOSUM62).
+    Similarity = sum(matrix[a,b]) + gap penalties.
+    Returns distance = -similarity.
+    """
+
+    def __init__(
+        self,
+        matrix_name: str,
+        gap_penalty: float = -4.0,
+    ):
+        self.gap_penalty = float(gap_penalty)
+
+        # Load Biopython substitution matrix
+        try:
+            bio_mat = _submat.load(matrix_name)
+        except Exception as e:
+            raise ValueError(
+                f"Could not load substitution matrix '{matrix_name}'. Please ensure it is a valid matrix name supported by Biopython."
+            ) from e
+
+        # Convert to dict for quick lookup
+        self.matrix: dict[tuple[str, str], float] = {}
+        for a in bio_mat.alphabet:
+            for b in bio_mat.alphabet:
+                v = float(bio_mat[a, b])
+                self.matrix[(a, b)] = v
+                self.matrix[(b, a)] = v  # ensure symmetric access
+
+    def compute(self, s1: str, s2: str) -> float:
+        if s1 == s2:
+            return -sum(self.matrix[(c, c)] for c in s1)
+
+        min_len = min(len(s1), len(s2))
+        score = 0.0
+        for i in range(min_len):
+            a, b = s1[i], s2[i]
+            score += self.matrix.get((a, b), self.gap_penalty)
+
+        # Gap penalty for length differences
+        len_diff = abs(len(s1) - len(s2))
+        if len_diff > 0:
+            score += len_diff * self.gap_penalty
+
+        return -score
+
+
+# -------------------------
+# Metric resolver
+# -------------------------
+def resolve_metric(
+    dist_func: Callable[[str, str], float] | str | Metric | None,
+) -> Metric:
+    """
+    Convert user-supplied dist_func into a Metric object.
+
+    Parameters
+    ----------
+    dist_func : Callable[[str, str], float] | str | Metric | None
+        Distance function specification.
+    Returns
+    -------
+    Metric
+        Resolved Metric object.
+    """
+    if dist_func is None:
+        return LevenshteinMetric()
+
+    if isinstance(dist_func, Metric):
+        return dist_func
+
+    if callable(dist_func):
+        return CallableMetric(dist_func)
+
+    if isinstance(dist_func, str):
+        return SubstitutionMatrixMetric(dist_func)
+
+    raise TypeError(
+        "dist_func must be None, callable, Metric, or substitution matrix name string."
+    )
