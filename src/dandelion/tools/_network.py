@@ -33,6 +33,7 @@ from dandelion.utilities._distances import (
 )
 from dandelion.utilities._utilities import (
     present,
+    running_on_hpc,
     sanitize_data,
     Tree,
     FALSES,
@@ -66,6 +67,7 @@ def generate_network(
     memory_safety_fraction: float = 0.3,
     compress: bool = True,
     random_state: int | np.random.RandomState | None = None,
+    hpc: bool | None = None,
     **kwargs,
 ) -> Dandelion | tuple[Dandelion, AnnData]:
     """
@@ -143,6 +145,10 @@ def generate_network(
         Fraction of available memory to use. Defaults to 0.3 (i.e., 30% of available memory will be used for chunk size calculation).
     compress: bool, optional
         Whether to compress the Zarr array using Blosc with zstd.
+    rnandom_state : int | np.random.RandomState | None, optional
+        Random state for reproducible sampling.
+    hpc: bool | None, optional
+        Whether the code is running on a high-performance computing (HPC) environment. This can affect how Dask is configured.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
@@ -161,7 +167,7 @@ def generate_network(
     if num_cores == -1:
         num_cores = multiprocessing.cpu_count()
     num_cores = max(1, int(num_cores))
-
+    hpc = running_on_hpc() if hpc is None else hpc
     clone_key = clone_key if clone_key is not None else "clone_id"
     dist_func = levenshtein if dist_func is None else dist_func
     metric = resolve_metric(dist_func)
@@ -272,6 +278,7 @@ def generate_network(
                     compress=compress,
                     lazy=lazy,
                     verbose=verbose,
+                    hpc=hpc,
                 )
             else:
                 if sequential_chain:
@@ -310,6 +317,7 @@ def generate_network(
                     compress=compress,
                     lazy=lazy,
                     verbose=verbose,
+                    hpc=hpc,
                 )
             else:
                 if sequential_chain:

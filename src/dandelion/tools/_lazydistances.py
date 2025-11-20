@@ -5,7 +5,6 @@ import shutil
 import zarr
 import zarr.storage
 
-import dask
 import dask.array as da
 import numpy as np
 import pandas as pd
@@ -19,7 +18,6 @@ from tqdm import tqdm
 from zarr.codecs import BloscCodec
 
 from dandelion.utilities._distances import dist_func_long_sep, Metric
-from dandelion.utilities._utilities import running_on_hpc
 
 
 def calculate_distance_matrix_zarr(
@@ -36,6 +34,7 @@ def calculate_distance_matrix_zarr(
     compress: bool = True,
     lazy: bool = False,
     verbose: bool = True,
+    hpc: bool = False,
 ) -> np.ndarray | da.Array:
     """
     Compute full pairwise distance matrix writing directly to Zarr.
@@ -80,6 +79,8 @@ def calculate_distance_matrix_zarr(
     lazy: bool, optional
         If True, computation will be performed lazily using Dask/Zarr arrays. True will also return a Dask array view of the
         distance matrix stored on disk instead of a numpy array stored in memory.
+    hpc: bool
+        Whether the code is running on a high-performance computing (HPC) environment. This can affect how Dask is configured.
     verbose : bool
         Whether to show progress
 
@@ -179,7 +180,7 @@ def calculate_distance_matrix_zarr(
 
     # Setup Dask client
     client = _setup_dask_client(
-        num_cores, memory_limit_gb, hpc=running_on_hpc()
+        num_cores=num_cores, memory_limit_gb=memory_limit_gb, hpc=hpc
     )
 
     try:
@@ -254,6 +255,7 @@ def _compute_multicol_distances_streaming(
     client: Client | None = None,
     membership: dict | None = None,
     lock: Lock | None = None,
+    hpc: bool = False,
     verbose: bool = True,
 ):
     """
@@ -369,7 +371,7 @@ def _compute_multicol_distances_streaming(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
         # Persist batches as lists of dask arrays, one array per element
-        if running_on_hpc() and client is not None:
+        if hpc and client is not None:
             batched_seqs_m = [
                 [
                     client.persist(
@@ -421,18 +423,17 @@ def _compute_multicol_distances_streaming(
         seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
         chunks_list = np.array_split(seqs_computed, n_chunks)
         # Convert each chunk to a dask array if client is provided
-        if running_on_hpc():
-            if client is not None:
-                chunks_list = [
-                    client.persist(
-                        da.from_delayed(
-                            dask.delayed(lambda x: x)(chunk),
-                            shape=chunk.shape,
-                            dtype=object,
-                        )
+        if hpc and client is not None:
+            chunks_list = [
+                client.persist(
+                    da.from_delayed(
+                        dask.delayed(lambda x: x)(chunk),
+                        shape=chunk.shape,
+                        dtype=object,
                     )
-                    for chunk in chunks_list
-                ]
+                )
+                for chunk in chunks_list
+            ]
 
         chunk_sizes = [len(c) for c in chunks_list]
         cum_sizes = np.cumsum([0] + chunk_sizes)
