@@ -368,23 +368,20 @@ def _compute_multicol_distances_streaming(
         )
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
             # Convert to dask arrays
-            seq_batch_dask = da.from_array(
-                np.concatenate(seq),
-                chunks=(sum(len(s) for s in seq), seq[0].shape[1]),
-            )
-            idx_batch_dask = da.from_array(
-                np.concatenate(idx), chunks=(sum(len(i) for i in idx),)
-            )
+            seq_lengths = [len(s) for s in seq]
+            seqs_cat = np.concatenate(seq, axis=0)
+            idxs_cat = np.concatenate(idx, axis=0)
 
             # Persist **this batch only**
             if running_on_hpc() and client is not None:
-                seq_batch_dask = client.persist(seq_batch_dask)
-                idx_batch_dask = client.persist(idx_batch_dask)
+                seqs_cat = client.scatter(seqs_cat)
+                idxs_cat = client.scatter(idxs_cat)
 
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
-                    batch_seqs_m=seq_batch_dask,
-                    batch_idx_m=idx_batch_dask,
+                    batch_seqs_m=seqs_cat,
+                    batch_idx_m=idxs_cat,
+                    seq_lengths=seq_lengths,
                     metric=metric,
                     pad_to_max=pad_to_max,
                     z_array=z_array,
@@ -570,25 +567,18 @@ def _compute_and_write_block(
 def _process_batch(
     batch_seqs_m: list[np.ndarray],
     batch_idx_m: list[list[int]],
+    seq_lengths: list[int],
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,  # Single lock for this batch
 ):
-    if isinstance(batch_seqs_m, da.Array):
-        batch_seqs_m = batch_seqs_m.compute()
-    if isinstance(batch_idx_m, da.Array):
-        batch_idx_m = batch_idx_m.compute()
-    seqs_cat = np.concatenate(batch_seqs_m, axis=0)
-    idxs_cat = np.concatenate(batch_idx_m, axis=0)
-
-    lengths = [len(s) for s in batch_seqs_m]
-    boundaries = np.cumsum(lengths)
+    boundaries = np.cumsum(seq_lengths)
     boundaries = np.insert(boundaries, 0, 0)
 
     results = _compute_and_write_membership_cat(
-        seqs_cat=seqs_cat,
-        idxs_cat=idxs_cat,
+        seqs_cat=batch_seqs_m,
+        idxs_cat=batch_idx_m,
         boundaries=boundaries,
         metric=metric,
         pad_to_max=pad_to_max,
