@@ -5,6 +5,7 @@ import shutil
 import zarr
 import zarr.storage
 
+import dask
 import dask.array as da
 import numpy as np
 import pandas as pd
@@ -563,15 +564,17 @@ def _process_batch(
     client: Client | None,
 ):
     if running_on_hpc() and client is not None:
-        batch_seqs_m = client.persist(
-            da.from_array(
-                batch_seqs_m,
-                chunks=(batch_seqs_m.shape[0], batch_seqs_m.shape[1]),
-            )
-        )
-        batch_idx_m = client.persist(
-            da.from_array(batch_idx_m, chunks=(batch_idx_m.shape[0],))
-        )
+        # persist each sequence in each batch
+        batch_seqs_m = [
+            [client.persist(dask.delayed(seq)) for seq in batch]
+            for batch in batch_seqs_m
+        ]
+
+        # persist each idx array
+        batch_idx_m = [
+            [client.persist(dask.delayed(idx)) for idx in batch]
+            for batch in batch_idx_m
+        ]
     seqs_cat = np.concatenate(batch_seqs_m, axis=0)
     idxs_cat = np.concatenate(batch_idx_m, axis=0)
 
