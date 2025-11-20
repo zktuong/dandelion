@@ -14,6 +14,7 @@ from pathlib import Path
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
+from sklearn.metrics import pairwise_distances
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
 from typing import Callable, Literal, TYPE_CHECKING
@@ -693,7 +694,6 @@ def calculate_distance_matrix_original(
     # iterate clones (membership) exactly like original
     for clone in tqdm(
         membership,
-        desc="Calculating distances (original, by membership)",
         disable=not verbose,
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
@@ -711,7 +711,9 @@ def calculate_distance_matrix_original(
                     pdist(
                         tdarray,
                         lambda x, y: (
-                            metric.compute(x[0], y[0])
+                            dist_func_long_sep(
+                                x[0], y[0], metric=metric, sep=""
+                            )
                             if (pd.notnull(x[0]) and pd.notnull(y[0]))
                             else 0
                         ),
@@ -787,32 +789,26 @@ def calculate_distance_matrix_original_full(
             continue
         # seq_indices = list(nonnull.index)
         seqs = nonnull.to_numpy(dtype=object)
-        m = len(seqs)
         if num_cores > 1:
-            results = Parallel(n_jobs=num_cores)(
-                delayed(_compute_row)(i, seqs, m, metric)
-                for i in tqdm(
-                    range(n), disable=not verbose, leave=False, position=0
-                )
+            results = pairwise_distances(
+                seqs,
+                metric=lambda x, y: (
+                    dist_func_long_sep(x, y, metric=metric, sep="")
+                ),
+                n_jobs=num_cores,
             )
-            for i in tqdm(
-                range(n), disable=not verbose, leave=False, position=0
-            ):
-                for j in range(i + 1, n):
-                    total_dist[i][j] += results[i][j]
-                    total_dist[j][i] += results[i][j]
         else:
             results = squareform(
                 pdist(
                     seqs.reshape(-1, 1),
                     lambda x, y: (
-                        metric.compute(x[0], y[0])
+                        dist_func_long_sep(x[0], y[0], metric=metric, sep="")
                         if (pd.notnull(x[0]) and pd.notnull(y[0]))
                         else 0
                     ),
                 )
             )
-            total_dist += results
+        total_dist += results
 
     np.fill_diagonal(total_dist, np.nan)
     if verbose:
@@ -872,18 +868,17 @@ def calculate_distance_matrix_long(
         # Step 3: compute full distance matrix at once
         seqs = dat_seq_clean.values
         if num_cores > 1:
-            results = Parallel(n_jobs=num_cores)(
-                delayed(_compute_row)(i, seqs, n, metric)
-                for i in tqdm(
-                    range(n), disable=not verbose, leave=False, position=0
-                )
+            results = pairwise_distances(
+                seqs,
+                metric=lambda x, y: (
+                    dist_func_long_sep(
+                        x, y, metric=metric, pad_to_max=pad_to_max, sep=sep
+                    )
+                    if (pd.notnull(x) and pd.notnull(y))
+                    else 0
+                ),
+                n_jobs=num_cores,
             )
-            for i in tqdm(
-                range(n), disable=not verbose, leave=False, position=0
-            ):
-                for j in range(i + 1, n):
-                    total_dist[i][j] += results[i][j]
-                    total_dist[j][i] += results[i][j]
         else:
             results = squareform(
                 pdist(
@@ -902,7 +897,6 @@ def calculate_distance_matrix_long(
         # Step 3: iterate over clone memberships
         for clone in tqdm(
             membership,
-            desc="Calculating distances (original, by membership)",
             disable=not verbose,
             bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
         ):
@@ -935,52 +929,3 @@ def calculate_distance_matrix_long(
             f"Distances calculated in {end_time - start_time:.2f} seconds"
         )
     return total_dist
-
-
-def _compute_distance(
-    i: int,
-    j: int,
-    sequences: np.ndarray,
-    metric: Metric,
-    sep: str = "#",
-    pad_to_max: bool = False,
-) -> tuple:
-    """Helper to compute distance between two sequences at indices i and j."""
-    return (
-        dist_func_long_sep(
-            sequences[i],
-            sequences[j],
-            metric=metric,
-            sep=sep,
-            pad_to_max=pad_to_max,
-        )
-        if (pd.notnull(sequences[i]) and pd.notnull(sequences[j]))
-        else 0
-    )
-
-
-def _compute_row(
-    i: int,
-    sequences: np.ndarray,
-    n: int,
-    metric: Metric,
-    sep: str = "#",
-    pad_to_max: bool = False,
-) -> list:
-    """Helper to compute a row of the distance matrix."""
-    row_distances = [
-        (
-            _compute_distance(
-                i,
-                j,
-                sequences,
-                metric=metric,
-                sep=sep,
-                pad_to_max=pad_to_max,
-            )
-            if j > i
-            else 0
-        )
-        for j in range(n)
-    ]
-    return row_distances
