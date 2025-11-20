@@ -165,7 +165,7 @@ def calculate_distance_matrix_zarr(
             fill_value=0.0,
         )
 
-    zarr_lock = Lock("zarr_distance_matrix_lock") if num_cores > 1 else None
+    # zarr_lock = Lock("zarr_distance_matrix_lock") if num_cores > 1 else None
 
     # Store metadata
     z_array.attrs["n_sequences"] = n
