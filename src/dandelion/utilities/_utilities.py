@@ -1526,7 +1526,7 @@ class SubstitutionMatrixMetric:
         if len_diff > 0:
             score += len_diff * self.gap_penalty
 
-        return -score
+        return max(0, -score)
 
 
 # -------------------------
