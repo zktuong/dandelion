@@ -364,6 +364,36 @@ def _compute_multicol_distances_streaming(
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
+        if client is not None:
+            # Persist batches as lists of dask arrays, one array per element
+            batched_seqs_m = [
+                [
+                    client.persist(
+                        da.from_delayed(
+                            dask.delayed(seq),
+                            shape=(seq.shape[0], seq.shape[1]),
+                            dtype=object,
+                        )
+                    )
+                    for seq in batch
+                ]
+                for batch in batched_seqs_m
+            ]
+
+            # Indices are usually small, can remain as NumPy arrays, but if you want:
+            batched_idx_m = [
+                [
+                    client.persist(
+                        da.from_delayed(
+                            dask.delayed(idx),
+                            shape=(len(idx),),
+                            dtype=object,
+                        )
+                    )
+                    for idx in batch
+                ]
+                for batch in batched_idx_m
+            ]
         for idx, seq in zip(batched_idx_m, batched_seqs_m):
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
@@ -761,12 +791,27 @@ def merge_tmp_arrays(
     verbose : bool
         Whether to show progress bar.
     """
+    chunk_shape = main_array.chunks
+
     for tmp_dir in tqdm(
         tmp_results,
         disable=not verbose,
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
         tmp_array = zarr.open(tmp_dir + "/tmp.zarr", mode="r")
-        main_array[:] += tmp_array[:]
-        # Clean up temporary directory
+
+        # Iterate over chunks
+        for idx in np.ndindex(
+            *[
+                s // c + int(s % c != 0)
+                for s, c in zip(main_array.shape, chunk_shape)
+            ]
+        ):
+            slices = tuple(
+                slice(i * c, min((i + 1) * c, s))
+                for i, c, s in zip(idx, chunk_shape, main_array.shape)
+            )
+            main_array[slices] += tmp_array[slices]
+
+        # Clean up
         shutil.rmtree(tmp_dir)
