@@ -1512,11 +1512,9 @@ class SubstitutionMatrixMetric:
                 self.matrix[(b, a)] = v  # ensure symmetric access
 
     def compute(self, s1: str, s2: str) -> float:
-        if s1 == s2:
-            return -sum(self.matrix[(c, c)] for c in s1)
-
         min_len = min(len(s1), len(s2))
         score = 0.0
+
         for i in range(min_len):
             a, b = s1[i], s2[i]
             score += self.matrix.get((a, b), self.gap_penalty)
@@ -1526,7 +1524,8 @@ class SubstitutionMatrixMetric:
         if len_diff > 0:
             score += len_diff * self.gap_penalty
 
-        return max(0, -score)
+        # Convert similarity → distance, clamp at 0
+        return max(0.0, -score)
 
 
 # -------------------------
