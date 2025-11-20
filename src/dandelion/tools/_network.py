@@ -25,14 +25,16 @@ if TYPE_CHECKING:
 from dandelion.tools._tools import vdj_sample
 from dandelion.tools._layout import generate_layout
 from dandelion.utilities._core import Dandelion, Query
+from dandelion.utilities._distances import (
+    Metric,
+    dist_func_long_sep,
+    resolve_metric,
+)
 from dandelion.utilities._utilities import (
     present,
     sanitize_data,
-    Metric,
     Tree,
     FALSES,
-    dist_func_long_sep,
-    resolve_metric,
 )
 
 

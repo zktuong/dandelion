@@ -12,10 +12,9 @@ from dask.diagnostics import ProgressBar
 from dask.distributed import Client, progress, Lock
 from pathlib import Path
 from scanpy import logging as logg
-from typing import Callable
 from zarr.codecs import BloscCodec
 
-from dandelion.utilities._utilities import dist_func_long_sep, Metric
+from dandelion.utilities._distances import dist_func_long_sep, Metric
 
 
 def calculate_distance_matrix_zarr(
