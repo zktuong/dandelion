@@ -562,22 +562,22 @@ def _process_batch(
     lock: Lock | None,  # Single lock for this batch
     client: Client | None,
 ):
+    if running_on_hpc() and client is not None:
+        batch_seqs_m = client.persist(
+            da.from_array(
+                batch_seqs_m,
+                chunks=(batch_seqs_m.shape[0], batch_seqs_m.shape[1]),
+            )
+        )
+        batch_idx_m = client.persist(
+            da.from_array(batch_idx_m, chunks=(batch_idx_m.shape[0],))
+        )
     seqs_cat = np.concatenate(batch_seqs_m, axis=0)
     idxs_cat = np.concatenate(batch_idx_m, axis=0)
 
     lengths = [len(s) for s in batch_seqs_m]
     boundaries = np.cumsum(lengths)
     boundaries = np.insert(boundaries, 0, 0)
-
-    if running_on_hpc() and client is not None:
-        seqs_cat = client.persist(
-            da.from_array(
-                seqs_cat, chunks=(seqs_cat.shape[0], seqs_cat.shape[1])
-            )
-        )
-        idxs_cat = client.persist(
-            da.from_array(idxs_cat, chunks=(idxs_cat.shape[0],))
-        )
 
     results = _compute_and_write_membership_cat(
         seqs_cat=seqs_cat,
