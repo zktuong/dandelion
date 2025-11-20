@@ -569,11 +569,15 @@ def _process_batch(
     boundaries = np.cumsum(lengths)
     boundaries = np.insert(boundaries, 0, 0)
 
-    if running_on_hpc():
-        if client is not None:
-            # Persist batches as lists of dask arrays, one array per element
-            seqs_cat = client.persist(seqs_cat)
-            idxs_cat = client.persist(idxs_cat)
+    if running_on_hpc() and client is not None:
+        seqs_cat = client.persist(
+            da.from_array(
+                seqs_cat, chunks=(seqs_cat.shape[0], seqs_cat.shape[1])
+            )
+        )
+        idxs_cat = client.persist(
+            da.from_array(idxs_cat, chunks=(idxs_cat.shape[0],))
+        )
 
     results = _compute_and_write_membership_cat(
         seqs_cat=seqs_cat,
