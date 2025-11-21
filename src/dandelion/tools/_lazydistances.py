@@ -367,53 +367,105 @@ def _compute_multicol_distances_streaming(
         avg_clonotypes_per_batch = sum(len(b) for b in batched_seqs_m) / len(
             batched_idx_m
         )
+        seq_lengths = [[len(s) for s in seq] for seq in batched_seqs_m]
         logg.info(
             msg=f"Created {len(batched_seqs_m)} chunks for distance computation of ~{math.ceil(avg_clonotypes_per_batch)} clonotypes per batch...",
         )
-        # Persist batches as lists of dask arrays, one array per element
-        if hpc and client is not None:
-            batched_seqs_m = [
-                [
-                    client.persist(
-                        da.from_delayed(
-                            dask.delayed(seq),
-                            shape=(seq.shape[0], seq.shape[1]),
-                            dtype=object,
-                        )
-                    )
-                    for seq in batch
-                ]
-                for batch in batched_seqs_m
-            ]
-
-            # Indices are usually small, can remain as NumPy arrays, but if you want:
-            batched_idx_m = [
-                [
-                    client.persist(
-                        da.from_delayed(
-                            dask.delayed(idx),
-                            shape=(len(idx),),
-                            dtype=object,
-                        )
-                    )
-                    for idx in batch
-                ]
-                for batch in batched_idx_m
-            ]
-        for idx, seq in zip(batched_idx_m, batched_seqs_m):
-            # Convert to dask arrays
-            seq_lengths = [len(s) for s in seq]
+        concatenated_batches_seqs = []
+        concatenated_batches_idx = []
+        for batch_seqs, batch_idx in zip(batched_seqs_m, batched_idx_m):
+            total_rows = sum(s.shape[0] for s in batch_seqs)
+            seq_width = batch_seqs[0].shape[1]
+            total_idx = sum(i.shape[0] for i in batch_idx)
+            if client is not None:
+                # 1. Submit concatenations to workers
+                fut_seqs = client.submit(np.concatenate, batch_seqs, axis=0)
+                fut_idx = client.submit(np.concatenate, batch_idx, axis=0)
+                # 2. Create dask arrays from futures
+                darr_seqs = da.from_delayed(
+                    fut_seqs,
+                    shape=(total_rows, seq_width),
+                    dtype=object,
+                )
+                total_idx = sum(x.shape[0] for x in batch_idx)
+                darr_idx = da.from_delayed(
+                    fut_idx,
+                    shape=(total_idx,),
+                    dtype=object,
+                )
+                # 3. persist
+                concatenated_batches_seqs.append(client.persist(darr_seqs))
+                concatenated_batches_idx.append(client.persist(darr_idx))
+            else:
+                concatenated_batches_seqs.append(
+                    np.concatenate(batch_seqs, axis=0)
+                )
+                concatenated_batches_idx.append(
+                    np.concatenate(batch_idx, axis=0)
+                )
+        for seq_cat, idx_cat, seq_len in zip(
+            concatenated_batches_seqs,
+            concatenated_batches_idx,
+            seq_lengths,
+        ):
             delayed_blocks.append(
                 dask.delayed(_process_batch)(
-                    batch_seqs_m=seq,
-                    batch_idx_m=idx,
-                    seq_lengths=seq_lengths,
+                    seq_cat=seq_cat,
+                    idx_cat=idx_cat,
+                    seq_lengths=seq_len,
                     metric=metric,
                     pad_to_max=pad_to_max,
                     z_array=z_array,
                     lock=lock,
                 )
             )
+
+        # Persist batches as lists of dask arrays, one array per element
+        # if client is not None:
+        # batched_seqs_m = [
+        #     [
+        #         client.persist(
+        #             da.from_delayed(
+        #                 dask.delayed(seq),
+        #                 shape=(seq.shape[0], seq.shape[1]),
+        #                 dtype=object,
+        #             )
+        #         )
+        #         for seq in batch
+        #     ]
+        #     for batch in batched_seqs_m
+        # ]
+
+        # Indices are usually small, can remain as NumPy arrays, but if you want:
+        # batched_idx_m = [
+        #     [
+        #         client.persist(
+        #             da.from_delayed(
+        #                 dask.delayed(idx),
+        #                 shape=(len(idx),),
+        #                 dtype=object,
+        #             )
+        #         )
+        #         for idx in batch
+        #     ]
+        #     for batch in batched_idx_m
+        # ]
+
+        # for idx, seq, seq_len in zip(
+        #     batched_idx_m, batched_seqs_m, seq_lengths
+        # ):
+        #     # Convert to dask arrays
+        #     delayed_blocks.append(
+        #         dask.delayed(_process_batch)(
+        #             seq_cat=seq,
+        #             idx_cat=idx,
+        #             seq_lengths=seq_len,
+        #             metric=metric,
+        #             pad_to_max=pad_to_max,
+        #             z_array=z_array,
+        #             lock=lock,
+        #         )
+        #     )
     else:
         # Determine number of chunks
         n_chunks = max(1, math.ceil(m / chunk_size))
@@ -590,16 +642,16 @@ def _compute_and_write_block(
 
 
 def _process_batch(
-    batch_seqs_m: list[np.ndarray],
-    batch_idx_m: list[list[int]],
+    seq_cat: list[np.ndarray],
+    idx_cat: list[list[int]],
     seq_lengths: list[int],
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
     lock: Lock | None,  # Single lock for this batch
 ):
-    seq_cat = np.concatenate(batch_seqs_m, axis=0)
-    idx_cat = np.concatenate(batch_idx_m, axis=0)
+    # seq_cat = np.concatenate(batch_seqs_m, axis=0)
+    # idx_cat = np.concatenate(batch_idx_m, axis=0)
     boundaries = np.cumsum(seq_lengths)
     boundaries = np.insert(boundaries, 0, 0)
 
@@ -661,6 +713,7 @@ def _compute_and_write_membership_cat(
     Compute distances within each membership group only.
     """
     # Compute full block once
+    print(seqs_cat)
     block = _compute_block_multicol(seqs_cat, seqs_cat, metric, pad_to_max)
 
     n_groups = len(boundaries) - 1
