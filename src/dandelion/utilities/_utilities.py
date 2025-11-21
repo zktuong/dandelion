@@ -1395,29 +1395,3 @@ def get_vcall_key(data: dict, v_call_key: str) -> str:
         return v_call_key
     else:
         return "v_call"
-
-
-def running_on_hpc() -> bool:
-    """
-    Check if the current environment is running on a High-Performance Computing (HPC) cluster
-    by looking for common scheduler environment variables.
-
-    Returns
-    -------
-    bool
-        True if running on an HPC cluster, False otherwise.
-    """
-    scheduler_env_vars = [
-        # SLURM
-        "SLURM_JOB_ID",
-        "SLURM_CPUS_PER_TASK",
-        "SLURM_NODEID",
-        # PBS
-        "PBS_JOBID",
-        "PBS_NODEFILE",
-        # LSF
-        "LSB_JOBID",
-        # SGE
-        "JOB_ID",
-    ]
-    return any(var in os.environ for var in scheduler_env_vars)

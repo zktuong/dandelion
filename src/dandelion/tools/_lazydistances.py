@@ -34,7 +34,6 @@ def calculate_distance_matrix_zarr(
     compress: bool = True,
     lazy: bool = False,
     verbose: bool = True,
-    hpc: bool = False,
 ) -> np.ndarray | da.Array:
     """
     Compute full pairwise distance matrix writing directly to Zarr.
@@ -79,8 +78,6 @@ def calculate_distance_matrix_zarr(
     lazy: bool, optional
         If True, computation will be performed lazily using Dask/Zarr arrays. True will also return a Dask array view of the
         distance matrix stored on disk instead of a numpy array stored in memory.
-    hpc: bool
-        Whether the code is running on a high-performance computing (HPC) environment. This can affect how Dask is configured.
     verbose : bool
         Whether to show progress
 
@@ -180,7 +177,7 @@ def calculate_distance_matrix_zarr(
 
     # Setup Dask client
     client = _setup_dask_client(
-        num_cores=num_cores, memory_limit_gb=memory_limit_gb, hpc=hpc
+        num_cores=num_cores, memory_limit_gb=memory_limit_gb
     )
 
     try:
@@ -255,7 +252,6 @@ def _compute_multicol_distances_streaming(
     client: Client | None = None,
     membership: dict | None = None,
     lock: Lock | None = None,
-    hpc: bool = False,
     verbose: bool = True,
 ):
     """
@@ -475,7 +471,7 @@ def _compute_multicol_distances_streaming(
         seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
         chunks_list = np.array_split(seqs_computed, n_chunks)
         # Convert each chunk to a dask array if client is provided
-        if hpc and client is not None:
+        if client is not None:
             chunks_list = [
                 client.persist(
                     da.from_delayed(
@@ -794,7 +790,7 @@ def _auto_chunk_size(
 
 
 def _setup_dask_client(
-    num_cores: int, memory_limit_gb: float | None = None, hpc: bool = False
+    num_cores: int, memory_limit_gb: float | None = None
 ) -> Client | None:
     """
     Setup Dask distributed client.
@@ -805,8 +801,6 @@ def _setup_dask_client(
         Number of workers
     memory_limit_gb : float, optional
         Memory limit per worker
-    hpc : bool
-        Whether running on HPC (affects client setup)
 
     Returns
     -------
@@ -823,13 +817,9 @@ def _setup_dask_client(
         return None
 
     client_kwargs = {
-        "n_workers": num_cores if not hpc else 1,
-        "threads_per_worker": (
-            1 if not hpc else num_cores
-        ),  # for simplicity and to avoid GIL issues
-        "processes": (
-            True if not hpc else False
-        ),  # Critical for memory isolation
+        "n_workers": num_cores,
+        "threads_per_worker": 1,  # for simplicity and to avoid GIL issues
+        "processes": True,  # Critical for memory isolation
     }
 
     if memory_limit_gb is not None:
