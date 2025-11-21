@@ -713,7 +713,6 @@ def _compute_and_write_membership_cat(
     Compute distances within each membership group only.
     """
     # Compute full block once
-    print(seqs_cat)
     block = _compute_block_multicol(seqs_cat, seqs_cat, metric, pad_to_max)
 
     n_groups = len(boundaries) - 1
