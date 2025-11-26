@@ -143,9 +143,7 @@ def calculate_distance_matrix_zarr(
     )
 
     # Create temporary Zarr array
-    tmp_dir = tempfile.mkdtemp()
-    tmp_zarr_array = tmp_dir + "/tmp.zarr"
-    store = zarr.storage.LocalStore(tmp_zarr_array)
+    store = zarr.storage.LocalStore(zarr_path)
     root = zarr.open_group(store=store, mode="w")
 
     # create temp Zarr array without compression for writing first
@@ -155,6 +153,7 @@ def calculate_distance_matrix_zarr(
         chunks=(chunk_size, chunk_size),
         dtype="float64",
         fill_value=0.0,
+        compressors=[comp] if compress else None,
     )
 
     # Store metadata
@@ -185,8 +184,8 @@ def calculate_distance_matrix_zarr(
             client=client,
             membership=membership,
             verbose=verbose,
+            compress=compress,
         )
-        z_array = compress_array(tmp_zarr_array, zarr_path, comp)
 
         # Set diagonal to NaN
         for i in range(0, n, chunk_size):
@@ -244,6 +243,7 @@ def _compute_multicol_distances_streaming(
     client: Client | None = None,
     membership: dict | None = None,
     verbose: bool = True,
+    compress: bool = True,
 ):
     """
     Compute distance matrix using concatenation across all columns,
@@ -405,6 +405,7 @@ def _compute_multicol_distances_streaming(
                     metric=metric,
                     pad_to_max=pad_to_max,
                     z_array=z_array,
+                    compress=compress,
                 )
             )
     else:
@@ -449,6 +450,7 @@ def _compute_multicol_distances_streaming(
                         start_j=start_j,
                         end_j=end_j,
                         is_diagonal=is_diagonal,
+                        compress=compress,
                     )
                 )
 
@@ -511,19 +513,14 @@ def _compute_and_write_block(
     start_j: int,
     end_j: int,
     is_diagonal: bool,
+    compress: bool = True,
 ):
     """
     Compute a single block and write it directly to Zarr.
     """
     block = _compute_block_multicol(chunk_i, chunk_j, metric, pad_to_max)
-    tmp_dir = tempfile.mkdtemp()
-    tmp_array = zarr.open(
-        tmp_dir + "/tmp.zarr",
-        mode="w",
-        shape=z_array.shape,
-        chunks=z_array.chunks,
-        dtype=z_array.dtype,
-    )
+    tmp_array, tmp_dir = create_tmp_zarr(z_array, compress)
+
     # Write to Zarr immediately
     tmp_array[start_i:end_i, start_j:end_j] = block
     # If not diagonal block, write transpose too
@@ -540,6 +537,7 @@ def _process_batch(
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
+    compress: bool = True,
 ):
     boundaries = np.cumsum(seq_lengths)
     boundaries = np.insert(boundaries, 0, 0)
@@ -551,6 +549,7 @@ def _process_batch(
         metric=metric,
         pad_to_max=pad_to_max,
         z_array=z_array,
+        compress=compress,
     )
     return results
 
@@ -562,22 +561,16 @@ def _compute_and_write_membership_cat(
     metric: Metric,
     pad_to_max: bool,
     z_array: zarr.Array,
+    compress: bool = True,
 ):
     """
     Compute distances within each membership group only.
     """
     # Compute full block once
     block = _compute_block_multicol(seqs_cat, seqs_cat, metric, pad_to_max)
-
+    # compress the tmp_array
     n_groups = len(boundaries) - 1
-    tmp_dir = tempfile.mkdtemp()
-    tmp_array = zarr.open(
-        tmp_dir + "/tmp.zarr",
-        mode="w",
-        shape=z_array.shape,
-        chunks=z_array.chunks,
-        dtype=z_array.dtype,
-    )
+    tmp_array, tmp_dir = create_tmp_zarr(z_array, compress)
     # Only process diagonal blocks (within each group)
     for g in range(n_groups):
         s, e = boundaries[g], boundaries[g + 1]
@@ -727,8 +720,8 @@ def merge_tmp_arrays(
         disable=not verbose,
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
-        tmp_array = zarr.open(tmp_dir + "/tmp.zarr", mode="r")
-
+        root = zarr.open_group(tmp_dir + "/tmp.zarr", mode="r")
+        tmp_array = root["distance_matrix"]
         # Iterate over chunks
         main_array[:] += tmp_array[:]
 
@@ -736,28 +729,19 @@ def merge_tmp_arrays(
         shutil.rmtree(tmp_dir)
 
 
-def compress_array(
-    in_path: Path | str,
-    out_path: Path | str,
-    compressor: BloscCodec | None = None,
-) -> None:
-    # Load uncompressed array
-    src = zarr.open(str(in_path) + "/distance_matrix", mode="r")
-
-    store = zarr.storage.LocalStore(str(out_path))
+def create_tmp_zarr(z_array: zarr.Array, compress: bool = True) -> zarr.Array:
+    """Assist function to create a temporary zarr array with same shape/chunks as input z_array."""
+    tmp_dir = tempfile.mkdtemp()
+    comp = BloscCodec(cname="zstd", clevel=3, shuffle="bitshuffle")
+    store = zarr.storage.LocalStore(tmp_dir + "/tmp.zarr")
     root = zarr.open_group(store=store, mode="w")
-    # Create destination compressed array
-    z_array = root.create_array(
+    # create temp Zarr array without compression for writing first
+    tmp_array = root.create_array(
         "distance_matrix",
-        shape=src.shape,
-        chunks=src.chunks,
-        dtype=src.dtype,
-        compressors=[compressor] if compressor is not None else None,
+        shape=z_array.shape,
+        chunks=z_array.chunks,
+        dtype=z_array.dtype,
         fill_value=0.0,
+        compressors=[comp] if compress else None,
     )
-
-    # Bulk copy (best possible performance)
-    z_array[:] = src[:]
-    # remove temporary uncompressed array
-    shutil.rmtree(in_path)
-    return z_array
+    return tmp_array, tmp_dir
