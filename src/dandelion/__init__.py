@@ -4,18 +4,19 @@ from dandelion import utilities as utl
 from dandelion import tools as tl
 from dandelion import plotting as pl
 from dandelion.utilities import (
-    concat,
     Dandelion,
-    from_scirpy,
     load_data,
-    read_airr,
     read_10x_airr,
     read_10x_vdj,
-    read_parse_airr,
+    read_airr,
     read_bd_airr,
     read_h5ddl,
+    read_parse_airr,
     read_pkl,
-    to_scirpy,
+    write_airr,
+    write_blastn,
+    write_fasta,
+    write_output,
 )
 from dandelion.logging import (
     __author__,
@@ -48,4 +49,11 @@ __all__ = [
     "tl",
     "to_scirpy",
     "utl",
+    "write_airr",
+    "write_blastn",
+    "write_fasta",
+    "write_output",
+    "to_ak",
+    "from_ak",
+    "Query",
 ]

@@ -37,7 +37,6 @@ def test_find_clones_after_network(airr_generic):
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction_aa", layout_method="mod_fr")
     vdj2 = vdj.copy()
-    vdj2.threshold = 0.01
     vdj2.germline = {"dummy": "something"}
     ddl.tl.find_clones(vdj2)
     assert not vdj2.data.clone_id.empty

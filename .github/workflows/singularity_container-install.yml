@@ -12,6 +12,7 @@ jobs:
   changes:
     name: Checking changed files
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     outputs:
       keepgoing: ${{ steps.changed-files.outputs.any_changed }}
     steps:

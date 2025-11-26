@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 import pytest
-
-# import sys
 import pandas as pd
+
+from unittest.mock import patch
+
 import dandelion as ddl
 
 
@@ -43,6 +43,23 @@ def test_mutation(create_testfolder, airr_reannotated):
     assert not vdj.data.mu_freq.empty
 
 
+@patch("matplotlib.pyplot.show")
+@pytest.mark.usefixtures("create_testfolder", "annotation_10x_mouse")
+# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+def test_calculate_threshold(
+    mock_show, create_testfolder, annotation_10x_mouse
+):
+    """test threshold"""
+    out_file = create_testfolder / "filtered_contig_annotations.csv"
+    annotation_10x_mouse.to_csv(out_file, index=False)
+    vdj = ddl.read_10x_vdj(out_file)
+    try:
+        tr = ddl.pp.calculate_threshold(vdj)
+        assert tr > 0.0
+    except:
+        pytest.skip("R package 'shazam' not installed")
+
+
 @pytest.mark.usefixtures("create_testfolder", "database_paths")
 # @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
 def test_create_germlines(create_testfolder, database_paths):
@@ -61,10 +78,9 @@ def test_manual_threshold_and_define_clones(create_testfolder):
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
-    vdj.threshold = 0.1
-    ddl.tl.define_clones(vdj)
+    ddl.tl.define_clones(vdj, dist=0.1)
     assert not vdj.data.clone_id.empty
-    ddl.tl.define_clones(vdj, key_added="changeo_clone")
+    ddl.tl.define_clones(vdj, dist=0.1, key_added="changeo_clone")
     assert not vdj.data.changeo_clone.empty
 
 
@@ -75,11 +91,10 @@ def test_define_clones_outdir(create_testfolder):
     f = create_testfolder / "test.tsv"
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
-    vdj.threshold = 0.1
     out_path = (
         create_testfolder / "test" / "test"
     )  # this path shouldn't exist initially
-    ddl.tl.define_clones(vdj, out_dir=out_path)
+    ddl.tl.define_clones(vdj, dist=0.1, out_dir=out_path)
     assert len(list(out_path.iterdir())) == 3
     assert len(list((out_path / "tmp").iterdir())) == 2
 
