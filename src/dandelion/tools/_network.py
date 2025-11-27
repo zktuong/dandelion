@@ -236,7 +236,7 @@ def generate_network(
         # ensure that dat_seq matches order of vdj_data.metadata
         dat_seq = dat_seq.reindex(vdj_data.metadata.index)
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
-        if distance_mode == "clone":
+        if compute_graph or compute_layout or distance_mode == "clone":
             dat_clone = querier.retrieve(
                 query=clone_key, retrieve_mode="merge and unique only"
             )
