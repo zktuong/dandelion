@@ -28,8 +28,6 @@ from dandelion.tools._trajectory import (
     pseudotime_transfer,
     project_pseudotime_to_cell,
     pseudobulk_gex,
-    bin_expression,
-    chatterjee_corr,
 )
 
 __all__ = [
@@ -53,8 +51,6 @@ __all__ = [
     "pseudotime_transfer",
     "project_pseudotime_to_cell",
     "pseudobulk_gex",
-    "bin_expression",
-    "chatterjee_corr",
     "swap_view",
     "vdj_sample",
     "to_ak",

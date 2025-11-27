@@ -173,7 +173,7 @@ def decode(df):
 
 def read_h5ddl(
     filename: Path | str = "dandelion_data.h5ddl",
-    distance_zarr_array: Path | str | None = None,
+    distance_zarr: Path | str | None = None,
 ) -> Dandelion:
     """
     Read in and returns a Dandelion class from .h5ddl format.
@@ -182,8 +182,8 @@ def read_h5ddl(
     ----------
     filename : Path | str, optional
         path to `.h5ddl` file
-    distance_zarr_array : Path | str | None, optional
-        path to Zarr array for distances if computed lazy.
+    distance_zarr : Path | str | None, optional
+        path to Zarr array for distances if computed lazily.
 
     Returns
     -------
@@ -198,6 +198,7 @@ def read_h5ddl(
     data = decode(load_data(_read_h5_group(filename, group="data")))
     # final decode to ensure all byte strings are converted to str
     metadata = _read_h5_group(filename, group="metadata")
+
     try:
         metadata_names = _read_h5_group(filename, group="metadata_names")
         metadata.index = metadata_names
@@ -210,34 +211,31 @@ def read_h5ddl(
         graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
         graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
-    except:
+    except KeyError:
         pass
 
     try:
         distances = _read_h5_csr_matrix(
             filename, group="distances", as_df=False
         )
-        if distance_zarr_array is not None:
-            # read in the zarr array as a dask array
+    except KeyError:
+        if distance_zarr is not None:
             import dask.array as da
 
-            distances = da.from_zarr(distance_zarr_array)
-    except:
-        pass
+            distances = da.from_zarr(str(distance_zarr) + "/distance_matrix")
 
     try:
         layout0 = _read_h5_dict(filename, group="layout/layout_0")
         layout1 = _read_h5_dict(filename, group="layout/layout_1")
         layout = (layout0, layout1)
-    except:
+    except KeyError:
         pass
 
     try:
         germline = _read_h5_zip(
             filename, group="germline", key_group="keys", value_group="values"
         )
-    except:
-
+    except KeyError:
         pass
 
     constructor = {}
@@ -252,12 +250,10 @@ def read_h5ddl(
         constructor["graph"] = graph
     if "distances" in locals():
         constructor["distances"] = distances
-    try:
-        res = Dandelion(**constructor, verbose=False)
-        # ensure that the metadata is decoded
-        res.metadata = decode(res.metadata)
-    except:
-        res = Dandelion(**constructor, initialize=False, verbose=False)
+
+    res = Dandelion(**constructor, verbose=False)
+    # ensure that the metadata is decoded
+    res.metadata = decode(res.metadata)
 
     return res
 

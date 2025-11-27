@@ -21,27 +21,25 @@ Tools: `tl`
 .. autosummary::
    :toctree: .
 
-
-   transfer
-   find_clones
-   define_clones
-   generate_network
    clone_centrality
    clone_degree
    clone_diversity
    clone_overlap
    clone_rarefaction
    clone_size
+   define_clones
    extract_edge_weights
+   find_clones
+   generate_network
    productive_ratio
-   vj_usage_pca
-   setup_vdj_pseudobulk
-   vdj_pseudobulk
+   project_pseudotime_to_cell
    pseudobulk_gex
    pseudotime_transfer
-   project_pseudotime_to_cell
-   bin_expression
-   chatterjee_corr
+   setup_vdj_pseudobulk
+   transfer
+   vdj_pseudobulk
+   vdj_sample
+   vj_usage_pca
 
 
 Plotting: `pl`
@@ -79,6 +77,15 @@ Utilities: `utl`
    from_scirpy
    makeblastdb
 
+Tutorial
+========
+.. module:: dandelion.tutorial
+
+.. autosummary::
+   :toctree: .
+
+   setup_dandelion_tutorial_bcr
+   setup_dandelion_tutorial_tcr
 
 Dandelion
 =========
@@ -109,6 +116,7 @@ dandelion.Dandelion
    add_sequence_prefix
    add_sequence_suffix
    copy
+   compute
    reset_ids
    simplify
    store_germline_reference
