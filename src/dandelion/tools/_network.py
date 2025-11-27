@@ -41,7 +41,7 @@ from dandelion.utilities._utilities import (
 
 def generate_network(
     vdj_data: Dandelion,
-    adata: AnnData | None = None,
+    gex_data: AnnData | None = None,
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
@@ -209,9 +209,9 @@ def generate_network(
             from dandelion.tools._lazydistances import dask_safe_slice_square
 
         if sample is not None:
-            vdj_data, adata = vdj_sample(
+            vdj_data, gex_data = vdj_sample(
                 vdj_data,
-                adata,
+                gex_data,
                 size=sample,
                 force_replace=force_replace,
                 random_state=random_state,
@@ -438,10 +438,10 @@ def generate_network(
             germline=germline,
             verbose=False,
         )
-        if adata is None:
+        if gex_data is None:
             return out
         else:
-            return out, adata
+            return out, gex_data
     else:
         vdj_data.__init__(
             data=vdj_data.data,

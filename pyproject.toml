@@ -56,7 +56,7 @@ addopts = "--cov src/dandelion --cov-report=xml -rP"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-omit = ["containter/*", "src/dandelion/external/*"]
+omit = ["containter/*", "src/dandelion/external/*", "src/dandelion/tutorial/*"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
@@ -73,6 +73,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
 ]
 keywords = ["dandelion", "single-cell", "immune", "TCR", "BCR"]
@@ -123,6 +124,7 @@ docs = [
 scirpy = ["scirpy<0.23.0", "awkward<2.8.10", "mudata<0.3.2"]
 scrubet = ["scrublet<0.2.4", "annoy<1.17.0"]
 palantir = ["palantir<1.4.2", "jax<0.6.3"]
+dask = ["dask<2025.11.1", "distributed<2025.11.1", "psutil<6.1.2"]
 
 [tool.setuptools]
 include-package-data = true

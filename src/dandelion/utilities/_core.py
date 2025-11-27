@@ -1930,7 +1930,9 @@ class Dandelion:
                             data=G_index_array,
                             **save_args,
                         )
-            if self.distances is not None:
+            if self.distances is not None and isinstance(
+                self.distances, csr_matrix
+            ):
                 with h5py.File(filename, "a") as hf:
                     hf.create_dataset(
                         f"distances/data",
