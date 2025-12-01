@@ -67,6 +67,7 @@ Utilities: `utl`
    concat
    load_data
    read_h5ddl
+   read_h5ddl_legacy
    read_pkl
    read_airr
    read_10x_airr

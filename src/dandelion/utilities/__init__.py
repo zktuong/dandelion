@@ -10,6 +10,7 @@ from dandelion.utilities._utilities import (
 from dandelion.utilities._io import (
     read_pkl,
     read_h5ddl,
+    read_h5ddl_legacy,
     read_airr,
     read_bd_airr,
     read_parse_airr,
@@ -27,6 +28,7 @@ __all__ = [
     "write_output",
     "read_pkl",
     "read_h5ddl",
+    "read_h5ddl_legacy",
     "read_airr",
     "read_bd_airr",
     "read_parse_airr",

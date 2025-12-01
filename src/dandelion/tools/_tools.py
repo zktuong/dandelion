@@ -395,19 +395,26 @@ def transfer(
     # --- 3) Convert both graphs ---
     graph_connectivities, graph_distances = {}, {}
     for idx in (0, 1):
-        try:
-            G = dandelion.graph[idx]
-        except Exception:
-            G = None
         if G is None:
             continue
         graph_connectivities[idx], graph_distances[idx] = _graph_to_matrices(
-            G, recipient
-        )
-        if dandelion.distances is not None:
-            graph_connectivities[2], graph_distances[2] = _graph_to_matrices(
-                None, recipient, dandelion.distances
+        G = None
+        if dandelion.graph is not None:
+            try:
+                G = dandelion.graph[idx]
+            except Exception:
+                pass
+
+        if G is not None:
+            graph_connectivities[idx], graph_distances[idx] = (
+                _graph_to_matrices(G, recipient, None)
             )
+
+    # handle precomputed distances (sparse or DataFrame)
+    if getattr(dandelion, "distances", None) is not None:
+        graph_connectivities[2], graph_distances[2] = _graph_to_matrices(
+            None, recipient, dandelion.distances
+        )
 
     # Determine main graph index
     main_idx = 1 if expanded else 0
@@ -515,7 +522,7 @@ def transfer(
                 if layout is None:
                     continue
                 coord = pd.DataFrame.from_dict(layout, orient="index")
-                coord = coord.reindex(index=recipient.obs_names).fillna(0.0)
+                coord = coord.reindex(index=recipient.obs_names).fillna(np.nan)
                 if coord.shape[1] >= 2:
                     embedding = coord.iloc[:, :2].to_numpy(dtype=np.float32)
                 else:
@@ -567,48 +574,101 @@ tf = transfer  # alias for transfer
 def _graph_to_matrices(
     G: nx.Graph | None,
     adata: AnnData,
-    distances: pd.DataFrame | csr_matrix | None = None,
+    distances: csr_matrix | None = None,
 ) -> tuple[csr_matrix, csr_matrix]:
-    """Helper function to build connectivities/distances.
-
-    Ensures that if a graph has no edges (all zeros), we add a tiny self-edge
-    to the first node to avoid downstream plotting errors.
     """
-    if distances is None:
-        # Convert graph to adjacency matrices
-        distances = nx.to_pandas_adjacency(
-            G, dtype=np.float32, weight="weight", nonedge=np.nan
-        )
-        distances = distances.reindex(
-            index=adata.obs_names, columns=adata.obs_names
-        )
-    if isinstance(distances, csr_matrix):
-        distances = pd.DataFrame(
-            distances.toarray(),
-            index=adata.obs_names,
-            columns=adata.obs_names,
-        )
-    connectivities = distances.apply(lambda x: np.exp(-x))
-    connectivities = connectivities.clip(lower=1e-45)
-    connectivities = connectivities.reindex(
-        index=adata.obs_names, columns=adata.obs_names
-    )
+    Convert a graph or provided distances into properly aligned sparse
+    connectivities and distances matrices.
 
-    # Replace NaN with 0 and convert to sparse
-    conn_arr = np.nan_to_num(connectivities.values, nan=0.0)
-    dist_arr = np.nan_to_num(distances.values, nan=0.0)
+    Rules:
+    - If G is provided, convert edges → sparse distance matrix.
+    - If a CSR distance matrix is provided, must have `._index_names`.
+    - If a DataFrame is provided, use its index/columns.
+    - Reindex to `adata.obs_names` without dense conversion.
+    - Compute connectivities as exp(-d) on non-zero entries.
+    - Add tiny self-edge if matrix is entirely empty.
+    """
 
-    # --- Add small self-edge if completely zero ---
-    if not np.any(conn_arr):
-        conn_arr[0, 0] = 1e-10  # tiny self-edge for first cell
-        dist_arr[0, 0] = 0.0  # zero distance for self-loop
+    target_names = list(adata.obs_names)
+    n = len(target_names)
+    name_to_new = {name: i for i, name in enumerate(target_names)}
+    # CASE A: Build distances from a NetworkX graph
+    if distances is None and G is not None:
+        # Build COO arrays directly
+        edges = list(G.edges(data=True))
+        if not edges:
+            distances = csr_matrix((n, n), dtype=np.float32)
+        else:
+            u, v, w = zip(*[(u, v, d.get("weight", 1.0)) for u, v, d in edges])
+            # Filter edges where both nodes exist in target
+            mask_u = np.array([node in name_to_new for node in u])
+            mask_v = np.array([node in name_to_new for node in v])
+            mask = mask_u & mask_v  # vectorized AND
+            u = np.array(u)[mask]
+            v = np.array(v)[mask]
+            w = np.array(w, dtype=np.float32)[mask]
 
-    connectivities = csr_matrix(conn_arr.astype(np.float32))
-    distances = csr_matrix(dist_arr.astype(np.float32))
+            # Map names to target indices
+            u_idx = np.array([name_to_new[x] for x in u])
+            v_idx = np.array([name_to_new[x] for x in v])
+
+            # Make symmetric
+            rows = np.concatenate([u_idx, v_idx])
+            cols = np.concatenate([v_idx, u_idx])
+            vals = np.concatenate([w, w])
+            vals += 1.0
+
+            distances = csr_matrix(
+                (vals, (rows, cols)), shape=(n, n), dtype=np.float32
+            )
+
+    # CASE B: distances provided as a csr_matrix with _index_names
+    elif isinstance(distances, csr_matrix):
+        old_names = np.array(distances._index_names)
+        coo = distances.tocoo()
+
+        # Map old names to target indices, missing names → -1
+        old_row_names = old_names[coo.row]
+        old_col_names = old_names[coo.col]
+
+        row_idx = np.array(
+            [name_to_new.get(name, -1) for name in old_row_names]
+        )
+        col_idx = np.array(
+            [name_to_new.get(name, -1) for name in old_col_names]
+        )
+
+        # Keep only edges where both row and col exist in target
+        mask = (row_idx >= 0) & (col_idx >= 0)
+        rows = row_idx[mask]
+        cols = col_idx[mask]
+        vals = coo.data[mask]
+        vals += 1.0
+
+        distances = csr_matrix(
+            (vals, (rows, cols)), shape=(n, n), dtype=np.float32
+        )
+    # Build connectivities = exp(-d) for non-zero entries
+    connectivities = distances.copy()
+    if connectivities.nnz > 0:
+        connectivities.data = np.exp(-connectivities.data)
+        connectivities.data = np.clip(connectivities.data, 1e-45, np.inf)
+
+    distances.data -= 1.0
+
+    # Ensure matrix is not completely empty
+    if connectivities.nnz == 0:
+        connectivities = connectivities.tolil()
+        distances = distances.tolil()
+        connectivities[0, 0] = 1e-10
+        distances[0, 0] = 0.0
+        connectivities = connectivities.tocsr()
+        distances = distances.tocsr()
+
     return connectivities, distances
 
 
-def swap_view(
+def clone_view(
     adata: AnnData,
     mode: Literal["all", "expanded", "full", "gex"] | None = "expanded",
     connectivities_key: str | None = None,

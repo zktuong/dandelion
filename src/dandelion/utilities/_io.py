@@ -21,6 +21,7 @@ from typing import Literal
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import (
     DEFAULT_PREFIX,
+    deprecated,
     isGZIP,
     isBZIP,
     check_filepath,
@@ -198,12 +199,8 @@ def read_h5ddl(
     data = decode(load_data(_read_h5_group(filename, group="data")))
     # final decode to ensure all byte strings are converted to str
     metadata = _read_h5_group(filename, group="metadata")
-
-    try:
-        metadata_names = _read_h5_group(filename, group="metadata_names")
-        metadata.index = metadata_names
-    except KeyError:  # pragma: no cover
-        pass
+    metadata_names = _read_h5_group(filename, group="metadata_names")
+    metadata.index = metadata_names
 
     try:
         g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0", as_df=True)
@@ -218,6 +215,7 @@ def read_h5ddl(
         distances = _read_h5_csr_matrix(
             filename, group="distances", as_df=False
         )
+        distances._index_names = metadata.index
     except KeyError:
         if distance_zarr is not None:
             import dask.array as da
@@ -1060,47 +1058,39 @@ def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     KeyError
         If the specified group is not found in the H5 file.
     """
-    try:
-        with h5py.File(filename, "r") as hf:
-            data_group = hf[group]
-            structured_data_array = data_group[:]
-            decoded = {}
-            if structured_data_array.dtype.names is not None:
-                for col in structured_data_array.dtype.names:
-                    dtype = structured_data_array.dtype[col]
-                    if dtype.char == "S":  # Check if dtype is byte strings
-                        # Decode byte strings
-                        decoded.update(
-                            {
-                                col: np.array(
-                                    [
-                                        (
-                                            x.astype(str)
-                                            if isinstance(x, bytes)
-                                            else x
-                                        )
-                                        for x in structured_data_array[col]
-                                    ]
-                                )
-                            }
-                        )
-                    else:
-                        decoded.update({col: structured_data_array[col]})
-                # Create a DataFrame from the structured array
-                data = pd.DataFrame(decoded)
-            else:
-                data = np.array(
-                    [
-                        x.astype(str) if isinstance(x, bytes) else x
-                        for x in structured_data_array
-                    ]
-                )
-    except TypeError:
-        try:
-            data = pd.read_hdf(filename, group)
-        except:
-            raise KeyError(
-                f"{str(filename)} does not contain attribute `{group}`"
+    with h5py.File(filename, "r") as hf:
+        data_group = hf[group]
+        structured_data_array = data_group[:]
+        decoded = {}
+        if structured_data_array.dtype.names is not None:
+            for col in structured_data_array.dtype.names:
+                dtype = structured_data_array.dtype[col]
+                if dtype.char == "S":  # Check if dtype is byte strings
+                    # Decode byte strings
+                    decoded.update(
+                        {
+                            col: np.array(
+                                [
+                                    (
+                                        x.astype(str)
+                                        if isinstance(x, bytes)
+                                        else x
+                                    )
+                                    for x in structured_data_array[col]
+                                ]
+                            )
+                        }
+                    )
+                else:
+                    decoded.update({col: structured_data_array[col]})
+            # Create a DataFrame from the structured array
+            data = pd.DataFrame(decoded)
+        else:
+            data = np.array(
+                [
+                    x.astype(str) if isinstance(x, bytes) else x
+                    for x in structured_data_array
+                ]
             )
     return data
 
@@ -1123,28 +1113,20 @@ def _read_h5_csr_matrix(
     pd.DataFrame
         The data from the specified group as a pandas dataframe.
     """
-    try:
-        with h5py.File(filename, "r") as f:
-            data = f[f"{group}/data"][:]
-            indices = f[f"{group}/indices"][:]
-            indptr = f[f"{group}/indptr"][:]
-            shape = tuple(f[f"{group}/shape"][:])
-            # Reconstruct CSR matrix
-            loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
-            if not as_df:
-                return loaded_matrix
-            df = pd.DataFrame(loaded_matrix.toarray())
-            df_col = _read_h5_group(filename, f"{group}/column")
-            df_index = _read_h5_group(filename, f"{group}/index")
-            df.columns = df_col
-            df.index = df_index
-    except TypeError:
-        try:
-            data = pd.read_hdf(filename, group)
-        except:
-            raise KeyError(
-                f"{str(filename)} does not contain attribute `{group}`"
-            )
+    with h5py.File(filename, "r") as f:
+        data = f[f"{group}/data"][:]
+        indices = f[f"{group}/indices"][:]
+        indptr = f[f"{group}/indptr"][:]
+        shape = tuple(f[f"{group}/shape"][:])
+        # Reconstruct CSR matrix
+        loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
+        if not as_df:
+            return loaded_matrix
+        df = pd.DataFrame(loaded_matrix.toarray())
+        df_col = _read_h5_group(filename, f"{group}/column")
+        df_index = _read_h5_group(filename, f"{group}/index")
+        df.columns = df_col
+        df.index = df_index
     return df
 
 
@@ -1229,18 +1211,131 @@ def _read_h5_zip(
         The dictionary data from the specified groups.
     """
     with h5py.File(filename, "r") as hf:
-        try:
-            keys = [
-                key.decode("utf-8") for key in hf[f"{group}/{key_group}"][:]
-            ]
-            values = [
-                value.decode("utf-8")
-                for value in hf[f"{group}/{value_group}"][:]
-            ]
-            # Reconstruct the dictionary
-            out_dict = dict(zip(keys, values))
-        except:
-            out_dict = {}
-            for g in hf[group].attrs:
-                out_dict.update({g: hf[group].attrs[g]})
+        keys = [key.decode("utf-8") for key in hf[f"{group}/{key_group}"][:]]
+        values = [
+            value.decode("utf-8") for value in hf[f"{group}/{value_group}"][:]
+        ]
+        # Reconstruct the dictionary
+        out_dict = dict(zip(keys, values))
+    return out_dict
+
+
+@deprecated(
+    deprecated_in="1.0.0",
+    removed_in="1.1.0",
+    details="legacy .h5ddl format will no longer be supported.",
+)
+def read_h5ddl_legacy(
+    filename: Path | str = "dandelion_data.h5ddl",
+) -> Dandelion:
+    """
+    Read in and returns a Dandelion class from .h5ddl format saved in legacy (version 3) format.
+
+    Parameters
+    ----------
+    filename : Path | str, optional
+        path to `.h5ddl` file
+
+    Returns
+    -------
+    Dandelion
+        Dandelion object.
+
+    Raises
+    ------
+    AttributeError
+        if `data` not found in `.h5ddl` file.
+    """
+    data = decode(load_data(_read_h5_group_legacy(filename, group="data")))
+    # final decode to ensure all byte strings are converted to str
+    metadata = _read_h5_group_legacy(filename, group="metadata")
+    try:
+        g_0 = _read_h5_group_legacy(filename, group="graph/graph_0")
+        g_1 = _read_h5_group_legacy(filename, group="graph/graph_1")
+        graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
+        graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
+        graph = (graph0, graph1)
+    except KeyError:
+        pass
+
+    try:
+        layout0 = _read_h5_dict(filename, group="layout/layout_0")
+        layout1 = _read_h5_dict(filename, group="layout/layout_1")
+        layout = (layout0, layout1)
+    except KeyError:
+        pass
+
+    try:
+        germline = _read_h5_zip_legacy(filename, group="germline")
+    except KeyError:
+        pass
+
+    constructor = {}
+    constructor["data"] = data
+    if "metadata" in locals():
+        constructor["metadata"] = metadata
+    if "germline" in locals():
+        constructor["germline"] = germline
+    if "layout" in locals():
+        constructor["layout"] = layout
+    if "graph" in locals():
+        constructor["graph"] = graph
+
+    res = Dandelion(**constructor, verbose=False)
+    # ensure that the metadata is decoded
+    res.metadata = decode(res.metadata)
+
+    return res
+
+
+def _read_h5_group_legacy(filename: Path | str, group: str) -> pd.DataFrame:
+    """
+    Read a specific group from an H5 file in legacy format.
+
+    Parameters
+    ----------
+    filename : Path | str
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The data from the specified group as a pandas dataframe.
+
+    Raises
+    ------
+    KeyError
+        If the specified group is not found in the H5 file.
+    """
+    data = pd.read_hdf(filename, group)
+
+    return data
+
+
+def _read_h5_zip_legacy(filename: Path | str, group: str) -> dict:
+    """
+    Read two groups from an H5 file and return them as a dictionary.
+
+    Parameters
+    ----------
+    filename : Path | str
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+    key_group : str
+        The name of the group containing the keys.
+    value_group : str
+        The name of the group containing the values.
+
+    Returns
+    -------
+    dict
+        The dictionary data from the specified groups.
+    """
+    with h5py.File(filename, "r") as hf:
+        out_dict = {}
+        for g in hf[group].attrs:
+            out_dict.update({g: hf[group].attrs[g]})
     return out_dict

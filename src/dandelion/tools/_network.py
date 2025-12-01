@@ -32,6 +32,7 @@ from dandelion.utilities._distances import (
     resolve_metric,
 )
 from dandelion.utilities._utilities import (
+    flatten,
     present,
     sanitize_data,
     Tree,
@@ -50,7 +51,7 @@ def generate_network(
     verbose: bool = True,
     compute_graph: bool = True,
     compute_layout: bool = True,
-    layout_method: Literal["mod_fr", "sfdp"] = "sfdp",
+    layout_method: Literal["mod_fr", "sfdp"] = "mod_fr",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
     num_cores: int = 1,
@@ -99,7 +100,7 @@ def generate_network(
     layout_method : Literal["sfdp", "mod_fr"], optional
         accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast)
         whereas 'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python
-        implementation; slow).
+        implementation; slightly slower).
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
@@ -331,13 +332,32 @@ def generate_network(
                         verbose=verbose,
                     )
         if compute_graph:
-
-            # build cluster_dist as before (only include groups with >1 member)
-            tmp_clusterdist2 = {
-                c: membership[c] for c in membership if len(membership[c]) > 1
-            }
-
-            # extract per-clone distance matrices
+            tmp_clusterdist = Tree()
+            cluster_dist = {}
+            overlap = []
+            for i in vdj_data.metadata.index:
+                if len(vdj_data.metadata.loc[i, str(clone_key)].split("|")) > 1:
+                    overlap.append(
+                        [
+                            c
+                            for c in vdj_data.metadata.loc[
+                                i, str(clone_key)
+                            ].split("|")
+                            if c != "None"
+                        ]
+                    )
+                    for c in vdj_data.metadata.loc[i, str(clone_key)].split(
+                        "|"
+                    ):
+                        if c != "None":
+                            tmp_clusterdist[c][i].value = 1
+                else:
+                    cx = vdj_data.metadata.loc[i, str(clone_key)]
+                    if cx != "None":
+                        tmp_clusterdist[cx][i].value = 1
+            tmp_clusterdist2 = {}
+            for x in tmp_clusterdist:
+                tmp_clusterdist2[x] = list(tmp_clusterdist[x])
             cluster_dist = {}
             for c_ in tqdm(
                 tmp_clusterdist2,
@@ -350,13 +370,45 @@ def generate_network(
                     for i in tmp_clusterdist2[c_]
                     if i in vdj_data.metadata.index
                 ]
-                if len(idxs) > 1:
-                    pos = [dat_seq.index.get_loc(i) for i in idxs]
+                if c_ in list(flatten(overlap)):
+                    for ol in overlap:
+                        if c_ in ol:
+                            idx = list(
+                                set(
+                                    flatten(
+                                        [tmp_clusterdist2[c_x] for c_x in ol]
+                                    )
+                                )
+                            )
+                            if len(list(set(idx))) > 1:
+                                pos = [dat_seq.index.get_loc(i) for i in idxs]
+                                # dist_mat_ = tmp_totaldist.loc[idx, idx]
+                                if lazy:
+                                    dist_mat_ = pd.DataFrame(
+                                        dask_safe_slice_square(
+                                            total_dist, pos
+                                        ).compute(),
+                                        index=idxs,
+                                        columns=idxs,
+                                    )
+                                else:
+                                    dist_mat_ = pd.DataFrame(
+                                        total_dist[np.ix_(pos, pos)],
+                                        index=idxs,
+                                        columns=idxs,
+                                    )
+                                s1, s2 = dist_mat_.shape
+                                if s1 > 1 and s2 > 1:
+                                    cluster_dist["|".join(ol)] = dist_mat_
+                else:
+                    pos = [
+                        dat_seq.index.get_loc(i) for i in tmp_clusterdist2[c_]
+                    ]
                     if lazy:
                         dist_mat_ = pd.DataFrame(
                             dask_safe_slice_square(total_dist, pos).compute(),
-                            index=idxs,
-                            columns=idxs,
+                            index=tmp_clusterdist2[c_],
+                            columns=tmp_clusterdist2[c_],
                         )
                     else:
                         dist_mat_ = pd.DataFrame(
@@ -364,7 +416,9 @@ def generate_network(
                             index=idxs,
                             columns=idxs,
                         )
-                    cluster_dist[c_] = dist_mat_
+                    s1, s2 = dist_mat_.shape
+                    if s1 > 1 and s2 > 1:
+                        cluster_dist[c_] = dist_mat_
             # Minimum spanning trees (unchanged)
             # mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
             mst_tree = mst(cluster_dist, num_cores=1, verbose=verbose)
@@ -380,10 +434,152 @@ def generate_network(
                 if edge_list[c].shape[0] > 0:
                     edge_list[c]["weight"] = edge_list[c]["weight"] - 1
                     edge_list[c].loc[edge_list[c]["weight"] < 0, "weight"] = 0
-            # try to combine edge lists (simple version)
+
+            clone_ref = dict(vdj_data.metadata[clone_key])
+            clone_ref = {k: r for k, r in clone_ref.items() if r != "None"}
+            tmp_clone_tree = Tree()
+            for x in vdj_data.metadata.index:
+                if x in clone_ref:
+                    if "|" in clone_ref[x]:
+                        for x_ in clone_ref[x].split("|"):
+                            if x_ != "None":
+                                tmp_clone_tree[x_][x].value = 1
+                    else:
+                        tmp_clone_tree[clone_ref[x]][x].value = 1
+            tmp_clone_tree2 = Tree()
+            for x in tmp_clone_tree:
+                tmp_clone_tree2[x] = list(tmp_clone_tree[x])
+
+            tmp_clone_tree3 = Tree()
+            tmp_clone_tree3_overlap = Tree()
+            for x in tqdm(
+                tmp_clone_tree2,
+                desc="Computing overlap ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            ):
+                # this is to catch all possible cells that may potentially match up with this clone that's joined together
+                if x in list(flatten(overlap)):
+                    for ol in overlap:
+                        if x in ol:
+                            if len(tmp_clone_tree2[x]) > 1:
+                                for x_ in tmp_clone_tree2[x]:
+                                    tmp_clone_tree3_overlap["|".join(ol)][
+                                        "".join(x_)
+                                    ].value = 1
+                            else:
+                                tmp_clone_tree3_overlap["|".join(ol)][
+                                    "".join(tmp_clone_tree2[x])
+                                ].value = 1
+                else:
+                    tmp_ = pd.DataFrame(
+                        index=tmp_clone_tree2[x], columns=tmp_clone_tree2[x]
+                    )
+                    tmp_ = pd.DataFrame(
+                        np.tril(tmp_) + 1,
+                        index=tmp_clone_tree2[x],
+                        columns=tmp_clone_tree2[x],
+                    )
+                    tmp_ = tmp_.astype(float).fillna(0)
+                    tmp_clone_tree3[x] = tmp_
+
+            for x in tqdm(
+                tmp_clone_tree3_overlap,
+                desc="Adjust overlap ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            ):  # repeat for the overlap clones
+                tmp_ = pd.DataFrame(
+                    index=tmp_clone_tree3_overlap[x],
+                    columns=tmp_clone_tree3_overlap[x],
+                )
+                tmp_ = pd.DataFrame(
+                    np.tril(tmp_) + 1,
+                    index=tmp_clone_tree3_overlap[x],
+                    columns=tmp_clone_tree3_overlap[x],
+                )
+                tmp_ = tmp_.astype(float).fillna(0)
+                tmp_clone_tree3[x] = tmp_
+
+            # free up memory
+            del tmp_clone_tree2
+
+            # this chunk doesn't scale well?
+            # here I'm using a temporary edge list to catch all cells that were identified as clones to forcefully
+            # link them up if they were identical but clipped off during the mst step
+
+            # create a data frame to recall the actual distance quickly
+            # convert total_dist to DataFrame to become adjacency matrix
+            tmp_totaldist = pd.DataFrame(
+                total_dist.compute() if lazy else total_dist,
+                index=vdj_data.metadata.index,
+                columns=vdj_data.metadata.index,
+            )
+
+            tmp_totaldiststack = adjacency_to_edge_list(
+                tmp_totaldist, rename_index=True
+            )
+
+            tmp_totaldiststack["keep"] = [
+                False if len(set(i.split("|"))) == 1 else True
+                for i in tmp_totaldiststack.index
+            ]
+
+            tmp_totaldiststack = tmp_totaldiststack[
+                tmp_totaldiststack.keep
+            ].drop("keep", axis=1)
+
+            # convert tmp_totaldist to edge list and rename the index
+            tmp_edge_list = Tree()
+            for c in tqdm(
+                tmp_clone_tree3,
+                desc="Linking edges ",
+                disable=not verbose,
+                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+            ):
+                if len(tmp_clone_tree3[c]) > 1:
+                    G = create_networkx_graph(
+                        tmp_clone_tree3[c],
+                        drop_zero=True,
+                    )
+                    G.remove_edges_from(nx.selfloop_edges(G))
+                    tmp_edge_list[c] = nx.to_pandas_edgelist(G)
+                    set_edge_list_index(tmp_edge_list[c])
+
+                    tmp_edge_list[c].update(
+                        {"weight": tmp_totaldiststack["weight"]}
+                    )
+                    # keep only edges when there is 100% identity, to minimise crowding
+                    tmp_edge_list[c] = tmp_edge_list[c][
+                        tmp_edge_list[c]["weight"] == 0
+                    ]
+                    tmp_edge_list[c].reset_index(inplace=True)
+
+            # try to catch situations where there's no edge (only singletons)
             try:
-                edge_list_final = pd.concat([edge_list[x] for x in edge_list])
-                set_edge_list_index(edge_list_final)
+                edge_listx = pd.concat([edge_list[x] for x in edge_list])
+                set_edge_list_index(edge_listx)
+                tmp_edge_listx = pd.concat(
+                    [tmp_edge_list[x] for x in tmp_edge_list]
+                )
+                tmp_edge_listx = tmp_edge_listx.drop("index", axis=1)
+                set_edge_list_index(tmp_edge_listx)
+
+                edge_list_final = edge_listx.combine_first(tmp_edge_listx)
+
+                common_idx = edge_list_final.index.intersection(
+                    tmp_totaldiststack.index
+                )
+                edge_list_final.loc[common_idx, "weight"] = (
+                    tmp_totaldiststack.loc[common_idx, "weight"]
+                )
+
+                # for i, row in tmp_totaldiststack.iterrows():
+                #     if i in edge_list_final.index:
+                #         edge_list_final.at[i, "weight"] = row["weight"]
+
+                # return the edge list
+                edge_list_final = edge_list_final.reset_index(drop=True)
             except Exception:
                 edge_list_final = None
 
@@ -423,6 +619,8 @@ def generate_network(
     germline = getattr(vdj_data, "germline", None)
     if regenerate:
         distances = total_dist if lazy else csr_matrix(total_dist)
+        if not lazy:
+            distances._index_names = vdj_data.metadata_names
     else:
         distances = vdj_data.distances
     graph = (g, g_) if compute_graph else None
@@ -564,10 +762,13 @@ def set_edge_list_index(edge_list: pd.DataFrame) -> None:
     edge_list : pd.DataFrame
         Edge list.
     """
-    edge_list.index = [
-        str(s) + "|" + str(t)
-        for s, t in zip(edge_list["source"], edge_list["target"])
-    ]
+    # edge_list.index = [
+    #     str(s) + "|" + str(t)
+    #     for s, t in zip(edge_list["source"], edge_list["target"])
+    # ]
+    edge_list.index = (
+        edge_list["source"].astype(str) + "|" + edge_list["target"].astype(str)
+    )
 
 
 def adjacency_to_edge_list(
