@@ -1763,6 +1763,17 @@ class Dandelion:
                 if dcol in tmp_metadata:
                     tmp_metadata.drop(dcol, axis=1, inplace=True)
             self.metadata = tmp_metadata.copy()
+        # move clonekey and {clonekey}_rank to the front
+        if clonekey in self.metadata:
+            clonekey_rank = clonekey + "_rank"
+            self.metadata = self.metadata[
+                [clonekey, clonekey_rank]
+                + [
+                    c
+                    for c in self.metadata.columns
+                    if c not in [clonekey, clonekey_rank]
+                ]
+            ]
 
     def write_pkl(
         self, filename: str = "dandelion_data.pkl.pbz2", **kwargs

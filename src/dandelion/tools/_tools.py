@@ -236,20 +236,8 @@ def find_clones(
     if verbose:
         logg.info("Initialising Dandelion object")
     if isinstance(vdj_data, Dandelion):
-        vdj_data.__init__(
-            data=dat_,
-            germline=(
-                vdj_data.germline if vdj_data.germline is not None else None
-            ),
-            layout=vdj_data.layout if vdj_data.layout is not None else None,
-            graph=vdj_data.graph if vdj_data.graph is not None else None,
-            distances=(
-                vdj_data.distances if vdj_data.distances is not None else None
-            ),
-            clone_key=clone_key,
-            verbose=False,
-            **kwargs,
-        )
+        vdj_data.data[str(clone_key)] = dat_[str(clone_key)]
+        vdj_data.update_metadata(clone_key=str(clone_key))
         logg.info(
             " finished",
             time=start,
@@ -394,10 +382,8 @@ def transfer(
 
     # --- 3) Convert both graphs ---
     graph_connectivities, graph_distances = {}, {}
+    # handle graph[0] and graph[1]
     for idx in (0, 1):
-        if G is None:
-            continue
-        graph_connectivities[idx], graph_distances[idx] = _graph_to_matrices(
         G = None
         if dandelion.graph is not None:
             try:
@@ -1112,19 +1098,8 @@ def define_clones(
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
     dat_[str(clone_key)] = dat_[str(clone_key)].fillna("")
     if isinstance(vdj_data, Dandelion):
-        vdj_data.__init__(
-            data=dat_,
-            clone_key=clone_key,
-            germline=(
-                vdj_data.germline if vdj_data.germline is not None else None
-            ),
-            layout=vdj_data.layout if vdj_data.layout is not None else None,
-            graph=vdj_data.graph if vdj_data.graph is not None else None,
-            distances=(
-                vdj_data.distances if vdj_data.distances is not None else None
-            ),
-            verbose=False,
-        )
+        vdj_data.data[str(clone_key)] = dat_[str(clone_key)]
+        vdj_data.update_metadata(clone_key=str(clone_key))
     else:
         out = Dandelion(
             data=dat_,
