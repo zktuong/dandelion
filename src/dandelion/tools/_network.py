@@ -211,9 +211,9 @@ def generate_network(
 
         if sample is not None:
             vdj_data, gex_data = vdj_sample(
-                vdj_data,
-                gex_data,
                 size=sample,
+                vdj_data=vdj_data,
+                gex_data=gex_data,
                 force_replace=force_replace,
                 random_state=random_state,
             )

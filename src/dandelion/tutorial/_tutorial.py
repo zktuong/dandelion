@@ -43,7 +43,6 @@ def setup_dandelion_tutorial_bcr(path: Path | str | None = None) -> None:
         },
     }
 
-    already_downloaded = []
     for dirname, files in datasets.items():
         dirpath = base / dirname
         dirpath.mkdir(parents=True, exist_ok=True)
@@ -51,14 +50,9 @@ def setup_dandelion_tutorial_bcr(path: Path | str | None = None) -> None:
         for filename, url in files.items():
             outfile = dirpath / filename
             if outfile.exists():
-                already_downloaded.append(True)
                 continue
             print(f"Downloading {filename} → {outfile}")
             download_file(url, outfile)
-    if all(already_downloaded):
-        print("All files already downloaded, skipping download.")
-    else:
-        print("All downloads complete.")
 
 
 def setup_dandelion_tutorial_tcr(path: Path | str | None = None) -> None:
@@ -87,7 +81,7 @@ def setup_dandelion_tutorial_tcr(path: Path | str | None = None) -> None:
 
         for filename, url in files.items():
             outfile = dirpath / filename
+            if outfile.exists():
+                continue
             print(f"Downloading {filename} → {outfile}")
             download_file(url, outfile)
-
-    print("All downloads complete.")

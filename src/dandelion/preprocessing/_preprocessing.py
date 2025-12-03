@@ -3173,7 +3173,7 @@ def check_contigs(
     if isinstance(data, Dandelion):
         out_dat.germline = data.germline
     if adata_provided:
-        transfer(adata_, out_dat, overwrite=True)
+        transfer(adata_, out_dat)
         return (out_dat, adata_)
     else:
         return out_dat

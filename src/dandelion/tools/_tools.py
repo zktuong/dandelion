@@ -2158,9 +2158,9 @@ def check_chains(dat_vdj: pd.DataFrame, dat_vj: pd.DataFrame) -> pd.DataFrame:
 
 
 def vdj_sample(
-    vdj_data: Dandelion,
-    gex_data: AnnData | MuData | None,
     size: int,
+    vdj_data: Dandelion,
+    gex_data: AnnData | MuData | None = None,
     force_replace: bool = False,
     random_state: int | np.random.RandomState | None = None,
 ) -> tuple[Dandelion, AnnData]:
@@ -2169,12 +2169,12 @@ def vdj_sample(
 
     Parameters
     ----------
-    vdj_data : Dandelion
-        Dandelion object containing VDJ data.
-    gex_data : AnnData | MuData | None
-        AnnData or MuData object corresponding to the gene expression data.
     size : int
         Desired size for resampling.
+    vdj_data : Dandelion
+        Dandelion object containing VDJ data.
+    gex_data : AnnData | MuData | None, optional
+        AnnData or MuData object corresponding to the gene expression data.
     force_replace : bool, optional
         Whether to force sampling with replacement, by default False.
     random_state : int | np.random.RandomState | None, optional

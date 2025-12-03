@@ -12,15 +12,15 @@ from plotnine import (
     labs,
     options,
     scale_color_manual,
+    scale_linetype_manual,
     theme_classic,
     xlab,
     ylab,
-    save_as_pdf_pages,
 )
-from time import sleep
 from tqdm import tqdm
 from scanpy import logging as logg
 from scipy.special import gammaln
+from scipy.optimize import curve_fit
 from typing import Literal
 
 from dandelion.external.skbio._chao1 import chao1
@@ -31,64 +31,99 @@ from dandelion.tools._network import (
     clone_degree,
     generate_network,
 )
-
 from dandelion.utilities._core import Dandelion
 from dandelion.utilities._utilities import flatten
 
 
 def clone_rarefaction(
-    vdj_data: AnnData | Dandelion,
-    color: str,
+    vdj_data: Dandelion | AnnData,
+    groupby: str,
     clone_key: str | None = None,
     palette: list[str] | None = None,
     figsize: tuple[float, float] = (5, 3),
-    chain_status_include: list[
-        Literal[
-            "Single pair",
-            "Orphan VDJ",
-            "Orphan VDJ-exception",
-            "Orphan VJ",
-            "Orphan VJ-exception",
-            "Extra pair",
-            "Extra pair-exception",
-        ]
-    ] = [
+    chain_status_include=[
         "Single pair",
         "Orphan VDJ",
         "Orphan VDJ-exception",
+        "Orphan VJ",
+        "Orphan VJ-exception",
         "Extra pair",
         "Extra pair-exception",
     ],
-    return_results: bool = True,
-    save_fig: str | None = None,
-) -> ggplot:
+    plot: bool = False,
+    plateau_fraction: float = 0.95,  # fraction of asymptote to stop extrapolation
+    step: int = 1,
+) -> pd.DataFrame | ggplot:
     """
-    Plot rarefaction curve for cell numbers vs clone size.
+    Compute sample-based rarefaction curves with asymptotic extrapolation
+    and optional plotting.
+
+    This function calculates rarefaction curves per group, fits an
+    asymptotic model (Michaelis–Menten) to estimate the expected plateau
+    of clone richness, and extrapolates each curve until the predicted
+    value reaches a specified fraction of the asymptote. It supports both
+    tabular output and ggplot-style visualization.
 
     Parameters
     ----------
-    vdj_data : AnnData | Dandelion
-        AnnData or Dandelion object.
-    color : str
-        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
-    clone_key : str | None, optional
-        Column name specifying the clone_id column in metadata/obs.
-    palette : list[str] | None, optional
-        Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
-    figsize : tuple[float, float], optional
-        Size of plot.
-    chain_status_include : list[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
-        chain statuses to include.
-    return_results : bool, optional
-        Whether to return the calculated rarefaction results instead of the plot.
-    save_fig : str | None, optional
-        File path for saving the figure.
+    vdj_data : AnnData or Dandelion
+        Object containing V(D)J metadata. Clone IDs must be stored in
+        `.obs` (AnnData) or `.metadata` (Dandelion).
+    groupby : str
+        Column in metadata specifying the grouping variable (e.g., sample,
+        donor, condition).
+    clone_key : str, optional
+        Column containing clone identifiers. Defaults to `"clone_id"` if
+        not provided.
+    palette : list of str, optional
+        List of colors to use for plotting. If `None`, the function tries
+        to use `vdj_data.uns[f"{groupby}_colors"]` when available.
+    figsize : tuple of float, optional
+        Width and height of the plot (in inches). Defaults to `(5, 3)`.
+    chain_status_include : list of str, optional
+        List of chain-status categories to retain. All other chain-status
+        entries are excluded. Defaults to a set of productive/orphan chain
+        categories commonly used in V(D)J QC.
+    plot : bool, optional
+        If `True`, returns a ggplot object. If `False`, returns a tidy
+        DataFrame with observed and extrapolated rarefaction values.
+    plateau_fraction : float, optional
+        Fraction of the estimated asymptote at which extrapolation stops.
+        For example, `0.95` stops when the curve reaches 95% of the fitted
+        asymptotic clone richness.
+    step : int, optional
+        Increment for generating extrapolated sampling depths. Smaller
+        values produce smoother curves but increase computation time.
 
     Returns
     -------
-    ggplot
-        rarefaction plot.
+    pandas.DataFrame or ggplot
+        If `plot=False`:
+            A tidy DataFrame with the following columns:
+                - `cells`: number of sampled cells
+                - `yhat`: predicted clone richness
+                - `group`: group label
+                - `type`: "observed" or "extrapolated"
+                - `plateau`: plateau threshold for that group
+        If `plot=True`:
+            A ggplot object showing observed and extrapolated rarefaction
+            curves with solid and dashed line types, respectively.
+
+    Notes
+    -----
+    * Rarefaction for observed values is computed using rarefun adapted
+      from the `vegan` R package.
+    * Asymptotic extrapolation is performed using a Michaelis–Menten
+      saturation curve:
+        ``y = a * x / (b + x)``
+    * If the nonlinear fit fails, the function falls back to extending the
+      observed rarefaction curve without asymptotic modeling.
+    * The function automatically filters out unused categories in the
+      clone column and removes `"No_contig"` clones if present.
     """
+    # --------------------------
+    # Extract metadata
+    # --------------------------
     if isinstance(vdj_data, AnnData):
         metadata = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
@@ -96,121 +131,126 @@ def clone_rarefaction(
     elif hasattr(vdj_data, "mod"):
         metadata = vdj_data.mod["airr"].copy()
 
-    if clone_key is None:
-        clonekey = "clone_id"
-    else:
-        clonekey = clone_key
+    clonekey = "clone_id" if clone_key is None else clone_key
 
-    groups = list(set(metadata[color]))
+    groups = list(set(metadata[groupby]))
     if "chain_status" in metadata:
         metadata = metadata[metadata["chain_status"].isin(chain_status_include)]
 
     if pd.api.types.is_categorical_dtype(metadata[clonekey]):
         metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
+
+    # Count clone sizes per group
     res = {}
     for g in groups:
-        _metadata = metadata[metadata[color] == g]
+        _metadata = metadata[metadata[groupby] == g]
         res[g] = _metadata[clonekey].value_counts()
     res_ = pd.DataFrame.from_dict(res, orient="index")
 
-    # remove those with no counts
-    logg.info(
-        "removing due to zero counts: "
-        ", ".join(
-            [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
-        ),
-    )
-    sleep(0.5)
+    # Remove empty and no-contig
     res_ = res_[~(res_.sum(axis=1) == 0)]
-
-    # set up for calculating rarefaction
-    tot = res_.apply(sum, axis=1)
-    # S = res_.apply(lambda x: x[x > 0].shape[0], axis=1)
+    res_ = res_.drop("No_contig", axis=1, errors="ignore")
+    tot = res_.sum(axis=1)
     nr = res_.shape[0]
-
-    # append the results to a dictionary
-    rarecurve = {}
+    all_results = []
+    # --------------------------
+    # Compute curves per group
+    # --------------------------
     for i in tqdm(
-        range(0, nr),
-        desc="Calculating rarefaction curve ",
+        range(nr),
+        desc="Calculating rarefaction + extrapolation",
         bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
     ):
-        n = np.arange(1, tot[i], step=10)
-        if n[-1:] != tot[i]:
-            n = np.append(n, tot[i])
-        rarecurve[res_.index[i]] = [
-            rarefun(
-                np.array(res_.iloc[i,]),
-                z,
+        clone_sizes = np.array(res_.iloc[i,])
+        total_cells = tot.iloc[i]
+
+        # Observed curve
+        n_obs = np.arange(1, total_cells, 10)
+        if n_obs[-1] != total_cells:
+            n_obs = np.append(n_obs, total_cells)
+        y_obs = [rarefun(clone_sizes, z) for z in n_obs]
+
+        # Fit asymptotic model
+        try:
+            popt, _ = curve_fit(
+                michaelis_menten_curve,
+                n_obs,
+                y_obs,
+                maxfev=5000,
+                bounds=(0, np.inf),
             )
-            for z in n
-        ]
-    y = pd.DataFrame([rarecurve[c] for c in rarecurve]).T
-    pred = pd.DataFrame(
-        [np.append(np.arange(1, s, 10), s) for s in res_.sum(axis=1)],
-        index=res_.index,
-    ).T
+        except Exception:
+            # fallback: no fitting
+            popt = None
 
-    y = y.melt()
-    pred = pred.melt()
-    pred["yhat"] = y["value"]
-
-    if return_results:
-        return pred, y
-
-    options.figure_size = figsize
-    if palette is None:
-        if isinstance(vdj_data, AnnData):
-            if str(color) + "_colors" in vdj_data.uns:
-                pal = vdj_data.uns[str(color) + "_colors"]
-            else:
-                pal = None
-
-            if pal is not None:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + scale_color_manual(values=(pal))
-                    + geom_line()
-                )
-            else:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + geom_line()
-                )
+        # Determine plateau target
+        if popt is not None:
+            a = popt[0]
+            target = plateau_fraction * a
         else:
-            p = (
-                ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                + theme_classic()
-                + xlab("number of cells")
-                + ylab("number of clones")
-                + ggtitle("rarefaction curve")
-                + labs(color=color)
-                + geom_line()
-            )
-    else:
-        p = (
-            ggplot(pred, aes(x="value", y="yhat", color="variable"))
-            + theme_classic()
-            + xlab("number of cells")
-            + ylab("number of clones")
-            + ggtitle("rarefaction curve")
-            + labs(color=color)
-            + scale_color_manual(values=palette)
-            + geom_line()
+            target = max(y_obs)
+
+        z_pred = np.arange(1, total_cells * 20, step)
+        if popt is not None:
+            y_pred = michaelis_menten_curve(z_pred, *popt)
+        else:
+            y_pred = [rarefun(clone_sizes, z) for z in z_pred]
+
+        # Stop at plateau
+        plateau_idx = np.argmax(np.array(y_pred) >= target)
+        if plateau_idx == 0 and y_pred[0] < target:
+            plateau_idx = len(y_pred) - 1
+        z_pred = z_pred[: plateau_idx + 1]
+        y_pred = y_pred[: plateau_idx + 1]
+
+        # Separate observed vs extrapolated for plotting
+        type_labels = [
+            "observed" if z <= n_obs[-1] else "extrapolated" for z in z_pred
+        ]
+
+        df_i = pd.DataFrame(
+            {
+                "cells": z_pred,
+                "yhat": y_pred,
+                "group": res_.index[i],
+                "type": type_labels,
+                "plateau": [target] * len(z_pred),
+            }
         )
-    if save_fig is not None:
-        save_as_pdf_pages([p], filename=save_fig, verbose=False)
-    p.show()
+        all_results.append(df_i)
+
+    pred = pd.concat(all_results, ignore_index=True)
+
+    if not plot:
+        return pred
+
+    # --------------------------
+    # Plotting
+    # --------------------------
+    options.figure_size = figsize
+
+    if palette is None:
+        if (
+            isinstance(vdj_data, AnnData)
+            and (str(groupby) + "_colors") in vdj_data.uns
+        ):
+            palette = vdj_data.uns[str(groupby) + "_colors"]
+
+    p = (
+        ggplot(pred, aes(x="cells", y="yhat", color="group", linetype="type"))
+        + theme_classic()
+        + xlab("number of cells")
+        + ylab("number of clones")
+        + ggtitle("rarefaction curve with plateau extrapolation")
+        + labs(color=groupby, linetype="data type")
+        + geom_line()
+        + scale_linetype_manual(
+            values={"observed": "solid", "extrapolated": "dashed"}
+        )
+    )
+
+    if palette is not None:
+        p += scale_color_manual(values=palette)
 
     return p
 
@@ -465,7 +505,7 @@ def diversity_gini(
     return res, {"cluster_raw": cluster_raw, "vertex_raw": vertex_raw}
 
 
-def chooseln(N, k) -> float:
+def chooseln(N: int, k: int) -> float:
     """
     R's lchoose in python
     from https://stackoverflow.com/questions/21767690/python-log-n-choose-k
@@ -473,7 +513,7 @@ def chooseln(N, k) -> float:
     return gammaln(N + 1) - gammaln(N - k + 1) - gammaln(k + 1)
 
 
-def rarefun(y, sample_size) -> float:
+def rarefun(y: np.ndarray, sample_size: int) -> float:
     """
     Adapted from rarefun from vegan:
     https://github.com/vegandevs/vegan/blob/master/R/rarefy.R
@@ -489,6 +529,13 @@ def rarefun(y, sample_size) -> float:
             res.append(np.exp(chooseln(d, sample_size) - ldiv))
     out = np.sum(1 - np.array(res))
     return out
+
+
+def michaelis_menten_curve(x: float, a: float, b: float) -> float:
+    """
+    Michaelis-Menten curve function. Used for extrapolation in rarefaction.
+    """
+    return (a * x) / (b + x)
 
 
 def drop_nan_values(df: pd.DataFrame) -> None:
