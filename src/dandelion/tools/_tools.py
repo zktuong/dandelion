@@ -2161,6 +2161,7 @@ def vdj_sample(
     vdj_data: Dandelion,
     size: int,
     gex_data: AnnData | MuData | None = None,
+    p: list[float] | np.ndarray[float] | None = None,
     force_replace: bool = False,
     random_state: int | np.random.RandomState | None = None,
 ) -> tuple[Dandelion, AnnData] | Dandelion:
@@ -2175,10 +2176,13 @@ def vdj_sample(
         Desired size for resampling.
     gex_data : AnnData | MuData | None, optional
         AnnData or MuData object corresponding to the gene expression data.
+    p : list[float] | np.ndarray[float] | None, optional
+        Drawing probabilities for each cell, must sum to 1. If None, uniform probabilities are used.
     force_replace : bool, optional
         Whether to force sampling with replacement, by default False.
     random_state : int | np.random.RandomState | None, optional
         Random state for reproducibility, by default None.
+
 
     Returns
     -------
@@ -2191,7 +2195,7 @@ def vdj_sample(
         if force_replace:
             replace = True
         keep_cells = vdj_data.metadata.sample(
-            size, replace=replace, random_state=random_state
+            size, replace=replace, random_state=random_state, weights=p
         )
         keep_cells = list(keep_cells.index)
     else:
@@ -2210,7 +2214,7 @@ def vdj_sample(
         if force_replace:
             replace = True
         # use scanpy to sample
-        sc.pp.sample(adata, n=size, replace=replace, rng=random_state)
+        sc.pp.sample(adata, n=size, replace=replace, rng=random_state, p=p)
         keep_cells = list(adata.obs_names)
 
     # get the .data without ambiguous assignments
