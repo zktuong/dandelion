@@ -14,6 +14,7 @@ from pathlib import Path
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
+from scipy.sparse.csgraph import csgraph_from_dense
 from sklearn.metrics import pairwise_distances
 from scipy.sparse import csr_matrix
 from tqdm import tqdm
@@ -518,25 +519,42 @@ def generate_network(
 
             # create a data frame to recall the actual distance quickly
             # convert total_dist to DataFrame to become adjacency matrix
-            tmp_totaldist = pd.DataFrame(
-                total_dist.compute() if lazy else total_dist,
-                index=vdj_data.metadata.index,
-                columns=vdj_data.metadata.index,
+            # tmp_totaldist = pd.DataFrame(
+            #     total_dist.compute() if lazy else total_dist,
+            #     index=vdj_data.metadata.index,
+            #     columns=vdj_data.metadata.index,
+            # )
+
+            # tmp_totaldiststack = adjacency_to_edge_list(
+            #     tmp_totaldist, rename_index=True
+            # )
+
+            # tmp_totaldiststack["keep"] = [
+            #     False if len(set(i.split("|"))) == 1 else True
+            #     for i in tmp_totaldiststack.index
+            # ]
+
+            # tmp_totaldiststack = tmp_totaldiststack[
+            #     tmp_totaldiststack.keep
+            # ].drop("keep", axis=1)
+            # convert total_dist to sparse graph
+            tmp_g = csgraph_from_dense(
+                total_dist.compute() if lazy else total_dist
             )
-
-            tmp_totaldiststack = adjacency_to_edge_list(
-                tmp_totaldist, rename_index=True
+            # construct edge list as a dictionary
+            Gcoo = tmp_g.tocoo()
+            # remove self-loops
+            mask = Gcoo.row != Gcoo.col
+            rows = Gcoo.row[mask]
+            cols = Gcoo.col[mask]
+            weights = Gcoo.data[mask]
+            tmp_totaldiststack = {
+                vdj_data.metadata.index[r] + "|" + vdj_data.metadata.index[c]: w
+                for r, c, w in zip(rows, cols, weights)
+            }
+            tmp_totaldiststack = pd.DataFrame(
+                pd.Series(tmp_totaldiststack, name="weight")
             )
-
-            tmp_totaldiststack["keep"] = [
-                False if len(set(i.split("|"))) == 1 else True
-                for i in tmp_totaldiststack.index
-            ]
-
-            tmp_totaldiststack = tmp_totaldiststack[
-                tmp_totaldiststack.keep
-            ].drop("keep", axis=1)
-
             # convert tmp_totaldist to edge list and rename the index
             tmp_edge_list = Tree()
             for c in tqdm(
