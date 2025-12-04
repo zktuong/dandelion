@@ -9,7 +9,7 @@ import numpy as np
     "create_testfolder",
 )
 @pytest.mark.parametrize(
-    "sequential_chain,num_cores,lazy,pad_to_max,expected",
+    "sequential_chain,n_cpus,lazy,pad_to_max,expected",
     [
         pytest.param(True, 1, False, False, 34),  # original
         pytest.param(True, 2, False, False, 34),  # original parallel
@@ -29,7 +29,7 @@ def test_generate_network_clone(
     create_testfolder,
     vdj_small,
     sequential_chain,
-    num_cores,
+    n_cpus,
     lazy,
     pad_to_max,
     expected,
@@ -42,7 +42,7 @@ def test_generate_network_clone(
         compute_graph=False,
         use_existing_graph=False,
         sequential_chain=sequential_chain,
-        num_cores=num_cores,
+        n_cpus=n_cpus,
         pad_to_max=pad_to_max,
         lazy=lazy,
         zarr_path=create_testfolder / "test.zarr",
@@ -60,7 +60,7 @@ def test_generate_network_clone(
     "create_testfolder",
 )
 @pytest.mark.parametrize(
-    "sequential_chain,num_cores,lazy,pad_to_max,expected",
+    "sequential_chain,n_cpus,lazy,pad_to_max,expected",
     [
         pytest.param(True, 1, False, False, 10398758),  # original
         pytest.param(True, 2, False, False, 10398758),  # original parallel
@@ -80,7 +80,7 @@ def test_generate_network_full(
     create_testfolder,
     vdj_smaller,
     sequential_chain,
-    num_cores,
+    n_cpus,
     lazy,
     pad_to_max,
     expected,
@@ -93,7 +93,7 @@ def test_generate_network_full(
         compute_graph=False,
         use_existing_graph=False,
         sequential_chain=sequential_chain,
-        num_cores=num_cores,
+        n_cpus=n_cpus,
         pad_to_max=pad_to_max,
         lazy=lazy,
         zarr_path=create_testfolder / "test.zarr",

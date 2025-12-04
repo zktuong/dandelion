@@ -273,7 +273,7 @@ def calculate_threshold(
     plot_group: str | None = None,
     figsize: tuple[float, float] = (4.5, 2.5),
     save_plot: str | None = None,
-    ncpu: int = 1,
+    n_cpus: int = 1,
     **kwargs,
 ) -> float:
     """
@@ -343,7 +343,7 @@ def calculate_threshold(
         size of plot.
     save_plot : str | None, optional
         if specified, plot will be save with this path.
-    ncpu : int, optional
+    n_cpus : int, optional
         number of cpus to run `distToNearest`. defaults to 1.
     **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
@@ -405,7 +405,7 @@ def calculate_threshold(
                 vCallColumn=v_call,
                 normalize=norm_,
                 model=model_,
-                nproc=ncpu,
+                nproc=n_cpus,
                 **kwargs,
             )
         except:
@@ -422,7 +422,7 @@ def calculate_threshold(
                 vCallColumn=v_call,
                 model=model_,
                 normalize=norm_,
-                nproc=ncpu,
+                nproc=n_cpus,
                 **kwargs,
             )
     dist_ham = safe_rpy2py(dist_ham)

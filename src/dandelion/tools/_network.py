@@ -54,7 +54,7 @@ def generate_network(
     layout_method: Literal["mod_fr", "sfdp"] = "mod_fr",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
-    num_cores: int = 1,
+    n_cpus: int = 1,
     sequential_chain: bool = False,
     distance_mode: Literal["clone", "full"] = "clone",
     dist_func: Callable | str | None = None,
@@ -105,7 +105,7 @@ def generate_network(
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
         whether or not to just compute the layout using the existing graph if it exists in the object.
-    num_cores : int, optional
+    n_cpus : int, optional
         number of cores to use for parallelizable steps. -1 uses all available cores.
     sequential_chain : bool, optional
         whether or not to use the original method for distance calculation method where each chain is calculated
@@ -160,10 +160,10 @@ def generate_network(
     ValueError
         if any errors with dandelion input.
     """
-    # normalize num_cores convention (-1 => use all CPUs)
-    if num_cores == -1:
-        num_cores = multiprocessing.cpu_count()
-    num_cores = max(1, int(num_cores))
+    # normalize n_cpus convention (-1 => use all CPUs)
+    if n_cpus == -1:
+        n_cpus = multiprocessing.cpu_count()
+    n_cpus = max(1, int(n_cpus))
     clone_key = clone_key if clone_key is not None else "clone_id"
     dist_func = levenshtein if dist_func is None else dist_func
     metric = resolve_metric(dist_func)
@@ -210,13 +210,21 @@ def generate_network(
             from dandelion.tools._lazydistances import dask_safe_slice_square
 
         if sample is not None:
-            vdj_data, gex_data = vdj_sample(
-                size=sample,
-                vdj_data=vdj_data,
-                gex_data=gex_data,
-                force_replace=force_replace,
-                random_state=random_state,
-            )
+            if gex_data is not None:
+                vdj_data, gex_data = vdj_sample(
+                    vdj_data=vdj_data,
+                    size=sample,
+                    gex_data=gex_data,
+                    force_replace=force_replace,
+                    random_state=random_state,
+                )
+            else:
+                vdj_data = vdj_sample(
+                    vdj_data=vdj_data,
+                    size=sample,
+                    force_replace=force_replace,
+                    random_state=random_state,
+                )
             dat = vdj_data.data.copy()
         else:
             if "ambiguous" in vdj_data.data:
@@ -268,7 +276,7 @@ def generate_network(
                     zarr_path=zarr_path,
                     chunk_size=chunk_size,
                     max_clones_per_chunk=chunk_clone_limit,
-                    num_cores=num_cores,
+                    n_cpus=n_cpus,
                     memory_limit_gb=memory_limit_gb,
                     memory_safety_fraction=memory_safety_fraction,
                     compress=compress,
@@ -290,7 +298,7 @@ def generate_network(
                         membership=membership,
                         metric=metric,
                         pad_to_max=pad_to_max,
-                        num_cores=num_cores,
+                        n_cpus=n_cpus,
                         verbose=verbose,
                     )
         elif distance_mode == "full":
@@ -306,7 +314,7 @@ def generate_network(
                     membership=None,
                     zarr_path=zarr_path,
                     chunk_size=chunk_size,
-                    num_cores=num_cores,
+                    n_cpus=n_cpus,
                     memory_limit_gb=memory_limit_gb,
                     memory_safety_fraction=memory_safety_fraction,
                     compress=compress,
@@ -319,7 +327,7 @@ def generate_network(
                         dat_seq,
                         metric=metric,
                         pad_to_max=pad_to_max,
-                        num_cores=num_cores,
+                        n_cpus=n_cpus,
                         verbose=verbose,
                     )
                 else:
@@ -328,7 +336,7 @@ def generate_network(
                         membership=None,
                         metric=metric,
                         pad_to_max=pad_to_max,
-                        num_cores=num_cores,
+                        n_cpus=n_cpus,
                         verbose=verbose,
                     )
         if compute_graph:
@@ -420,8 +428,8 @@ def generate_network(
                     if s1 > 1 and s2 > 1:
                         cluster_dist[c_] = dist_mat_
             # Minimum spanning trees (unchanged)
-            # mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
-            mst_tree = mst(cluster_dist, num_cores=1, verbose=verbose)
+            # mst_tree = mst(cluster_dist, n_cpus=n_cpus, verbose=verbose)
+            mst_tree = mst(cluster_dist, n_cpus=1, verbose=verbose)
             # generate edge list
             edge_list = Tree()
             for c in tqdm(
@@ -656,7 +664,7 @@ def generate_network(
 
 def mst(
     mat: dict,
-    num_cores: int | None = None,
+    n_cpus: int | None = None,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -666,8 +674,8 @@ def mst(
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
-    num_cores: int, optional
-        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1..
+    n_cpus: int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1..
     verbose : bool, optional
         Whether or not to show logging information.
 
@@ -678,7 +686,7 @@ def mst(
     """
     mst_tree = Tree()
 
-    if num_cores == 1:
+    if n_cpus == 1:
         for c in tqdm(
             mat,
             desc="Calculating minimum spanning tree ",
@@ -687,11 +695,11 @@ def mst(
         ):
             _, mst_tree[c] = process_mst_per_clonotype(mat=mat, c=c)
     else:
-        results = Parallel(n_jobs=num_cores)(
+        results = Parallel(n_jobs=n_cpus)(
             delayed(process_mst_per_clonotype)(mat, c)
             for c in tqdm(
                 mat,
-                desc=f"Calculating minimum spanning tree, parallelized across {num_cores} cores ",
+                desc=f"Calculating minimum spanning tree, parallelized across {n_cpus} cores ",
                 disable=not verbose,
                 bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             )
@@ -963,7 +971,7 @@ def calculate_distance_matrix_original_full(
     dat_seq: pd.DataFrame,
     metric: Metric,
     pad_to_max: bool = False,
-    num_cores: int = 1,
+    n_cpus: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -977,8 +985,8 @@ def calculate_distance_matrix_original_full(
         Distance metric to use.
     pad_to_max : bool, optional
         Whether to pad sequences to maximum length before distance calculation.
-    num_cores : int, optional
-        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1.
+    n_cpus : int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1.
     verbose : bool, optional
         Whether to show progress.
 
@@ -1003,7 +1011,7 @@ def calculate_distance_matrix_original_full(
             continue
         # seq_indices = list(nonnull.index)
         seqs = nonnull.to_numpy(dtype=object)
-        if num_cores > 1:
+        if n_cpus > 1:
             results = pairwise_distances(
                 seqs,
                 metric=lambda x, y: (
@@ -1015,7 +1023,7 @@ def calculate_distance_matrix_original_full(
                         sep="" if not pad_to_max else "#",
                     )
                 ),
-                n_jobs=num_cores,
+                n_jobs=n_cpus,
             )
         else:
             results = squareform(
@@ -1050,7 +1058,7 @@ def calculate_distance_matrix_long(
     membership: dict | None,
     metric: Metric,
     pad_to_max: bool = False,
-    num_cores: int = 1,
+    n_cpus: int = 1,
     verbose: bool = True,
 ) -> np.ndarray:
     """
@@ -1070,8 +1078,8 @@ def calculate_distance_matrix_long(
         whether or not to pad sequences to the maximum length in the dataset before distance calculation. This will
         allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
         may increase memory usage and computation time.
-    num_cores : int, optional
-        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if num_cores > 1..
+    n_cpus : int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1..
     verbose : bool, optional
         Whether to show progress.
 
@@ -1092,7 +1100,7 @@ def calculate_distance_matrix_long(
     if membership is None:
         # Step 3: compute full distance matrix at once
         seqs = dat_seq_clean.values
-        if num_cores > 1:
+        if n_cpus > 1:
             results = pairwise_distances(
                 seqs,
                 metric=lambda x, y: (
@@ -1104,7 +1112,7 @@ def calculate_distance_matrix_long(
                         sep="#",  # always pad with some sep
                     )
                 ),
-                n_jobs=num_cores,
+                n_jobs=n_cpus,
             )
         else:
             results = squareform(

@@ -85,3 +85,22 @@ def setup_dandelion_tutorial_tcr(path: Path | str | None = None) -> None:
                 continue
             print(f"Downloading {filename} → {outfile}")
             download_file(url, outfile)
+
+
+def setup_dandelion_tutorial_trajectory(path: Path | str | None = None) -> None:
+    """Download example datasets for Dandelion V(D)J trajectory tutorial."""
+    try:
+        import gdown
+    except ImportError:
+        raise ImportError(
+            "gdown is required to download the trajectory tutorial data. Please install it via `pip install gdown`."
+        )
+    base = Path("./dandelion_tutorial") if path is None else Path(path)
+    base.mkdir(parents=True, exist_ok=True)
+
+    gex_id = "1-LbAinwhAhJW3Y60wpO9GWJJcaMa_liy"
+    # Destination filenames
+    gex_path = base / "demo-pseudobulk.h5ad"
+    if not gex_path.exists():
+        url = f"https://drive.google.com/uc?id={gex_id}"
+        gdown.download(url, str(gex_path), quiet=False)

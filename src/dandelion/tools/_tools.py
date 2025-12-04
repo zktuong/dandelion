@@ -267,7 +267,7 @@ def find_clones(
 
 
 def transfer(
-    adata: AnnData,
+    adata: AnnData | MuData,
     dandelion: Dandelion,
     expanded: bool = False,
     gex_key: str | None = None,
@@ -290,7 +290,7 @@ def transfer(
 
     Parameters
     ----------
-    adata : AnnData
+    adata : AnnData | MuData
         AnnData object or `MuData` object.
     dandelion : Dandelion
         Dandelion object.
@@ -740,7 +740,7 @@ def define_clones(
     norm: Literal["len", "mut", "none"] = "len",
     doublets: Literal["drop", "count"] = "drop",
     fileformat: Literal["changeo", "airr"] = "airr",
-    ncpu: int | None = None,
+    n_cpus: int | None = None,
     outFilePrefix: int | None = None,
     key_added: int | None = None,
     out_dir: Path | str | None = None,
@@ -779,7 +779,7 @@ def define_clones(
         the doublets while 'count' will retain only the highest umi count contig.
     fileformat : Literal["changeo", "airr"], optional
         Format of V(D)J file/objects. Default is 'airr'. Also accepts 'changeo'.
-    ncpu : int | None, optional
+    n_cpus : int | None, optional
         Number of cpus for parallelization. Default is 1, no parallelization.
     outFilePrefix : int | None, optional
         If specified, the out file name will have this prefix. `None` defaults to 'dandelion_define_clones'
@@ -796,10 +796,10 @@ def define_clones(
         Dandelion object with clone_id annotated in `.data` slot and `.metadata` initialized.
     """
     start = logg.info("Finding clones")
-    if ncpu is None:
+    if n_cpus is None:
         nproc = 1
     else:
-        nproc = ncpu
+        nproc = n_cpus
 
     clone_key = key_added if key_added is not None else "clone_id"
 
@@ -2158,21 +2158,21 @@ def check_chains(dat_vdj: pd.DataFrame, dat_vj: pd.DataFrame) -> pd.DataFrame:
 
 
 def vdj_sample(
-    size: int,
     vdj_data: Dandelion,
+    size: int,
     gex_data: AnnData | MuData | None = None,
     force_replace: bool = False,
     random_state: int | np.random.RandomState | None = None,
-) -> tuple[Dandelion, AnnData]:
+) -> tuple[Dandelion, AnnData] | Dandelion:
     """
     Resample vdj data and corresponding AnnData to a specified size.
 
     Parameters
     ----------
-    size : int
-        Desired size for resampling.
     vdj_data : Dandelion
         Dandelion object containing VDJ data.
+    size : int
+        Desired size for resampling.
     gex_data : AnnData | MuData | None, optional
         AnnData or MuData object corresponding to the gene expression data.
     force_replace : bool, optional
@@ -2182,8 +2182,8 @@ def vdj_sample(
 
     Returns
     -------
-    tuple[Dandelion, AnnData]
-        Resampled Dandelion and AnnData objects.
+    tuple[Dandelion, AnnData] | Dandelion
+        Resampled Dandelion and AnnData objects if gex_data is provided, otherwise only Dandelion.
     """
     logg.info("Resampling to {} cells.".format(str(size)))
     if gex_data is None:
@@ -2275,7 +2275,7 @@ def vdj_sample(
         else:
             return vdj_data, adata
     else:
-        return vdj_data, None
+        return vdj_data
 
 
 def to_scirpy(

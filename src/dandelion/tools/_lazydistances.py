@@ -29,7 +29,7 @@ def calculate_distance_matrix_zarr(
     zarr_path: Path | str | None = None,
     chunk_size: int | None = None,
     max_clones_per_chunk: int | None = None,
-    num_cores: int = 1,
+    n_cpus: int = 1,
     memory_limit_gb: float | None = None,
     memory_safety_fraction: float = 0.3,
     compress: bool = True,
@@ -64,7 +64,7 @@ def calculate_distance_matrix_zarr(
     max_clones_per_chunk : int | None, optional
         Maximum number of clones per computation chunk. If None, no limit is applied
         and instead if will be based on memory limits.
-    num_cores : int
+    n_cpus : int
         Number of cores/workers to use
     memory_limit_gb : float | None, optional
         Memory limit per worker in GB
@@ -116,7 +116,7 @@ def calculate_distance_matrix_zarr(
     if chunk_size is None:
         chunk_size, _ = _auto_chunk_size(
             n,
-            num_cores=num_cores,
+            n_cpus=n_cpus,
             memory_limit_gb=memory_limit_gb,
             safety_fraction=memory_safety_fraction,
         )
@@ -167,9 +167,7 @@ def calculate_distance_matrix_zarr(
         logg.info(f"Compressor: {comp}\n")
 
     # Setup Dask client
-    client = _setup_dask_client(
-        num_cores=num_cores, memory_limit_gb=memory_limit_gb
-    )
+    client = _setup_dask_client(n_cpus=n_cpus, memory_limit_gb=memory_limit_gb)
 
     try:
         # Compute distances and write blocks as they complete
@@ -179,7 +177,7 @@ def calculate_distance_matrix_zarr(
             pad_to_max=pad_to_max,
             z_array=z_array,
             chunk_size=chunk_size,
-            num_cores=num_cores,
+            n_cpus=n_cpus,
             chunk_batch_limit=max_clones_per_chunk,
             client=client,
             membership=membership,
@@ -238,7 +236,7 @@ def _compute_multicol_distances_streaming(
     pad_to_max: bool,
     z_array: zarr.Array,
     chunk_size: int,
-    num_cores: int,
+    n_cpus: int,
     chunk_batch_limit: int | None = None,
     client: Client | None = None,
     membership: dict | None = None,
@@ -301,11 +299,11 @@ def _compute_multicol_distances_streaming(
         current_batch_clones = 0  # total number of clones in current batch
 
         # Calculate soft batch limit if not provided
-        if chunk_batch_limit is None and num_cores > 1:
+        if chunk_batch_limit is None and n_cpus > 1:
             total_clonotypes = len(membership)
             # Target: distribute clonotypes across cores with some overhead for load balancing
             # Use 2x cores to allow for better parallelization
-            target_batches = num_cores * 2
+            target_batches = n_cpus * 2
             soft_chunk_batch_limit = max(1, total_clonotypes // target_batches)
         else:
             soft_chunk_batch_limit = None
@@ -411,8 +409,8 @@ def _compute_multicol_distances_streaming(
     else:
         # Determine number of chunks
         n_chunks = max(1, math.ceil(m / chunk_size))
-        if n_chunks < num_cores:
-            n_chunks = num_cores
+        if n_chunks < n_cpus:
+            n_chunks = n_cpus
         # Work with numpy for splitting, then convert chunks to dask arrays
         seqs_computed = seqs.compute() if hasattr(seqs, "compute") else seqs_np
         chunks_list = np.array_split(seqs_computed, n_chunks)
@@ -586,7 +584,7 @@ def _compute_and_write_membership_cat(
 
 def _auto_chunk_size(
     n: int,
-    num_cores: int,
+    n_cpus: int,
     memory_limit_gb: float | None = None,
     safety_fraction: float = 0.3,
 ) -> tuple[int, int]:
@@ -597,7 +595,7 @@ def _auto_chunk_size(
     ----------
     n : int
         Total number of sequences
-    num_cores : int
+    n_cpus : int
         Number of cores/workers
     memory_limit_gb : float, optional
         Memory limit per worker in GB
@@ -643,7 +641,7 @@ def _auto_chunk_size(
             )
 
     # Apply safety fraction regardless of source
-    mem_per_core = memory_limit_gb * safety_fraction / num_cores
+    mem_per_core = memory_limit_gb * safety_fraction / n_cpus
 
     # Each chunk block is chunk_size^2 * 8 bytes
     # Keep blocks small enough that 2-3 can fit in memory per worker
@@ -658,14 +656,14 @@ def _auto_chunk_size(
 
 
 def _setup_dask_client(
-    num_cores: int, memory_limit_gb: float | None = None
+    n_cpus: int, memory_limit_gb: float | None = None
 ) -> Client | None:
     """
     Setup Dask distributed client.
 
     Parameters
     ----------
-    num_cores : int
+    n_cpus : int
         Number of workers
     memory_limit_gb : float, optional
         Memory limit per worker
@@ -673,7 +671,7 @@ def _setup_dask_client(
     Returns
     -------
     Client or None
-        Dask client if num_cores > 1, else None
+        Dask client if n_cpus > 1, else None
     """
     try:
         from dask.distributed import Client
@@ -681,11 +679,11 @@ def _setup_dask_client(
         raise ImportError(
             "Please install dask distributed to enable parallel processing: pip install dask distributed"
         )
-    if num_cores <= 1:
+    if n_cpus <= 1:
         return None
 
     client_kwargs = {
-        "n_workers": num_cores,
+        "n_workers": n_cpus,
         "threads_per_worker": 1,  # for simplicity and to avoid GIL issues
         "processes": True,  # Critical for memory isolation
     }
