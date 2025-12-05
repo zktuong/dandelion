@@ -539,7 +539,9 @@ def generate_network(
             # ].drop("keep", axis=1)
             # convert total_dist to sparse graph
             tmp_g = csgraph_from_dense(
-                total_dist.compute() if lazy else total_dist
+                total_dist.compute() + 1
+                if lazy
+                else total_dist + 1  # +1 to keep zeros as infinite distance
             )
             # construct edge list as a dictionary
             Gcoo = tmp_g.tocoo()
@@ -547,7 +549,9 @@ def generate_network(
             mask = Gcoo.row != Gcoo.col
             rows = Gcoo.row[mask]
             cols = Gcoo.col[mask]
-            weights = Gcoo.data[mask]
+            weights = (
+                Gcoo.data[mask] - 1
+            )  # -1 to revert back to original distance
             tmp_totaldiststack = {
                 vdj_data.metadata.index[r] + "|" + vdj_data.metadata.index[c]: w
                 for r, c, w in zip(rows, cols, weights)
