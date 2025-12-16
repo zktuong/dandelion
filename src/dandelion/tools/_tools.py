@@ -27,7 +27,8 @@ if TYPE_CHECKING:
     from mudata import MuData
     from awkward import Array
 
-from dandelion.utilities._core import Dandelion
+from dandelion.utilities._core import Dandelion, load_data
+from dandelion.utilities._io import write_airr
 from dandelion.utilities._utilities import (
     FALSES,
     VCALL,
@@ -39,8 +40,6 @@ from dandelion.utilities._utilities import (
     is_categorical,
     type_check,
     present,
-    load_data,
-    write_airr,
     check_same_celltype,
     Tree,
     sanitize_column,

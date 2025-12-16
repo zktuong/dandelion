@@ -37,8 +37,6 @@ from dandelion.utilities._utilities import (
     all_missing2,
     sanitize_data_for_saving,
     sanitize_data,
-    check_travdv,
-    load_data,
     format_isotype1,
     format_isotype2,
     format_locus,
@@ -46,7 +44,6 @@ from dandelion.utilities._utilities import (
     movecol,
     format_chain_status,
     clear_h5file,
-    write_fasta,
     get_vcall_key,
     Tree,
 )
@@ -2967,3 +2964,112 @@ def write_h5ddl_legacy(
                 pass
             for k in self.germline.keys():
                 hf["germline"].attrs[k] = self.germline[k]
+
+
+def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
+    """
+    Read in or copy dataframe object and set sequence_id as index without dropping.
+
+    Parameters
+    ----------
+    obj : pd.DataFrame | Path | str | None
+        file path to .tsv file or pandas DataFrame object.
+
+    Returns
+    -------
+    pd.DataFrame
+
+    Raises
+    ------
+    ValueError
+        if input is not found.
+    KeyError
+        if `sequence_id` not found in input.
+    """
+    if obj is not None:
+        if os.path.isfile(str(obj)):
+            obj_ = pd.read_csv(obj, sep="\t")
+        elif isinstance(obj, pd.DataFrame):
+            obj_ = obj.copy()
+        else:
+            raise ValueError(
+                "Either input is not of pandas DataFrame or AIRR file does not exist."
+            )
+
+        if "sequence_id" in obj_.columns:
+            # assert that sequence_id is string
+            obj_["sequence_id"] = obj_["sequence_id"].astype(str)
+            obj_.set_index("sequence_id", drop=False, inplace=True)
+            if "cell_id" not in obj_.columns:
+                obj_["cell_id"] = [
+                    c.split("_contig")[0] if "_contig" in c else c
+                    for c in obj_["sequence_id"]
+                ]
+            # assert that cell_id is string
+            obj_["cell_id"] = obj_["cell_id"].astype(str)
+        else:
+            raise KeyError("'sequence_id' not found in columns of input")
+
+        if "duplicate_count" in obj_.columns:
+            if "umi_count" not in obj_.columns:
+                obj_.rename(
+                    columns={"duplicate_count": "umi_count"}, inplace=True
+                )
+
+        return obj_
+
+
+def write_fasta(
+    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
+) -> None:
+    """
+    Generic fasta writer using fasta_iterator
+
+    Parameters
+    ----------
+    fasta_dict : dict[str, str]
+        dictionary containing fasta headers and sequences as keys and records respectively.
+    out_fasta : str
+        path to write fasta file to.
+    overwrite : bool, optional
+        whether or not to overwrite the output file (out_fasta).
+    """
+    if overwrite:
+        fh = open(out_fasta, "w")
+        fh.close()
+    out = ""
+    for l in fasta_dict:
+        out = ">" + l + "\n" + fasta_dict[l] + "\n"
+        write_output(out, out_fasta)
+
+
+def write_output(out: str, file: Path | str) -> None:
+    """General line writer."""
+    fh = open(file, "a")
+    fh.write(out)
+    fh.close()
+
+
+def check_travdv(data: pd.DataFrame) -> pd.DataFrame:
+    """Check if locus is TRA/D."""
+    contig = [x for x in data["sequence_id"]]
+    v = [x for x in data["v_call"]]
+    d = [x for x in data["d_call"]]
+    j = [x for x in data["j_call"]]
+    c = [x for x in data["c_call"]]
+    l = [x for x in data["locus"]]
+    v_dict = dict(zip(contig, v))
+    d_dict = dict(zip(contig, d))
+    j_dict = dict(zip(contig, j))
+    c_dict = dict(zip(contig, c))
+    l_dict = dict(zip(contig, l))
+    for co in contig:
+        if re.search("TRAV.*/DV", v_dict[co]):
+            if same_call(j_dict[co], c_dict[co], d_dict[co], "TRA"):
+                if not re.search("TRA", l_dict[co]):
+                    l_dict[co] = "TRA"
+            elif same_call(j_dict[co], c_dict[co], d_dict[co], "TRD"):
+                if not re.search("TRD", l_dict[co]):
+                    l_dict[co] = "TRD"
+    data["locus"] = pd.Series(l_dict)
+    return data

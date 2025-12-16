@@ -602,11 +602,6 @@ def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
             data[d] = [
                 int(x) if present(x) else "" for x in pd.to_numeric(data[d])
             ]
-    try:
-        data = check_travdv(data)
-    except:
-        pass
-
     if (
         pd.Series(["cell_id", "umi_count", "productive"])
         .isin(data.columns)
@@ -686,85 +681,6 @@ def validate_airr(data: pd.DataFrame) -> None:
     RearrangementSchema.validate_row(contig)
 
 
-def check_travdv(data: pd.DataFrame) -> pd.DataFrame:
-    """Check if locus is TRA/D."""
-    data = load_data(data)
-    contig = [x for x in data["sequence_id"]]
-    v = [x for x in data["v_call"]]
-    d = [x for x in data["d_call"]]
-    j = [x for x in data["j_call"]]
-    c = [x for x in data["c_call"]]
-    l = [x for x in data["locus"]]
-    v_dict = dict(zip(contig, v))
-    d_dict = dict(zip(contig, d))
-    j_dict = dict(zip(contig, j))
-    c_dict = dict(zip(contig, c))
-    l_dict = dict(zip(contig, l))
-    for co in contig:
-        if re.search("TRAV.*/DV", v_dict[co]):
-            if same_call(j_dict[co], c_dict[co], d_dict[co], "TRA"):
-                if not re.search("TRA", l_dict[co]):
-                    l_dict[co] = "TRA"
-            elif same_call(j_dict[co], c_dict[co], d_dict[co], "TRD"):
-                if not re.search("TRD", l_dict[co]):
-                    l_dict[co] = "TRD"
-    data["locus"] = pd.Series(l_dict)
-    return data
-
-
-def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
-    """
-    Read in or copy dataframe object and set sequence_id as index without dropping.
-
-    Parameters
-    ----------
-    obj : pd.DataFrame | Path | str | None
-        file path to .tsv file or pandas DataFrame object.
-
-    Returns
-    -------
-    pd.DataFrame
-
-    Raises
-    ------
-    ValueError
-        if input is not found.
-    KeyError
-        if `sequence_id` not found in input.
-    """
-    if obj is not None:
-        if os.path.isfile(str(obj)):
-            obj_ = pd.read_csv(obj, sep="\t")
-        elif isinstance(obj, pd.DataFrame):
-            obj_ = obj.copy()
-        else:
-            raise ValueError(
-                "Either input is not of pandas DataFrame or AIRR file does not exist."
-            )
-
-        if "sequence_id" in obj_.columns:
-            # assert that sequence_id is string
-            obj_["sequence_id"] = obj_["sequence_id"].astype(str)
-            obj_.set_index("sequence_id", drop=False, inplace=True)
-            if "cell_id" not in obj_.columns:
-                obj_["cell_id"] = [
-                    c.split("_contig")[0] if "_contig" in c else c
-                    for c in obj_["sequence_id"]
-                ]
-            # assert that cell_id is string
-            obj_["cell_id"] = obj_["cell_id"].astype(str)
-        else:
-            raise KeyError("'sequence_id' not found in columns of input")
-
-        if "duplicate_count" in obj_.columns:
-            if "umi_count" not in obj_.columns:
-                obj_.rename(
-                    columns={"duplicate_count": "umi_count"}, inplace=True
-                )
-
-        return obj_
-
-
 class ContigDict(dict):
     """Class Object to extract the contigs as a dictionary."""
 
@@ -796,47 +712,6 @@ class Contig:
     def contig(self) -> ContigDict:
         """Contig slot."""
         return self._contig
-
-
-def mask_dj(
-    data: list[Path | str],
-    filename_prefix: str,
-    d_evalue_threshold: float,
-    j_evalue_threshold: float,
-) -> None:
-    """Mask d/j assignment."""
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_igblast_db-pass.tsv",
-        )
-        if filePath is not None:
-            dat = load_data(filePath)
-            if "d_support_blastn" in dat:
-                dat["d_call"] = [
-                    "" if s > d_evalue_threshold else c
-                    for c, s in zip(dat["d_call"], dat["d_support_blastn"])
-                ]
-            if "j_support_blastn" in dat:
-                dat["j_call"] = [
-                    "" if s > j_evalue_threshold else c
-                    for c, s in zip(dat["j_call"], dat["j_support_blastn"])
-                ]
-
-            write_airr(dat, filePath)
-
-
-def write_airr(data: pd.DataFrame, save: Path | str) -> None:
-    """Save as airr formatted file."""
-    data = sanitize_data(data)
-    data.to_csv(save, sep="\t", index=False)
-
-
-def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
-    """Write blast output."""
-    data = sanitize_blastn(data)
-    data.to_csv(save, sep="\t", index=False)
 
 
 def deprecated(
@@ -1334,37 +1209,6 @@ def clear_h5file(filename: Path | str) -> None:
     with h5py.File(filename, "w") as hf:
         for datasetname in hf.keys():
             del hf[datasetname]
-
-
-def write_fasta(
-    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
-) -> None:
-    """
-    Generic fasta writer using fasta_iterator
-
-    Parameters
-    ----------
-    fasta_dict : dict[str, str]
-        dictionary containing fasta headers and sequences as keys and records respectively.
-    out_fasta : str
-        path to write fasta file to.
-    overwrite : bool, optional
-        whether or not to overwrite the output file (out_fasta).
-    """
-    if overwrite:
-        fh = open(out_fasta, "w")
-        fh.close()
-    out = ""
-    for l in fasta_dict:
-        out = ">" + l + "\n" + fasta_dict[l] + "\n"
-        write_output(out, out_fasta)
-
-
-def write_output(out: str, file: Path | str) -> None:
-    """General line writer."""
-    fh = open(file, "a")
-    fh.write(out)
-    fh.close()
 
 
 def get_vcall_key(data: dict, v_call_key: str) -> str:

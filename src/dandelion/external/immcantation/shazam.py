@@ -24,10 +24,9 @@ from plotnine import (
     save_as_pdf_pages,
 )
 
-from dandelion.utilities._core import Dandelion
+from dandelion.utilities._core import Dandelion, load_data
+from dandelion.utilities._io import write_airr
 from dandelion.utilities._utilities import (
-    load_data,
-    write_airr,
     sanitize_data,
     sanitize_data_for_saving,
 )

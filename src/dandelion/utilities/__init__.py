@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 from dandelion.utilities._utilities import (
     makeblastdb,
-    load_data,
-    write_airr,
-    write_blastn,
-    write_fasta,
-    write_output,
 )
 from dandelion.utilities._io import (
     read_pkl,
@@ -16,16 +11,16 @@ from dandelion.utilities._io import (
     read_parse_airr,
     read_10x_airr,
     read_10x_vdj,
+    write_airr,
+    write_blastn,
 )
-from dandelion.utilities._core import Dandelion, Query
+from dandelion.utilities._core import Dandelion, load_data
 
 __all__ = [
     "makeblastdb",
     "load_data",
     "write_airr",
     "write_blastn",
-    "write_fasta",
-    "write_output",
     "read_pkl",
     "read_h5ddl",
     "read_h5ddl_legacy",
@@ -35,5 +30,4 @@ __all__ = [
     "read_10x_airr",
     "read_10x_vdj",
     "Dandelion",
-    "Query",
 ]

@@ -15,8 +15,6 @@ from dandelion.utilities import (
     read_pkl,
     write_airr,
     write_blastn,
-    write_fasta,
-    write_output,
 )
 from dandelion.logging import (
     __author__,
@@ -51,8 +49,6 @@ __all__ = [
     "utl",
     "write_airr",
     "write_blastn",
-    "write_fasta",
-    "write_output",
     "to_ak",
     "from_ak",
     "Query",

@@ -11,6 +11,7 @@ import _pickle as cPickle
 import networkx as nx
 import numpy as np
 import pandas as pd
+import polars as pl
 
 from collections import defaultdict, OrderedDict
 from pathlib import Path
@@ -18,7 +19,7 @@ from scanpy import logging as logg
 from scipy.sparse import csr_matrix
 from typing import Literal
 
-from dandelion.utilities._core import Dandelion
+from dandelion.utilities._core import Dandelion, load_data
 from dandelion.utilities._utilities import (
     DEFAULT_PREFIX,
     deprecated,
@@ -27,9 +28,9 @@ from dandelion.utilities._utilities import (
     check_filepath,
     present,
     all_missing,
-    check_travdv,
-    load_data,
-    write_airr,
+    same_call,
+    sanitize_blastn,
+    sanitize_data,
     check_data,
     Contig,
 )
@@ -175,6 +176,7 @@ def decode(df):
 def read_h5ddl(
     filename: Path | str = "dandelion_data.h5ddl",
     distance_zarr: Path | str | None = None,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Read in and returns a Dandelion class from .h5ddl format.
@@ -185,6 +187,8 @@ def read_h5ddl(
         path to `.h5ddl` file
     distance_zarr : Path | str | None, optional
         path to Zarr array for distances if computed lazily.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
@@ -249,7 +253,7 @@ def read_h5ddl(
     if "distances" in locals():
         constructor["distances"] = distances
 
-    res = Dandelion(**constructor, verbose=False)
+    res = Dandelion(**constructor, verbose=verbose)
     # ensure that the metadata is decoded
     res.metadata = decode(res.metadata)
 
@@ -262,6 +266,7 @@ def read_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Reads a standard single-cell AIRR rearrangement file.
@@ -282,13 +287,15 @@ def read_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
         Dandelion object from AIRR file.
     """
-    vdj = Dandelion(file, verbose=False)
+    vdj = Dandelion(file, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -310,6 +317,7 @@ def read_bd_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Read the TCR or BCR `_AIRR.tsv` produced from BD Rhapsody technology.
@@ -327,13 +335,15 @@ def read_bd_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
         Dandelion object from BD AIRR file.
     """
-    vdj = Dandelion(file, verbose=False)
+    vdj = Dandelion(file, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -355,6 +365,8 @@ def read_parse_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
+    **kwargs,
 ) -> Dandelion:
     """
     Read the TCR or BCR `_annotation_airr.tsv` produced from Parse Biosciences Evercode technology.
@@ -375,13 +387,17 @@ def read_parse_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
+    **kwargs
+        additional keyword arguments passed to Dandelion.
 
     Returns
     -------
     Dandelion
         Dandelion object from Parse AIRR file.
     """
-    data = load_data(file)
+    data = load_data(file, verbose=verbose)
     data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
     data = data.rename(
         columns={
@@ -392,7 +408,7 @@ def read_parse_airr(
             "cdr3_aa": "junction_aa",
         }
     )
-    vdj = Dandelion(data, verbose=False)
+    vdj = Dandelion(data, verbose=verbose, **kwargs)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -414,6 +430,7 @@ def read_10x_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a Dandelion object.
@@ -434,13 +451,15 @@ def read_10x_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
         Dandelion object from 10x AIRR file.
     """
-    dat = load_data(file)
+    dat = load_data(file, verbose=verbose)
     # get all the v,d,j,c calls
     if "locus" not in dat:
         tmp = [
@@ -471,7 +490,7 @@ def read_10x_airr(
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
-    vdj = Dandelion(dat, verbose=False)
+    vdj = Dandelion(dat, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -495,6 +514,7 @@ def read_10x_vdj(
     sep: str = "_",
     remove_malformed: bool = True,
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
@@ -664,7 +684,7 @@ def read_10x_vdj(
         res = res[~res["locus"].str.contains("[|]")]
     # change all unknowns to blanks
     res.replace("unknown", "", inplace=True)
-    vdj = Dandelion(res, verbose=False)
+    vdj = Dandelion(res, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -828,190 +848,6 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
         if out[contig]["locus"] == "None" or out[contig]["locus"] == "":
             out[contig]["locus"] = "|"
     return out
-
-
-def change_file_location(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-) -> None:
-    """
-    Move file from tmp folder to dandelion folder.
-
-    Only used for TCR data.
-
-    Parameters
-    ----------
-    data : list[Path | str]
-        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
-        list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : list[str] | str | None, optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'all'.
-    """
-    fileformat = "blast"
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    informat_dict = {
-        "changeo": "_igblast_db-pass.tsv",
-        "blast": "_igblast_db-pass.tsv",
-        "airr": "_igblast_gap.tsv",
-    }
-    filePath = None
-
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with=informat_dict[fileformat],
-            sub_dir="tmp",
-        )
-        if filePath is not None:
-            tmp = check_travdv(filePath)
-            _airrfile = str(filePath).replace("_db-pass.tsv", ".tsv")
-            airr_output = load_data(_airrfile)
-            cols_to_merge = [
-                "junction_aa_length",
-                "fwr1_aa",
-                "fwr2_aa",
-                "fwr3_aa",
-                "fwr4_aa",
-                "cdr1_aa",
-                "cdr2_aa",
-                "cdr3_aa",
-                "sequence_alignment_aa",
-                "v_sequence_alignment_aa",
-                "d_sequence_alignment_aa",
-                "j_sequence_alignment_aa",
-            ]
-            for x in cols_to_merge:
-                tmp[x] = pd.Series(airr_output[x])
-
-            write_airr(tmp, filePath)
-            fp = Path(filePath)
-            shutil.copyfile(fp, fp.parent.parent / fp.name)
-
-
-def move_to_tmp(
-    data: list[Path | str], filename_prefix: list[str] | str | None = None
-) -> None:
-    """Move file to tmp."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        filePath1 = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_annotations.csv",
-        )
-        filePath2 = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], ends_with=".fasta"
-        )
-        for fp in [filePath1, filePath2]:
-            fp = Path(fp)
-            shutil.move(fp, fp.parent / "tmp" / fp.name)
-
-
-def make_all(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-    loci: Literal["ig", "tr"] = "tr",
-) -> None:
-    """Construct db-all tsv file."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        if loci == "tr":
-            filePath1 = check_filepath(
-                data[i],
-                filename_prefix=filename_prefix[i],
-                ends_with="_igblast_db-pass.tsv",
-                sub_dir="tmp",
-            )
-        else:
-            filePath1 = check_filepath(
-                data[i],
-                filename_prefix=filename_prefix[i],
-                ends_with="_igblast_db-pass_genotyped.tsv",
-                sub_dir="tmp",
-            )
-            if filePath1 is None:
-                filePath1 = check_filepath(
-                    data[i],
-                    filename_prefix=filename_prefix[i],
-                    ends_with="_igblast_db-pass.tsv",
-                    sub_dir="tmp",
-                )
-                out_ex = "db-pass.tsv"
-            else:
-                out_ex = "db-pass_genotyped.tsv"
-        filePath2 = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_igblast_db-fail.tsv",
-            sub_dir="tmp",
-        )
-        if filePath1 is not None:
-            df1 = pd.read_csv(filePath1, sep="\t")
-            df1 = check_complete(df1)
-            write_airr(df1, filePath1)
-            if filePath2 is not None:
-                df2 = pd.read_csv(filePath2, sep="\t")
-                df2 = check_complete(df2)
-                df = pd.concat([df1, df2])
-                if loci == "tr":
-                    write_airr(
-                        df,
-                        filePath1.parent
-                        / (
-                            filePath1.name.rsplit("db-pass.tsv")[0]
-                            + "db-all.tsv"
-                        ),
-                    )
-                else:
-                    write_airr(
-                        df,
-                        filePath1.parent
-                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
-                    )
-                write_airr(df2, filePath2)
-            else:
-                if loci == "tr":
-                    write_airr(
-                        df1,
-                        filePath1.parent
-                        / (
-                            filePath1.name.rsplit("db-pass.tsv")[0]
-                            + "db-all.tsv"
-                        ),
-                    )
-                else:
-                    write_airr(
-                        df1,
-                        filePath1.parent
-                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
-                    )
-
-
-def rename_dandelion(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-    ends_with: str = "_igblast_db-pass_genotyped.tsv",
-    sub_dir: str | None = None,
-) -> None:
-    """Rename final dandlion file."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with=ends_with,
-            sub_dir=sub_dir,
-        )  # must be whatever's after contig
-        if sub_dir is None:
-            fp = filePath.parent / filePath.name.rsplit(ends_with)[0]
-        else:
-            fp = filePath.parent.parent / filePath.name.rsplit(ends_with)[0]
-        shutil.move(filePath, Path(str(fp) + "_dandelion.tsv"))
 
 
 def check_complete(df: pd.DataFrame) -> pd.DataFrame:
@@ -1339,3 +1175,15 @@ def _read_h5_zip_legacy(filename: Path | str, group: str) -> dict:
         for g in hf[group].attrs:
             out_dict.update({g: hf[group].attrs[g]})
     return out_dict
+
+
+def write_airr(data: pd.DataFrame, save: Path | str) -> None:
+    """Save as airr formatted file."""
+    data = sanitize_data(data)
+    data.to_csv(save, sep="\t", index=False)
+
+
+def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
+    """Write blast output."""
+    data = sanitize_blastn(data)
+    data.to_csv(save, sep="\t", index=False)
