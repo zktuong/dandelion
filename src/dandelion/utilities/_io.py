@@ -844,29 +844,6 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
     return out
 
 
-def check_complete(df: pd.DataFrame) -> pd.DataFrame:
-    """check if contig contains cdr3.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        airr data frame.
-
-    Returns
-    -------
-    pd.DataFrame
-        completed airr data frame
-    """
-    if "complete_vdj" not in df:
-        df["complete_vdj"] = ""
-    for i in df.index:
-        junc = df.loc[i, "junction"]
-        if not present(junc):
-            df.at[i, "productive"] = "F"
-            df.at[i, "complete_vdj"] = "F"
-    return df
-
-
 def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     """
     Read a specific group from an H5 file.

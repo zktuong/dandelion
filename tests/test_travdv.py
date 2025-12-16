@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.usefixtures("create_testfolder")
 def test_loadtravdv(airr_travdv):
     """test_loadtravdv"""
-    temp = ddl.utilities._utilities.check_travdv(airr_travdv)
+    temp = ddl.utilities._core.check_travdv(airr_travdv)
     assert temp.shape[0] == 6
     assert all([i == "TRA" for i in airr_travdv["locus"]])
     assert all([i == "TRD" for i in temp["locus"]])

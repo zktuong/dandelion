@@ -4833,3 +4833,26 @@ def rename_dandelion(
         else:
             fp = filePath.parent.parent / filePath.name.rsplit(ends_with)[0]
         shutil.move(filePath, Path(str(fp) + "_dandelion.tsv"))
+
+
+def check_complete(df: pd.DataFrame) -> pd.DataFrame:
+    """check if contig contains cdr3.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        airr data frame.
+
+    Returns
+    -------
+    pd.DataFrame
+        completed airr data frame
+    """
+    if "complete_vdj" not in df:
+        df["complete_vdj"] = ""
+    for i in df.index:
+        junc = df.loc[i, "junction"]
+        if not present(junc):
+            df.at[i, "productive"] = "F"
+            df.at[i, "complete_vdj"] = "F"
+    return df

@@ -35,6 +35,7 @@ from dandelion.utilities._utilities import (
     present,
     all_missing,
     all_missing2,
+    same_call,
     sanitize_data_for_saving,
     sanitize_data,
     format_isotype1,
@@ -3052,6 +3053,7 @@ def write_output(out: str, file: Path | str) -> None:
 
 def check_travdv(data: pd.DataFrame) -> pd.DataFrame:
     """Check if locus is TRA/D."""
+    data = load_data(data)
     contig = [x for x in data["sequence_id"]]
     v = [x for x in data["v_call"]]
     d = [x for x in data["d_call"]]
