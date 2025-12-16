@@ -5,19 +5,16 @@ import json
 import os
 import pickle
 import re
-import shutil
 
 import _pickle as cPickle
 import networkx as nx
 import numpy as np
 import pandas as pd
-import polars as pl
 
 from collections import defaultdict, OrderedDict
 from pathlib import Path
 from scanpy import logging as logg
 from scipy.sparse import csr_matrix
-from typing import Literal
 
 from dandelion.utilities._core import Dandelion, load_data
 from dandelion.utilities._utilities import (
@@ -25,13 +22,10 @@ from dandelion.utilities._utilities import (
     deprecated,
     isGZIP,
     isBZIP,
-    check_filepath,
     present,
     all_missing,
-    same_call,
     sanitize_blastn,
     sanitize_data,
-    check_data,
     Contig,
 )
 
@@ -397,7 +391,7 @@ def read_parse_airr(
     Dandelion
         Dandelion object from Parse AIRR file.
     """
-    data = load_data(file, verbose=verbose)
+    data = load_data(file)
     data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
     data = data.rename(
         columns={
@@ -459,7 +453,7 @@ def read_10x_airr(
     Dandelion
         Dandelion object from 10x AIRR file.
     """
-    dat = load_data(file, verbose=verbose)
+    dat = load_data(file)
     # get all the v,d,j,c calls
     if "locus" not in dat:
         tmp = [
