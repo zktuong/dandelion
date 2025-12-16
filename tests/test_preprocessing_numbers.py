@@ -21,7 +21,7 @@ except KeyError:
 def test_write_fasta(create_testfolder_number, fasta_10x, filename, expected):
     """test_write_fasta"""
     out_fasta = create_testfolder_number / (filename + "_contig.fasta")
-    ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=out_fasta)
+    ddl.utl._core.write_fasta(fasta_dict=fasta_10x, out_fasta=out_fasta)
     assert len(list(create_testfolder_number.iterdir())) == expected
 
 
