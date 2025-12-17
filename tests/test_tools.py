@@ -79,7 +79,7 @@ def test_generate_network(create_testfolder, resample, expected):
     adata = ddl.tl.to_scirpy(vdj, to_mudata=False)
     if resample is not None:
         vdj, adata = ddl.tl.generate_network(
-            vdj, adata=adata, sample=resample, layout_method="mod_fr"
+            vdj, gex_data=adata, sample=resample, layout_method="mod_fr"
         )
         assert vdj.n_obs == expected
         assert vdj.layout is not None
@@ -143,7 +143,7 @@ def test_diversity_anndata(create_testfolder, method):
         method=method,
         n_boot=5,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -168,7 +168,7 @@ def test_diversity_shannon(create_testfolder, normalize):
         n_boot=5,
         verbose=True,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -217,7 +217,7 @@ def test_diversity_min_size_ok(create_testfolder, method):
         n_boot=5,
         verbose=True,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder", "json_10x_cr6", "dummy_adata_cr6")
@@ -245,8 +245,8 @@ def test_diversity_rarefaction_ad(mock_show, create_testfolder):
     """test rarefaction"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.tl.clone_rarefaction(adata, color="sample_id")
-    ddl.tl.clone_rarefaction(adata, color="sample_id", return_results=False)
+    ddl.tl.clone_rarefaction(adata, groupby="sample_id")
+    ddl.tl.clone_rarefaction(adata, groupby="sample_id", plot=True)
 
 
 @patch("matplotlib.pyplot.show")
@@ -260,8 +260,8 @@ def test_diversity_rarefaction_ddl(mock_show, create_testfolder):
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    ddl.tl.clone_rarefaction(vdj, color="sample_id")
-    ddl.tl.clone_rarefaction(vdj, color="sample_id", return_results=False)
+    ddl.tl.clone_rarefaction(vdj, groupby="sample_id")
+    ddl.tl.clone_rarefaction(vdj, groupby="sample_id", plot=True)
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -284,12 +284,12 @@ def test_diversity_gini2(create_testfolder, use_network):
         method="gini",
         use_network=use_network,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "metric", ["clone_network", None, "clone_degree", "clone_centrality"]
+    "metric", ["clone_network", "clone_degree", "clone_centrality"]
 )
 def test_diversity_gini3(create_testfolder, metric):
     """test gini more"""
@@ -306,9 +306,9 @@ def test_diversity_gini3(create_testfolder, metric):
         min_size=6,
         key="sequence",
         n_boot=5,
-        metric=metric,
+        network_metric=metric,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -328,7 +328,7 @@ def test_diversity2a(create_testfolder):
         key="sequence",
         n_boot=5,
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -344,7 +344,7 @@ def test_diversity2b(create_testfolder):
     res, _ = ddl.tl.clone_diversity(
         vdj, groupby="sample_id", use_contracted=True, key="sequence", n_boot=5
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -360,7 +360,7 @@ def test_diversity2c(create_testfolder):
     res, _ = ddl.tl.clone_diversity(
         vdj, groupby="sample_id", key="sequence", return_table=True, n_boot=5
     )
-    assert not res.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -387,6 +387,6 @@ def test_diversity_anndata2(create_testfolder, method):
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     res, _ = ddl.tl.clone_diversity(
-        adata, groupby="sample_id", method=method, return_table=True, n_boot=5
+        adata, groupby="sample_id", method=method, n_boot=5
     )
-    assert not res.empty
+    assert res

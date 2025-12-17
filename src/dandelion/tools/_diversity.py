@@ -272,6 +272,7 @@ def clone_diversity(
     expanded_only: bool = False,
     use_contracted: bool = False,
     verbose: bool = False,
+    **kwargs,
 ) -> tuple[pd.DataFrame, dict[list[float]]]:
     """
     Compute clonal diversity with bootstrapping.
@@ -309,6 +310,8 @@ def clone_diversity(
         This is to try and preserve the single-cell properties of the network.
     verbose : bool, optional
         whether to print progress.
+    **kwargs
+        Additional keyword arguments passed to ddl.tl.generate_network if using network-based gini.
 
     Returns
     -------
@@ -329,6 +332,7 @@ def clone_diversity(
             expanded_only=expanded_only,
             use_contracted=use_contracted,
             verbose=verbose,
+            **kwargs,
         )
     else:
         return diversity_estimates(
@@ -355,6 +359,7 @@ def diversity_gini(
     expanded_only: bool = False,
     use_contracted: bool = False,
     verbose: bool = False,
+    **kwargs,
 ) -> tuple[dict[pd.DataFrame], dict[np.ndarray]]:
     """
     Compute clones Gini indices.
@@ -386,6 +391,8 @@ def diversity_gini(
         This is to try and preserve the single-cell properties of the network.
     verbose : bool, optional
         whether to print progress.
+    **kwargs
+        Additional keyword arguments passed to ddl.tl.generate_network
 
     Returns
     -------
@@ -405,6 +412,7 @@ def diversity_gini(
         expanded_only=expanded_only,
         contracted=use_contracted,
         verbose=verbose,
+        **kwargs,
     )
 
     return {
@@ -483,6 +491,7 @@ def gini_indices(
     expanded_only: bool = False,
     contracted: bool = False,
     verbose: bool = False,
+    **kwargs,
 ) -> tuple[pd.DataFrame, dict[list[float]], dict[list[float]]]:
     """Gini indices."""
     if isinstance(data, AnnData):
@@ -517,6 +526,7 @@ def gini_indices(
                 min_size,
                 expanded_only,
                 contracted,
+                **kwargs,
             )
             for _ in iterator
         )
@@ -671,6 +681,7 @@ def _bootstrap_network(
     min_size: int,
     expanded_only: bool,
     contracted: bool,
+    **kwargs,
 ):
     """
     Runs a single bootstrap iteration and returns:
@@ -683,6 +694,7 @@ def _bootstrap_network(
         force_replace=True,
         verbose=False,
         compute_layout=False,
+        **kwargs,
     )
     # ---- Choose metric mode
     if met == "clone_network":
