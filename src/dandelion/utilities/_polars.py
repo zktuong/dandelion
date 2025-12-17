@@ -3270,14 +3270,12 @@ def sanitize_data_polars(
                 # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
                 col = (
                     pl.when(
-                        (
                             col.is_null()
                             | (
                                 col.is_in(EMPTIES_STR)
                                 if is_string
                                 else pl.lit(False)
                             )
-                        )
                     )
                     .then(pl.lit(""))
                     .otherwise(col)
@@ -3299,14 +3297,12 @@ def sanitize_data_polars(
                 # col = pl.when(col.is_in(EMPTIES)).then(None).otherwise(col)
                 col = (
                     pl.when(
-                        (
                             col.is_null()
                             | (
                                 col.is_in(EMPTIES_STR)
                                 if is_string
                                 else pl.lit(False)
                             )
-                        )
                     )
                     .then(None)
                     .otherwise(col)
@@ -3318,14 +3314,12 @@ def sanitize_data_polars(
             # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
             col = (
                 pl.when(
-                    (
                         col.is_null()
                         | (
                             col.is_in(EMPTIES_STR)
                             if is_string
                             else pl.lit(False)
                         )
-                    )
                 )
                 .then(pl.lit(""))
                 .otherwise(col)
