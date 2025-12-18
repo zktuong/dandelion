@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from __future__ import annotations
 import bz2
 import copy
 import gzip
@@ -190,7 +191,7 @@ class Dandelion:
         # inspire by AnnData's function
         return self._gen_repr(self.n_obs, self.n_contigs)
 
-    def __getitem__(self, index: Index) -> "Dandelion":
+    def __getitem__(self, index: Index) -> Dandelion:
         """Return a sliced Dandelion object with synchronized data and metadata."""
         # Determine index type (metadata-based or data-based)
         if isinstance(index, np.ndarray):
@@ -1067,7 +1068,7 @@ class Dandelion:
             self.distances = csr_matrix(self.distances.compute())
             self.distances._index_names = self.metadata_names
 
-    def copy(self) -> "Dandelion":
+    def copy(self) -> Dandelion:
         """
         Performs a deep copy of all slots in Dandelion class.
 
