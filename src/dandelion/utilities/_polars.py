@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 from __future__ import annotations
-import bz2
 import copy
-import gzip
 import h5py
 import os
 import re
@@ -10,7 +8,6 @@ import tempfile
 import warnings
 import zarr
 
-import _pickle as cPickle
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -21,7 +18,7 @@ with warnings.catch_warnings():
     from airr import RearrangementSchema
 from anndata import AnnData
 from changeo.IO import readGermlines
-from functools import reduce
+from functools import cmp_to_key, reduce
 from pandas.api.types import infer_dtype
 from pathlib import Path
 from scanpy import logging as logg
@@ -36,8 +33,6 @@ from dandelion.utilities._utilities import (
     EMPTIES_STR,
     BOOLEAN_LIKE_COLUMNS,
     deprecated,
-    isGZIP,
-    isBZIP,
     sanitize_boolean,
     sanitize_data_for_saving,
     sanitize_data,
@@ -112,6 +107,11 @@ class DandelionPolars:
             passed to `Dandelion.update_metadata`.
         """
         self.lazy = lazy
+        self._data_name_col = "sequence_id"
+        self._metadata_name_col = "cell_id"
+        self._backend = "polars"
+        self._tmpfiles = {}
+
         self._data = data
         self._metadata = metadata
         self.layout = layout
@@ -119,13 +119,6 @@ class DandelionPolars:
         self.distances = distances
         self.germline = {}
         self.library_type = library_type
-        self.data = self._data
-        self.metadata = self._metadata
-
-        self._data_name_col = "sequence_id"
-        self._metadata_name_col = "cell_id"
-        self._backend = "polars"
-        self._tmpfiles = {}
 
         if germline is not None:
             self.germline.update(germline)
@@ -147,7 +140,7 @@ class DandelionPolars:
                     self._data = self._data.filter(
                         pl.col("locus").is_in(acceptable)
                     )
-            self._data = check_travdv_polars(self._data, lazy=self.lazy)
+            self._data = _check_travdv_polars(self._data, lazy=self.lazy)
             sort_cols = {"cell_id", "productive", "umi_count"}
             if isinstance(self._data, (pl.DataFrame, pl.LazyFrame)):
                 cols = set(self._data.collect_schema().names())
@@ -256,25 +249,20 @@ class DandelionPolars:
         """Return a sliced Dandelion object with synchronized data and metadata."""
         # Determine which dataframe to filter and extract cell_ids
         cell_ids = None
+        # Convert pandas to polars first
+        if self._backend == "pandas":
+            self.to_polars()
+            original_backend = "pandas"
+        else:
+            original_backend = "polars"
         if isinstance(index, (list, tuple, set, np.ndarray)):
             try:
                 if all(isinstance(x, (bool, np.bool_)) for x in index):
                     index = pl.Series(index)
             except TypeError:
                 pass
-        # first if self._data and self._metadata are pandas DataFrame, convert to polars
-        if isinstance(self._data, pd.DataFrame):
-            self._data = pl.DataFrame(self._data.reset_index(drop=True))
-            if self.lazy:
-                self._data = self._data.lazy()
-        if self._metadata is not None:
-            if isinstance(self._metadata, pd.DataFrame):
-                self._metadata = pl.DataFrame(
-                    self._metadata.reset_index(drop=False)
-                )
-                if self.lazy:
-                    self._metadata = self._metadata.lazy()
-
+        data = self._data
+        metadata = self._metadata
         # Case 1: Direct cell_id list/array/tuple/set
         if isinstance(index, (list, set, tuple, np.ndarray)):
             cell_ids = pl.Series(list(index), dtype=pl.Utf8)
@@ -283,47 +271,15 @@ class DandelionPolars:
         elif isinstance(index, pl.Series):
             if index.dtype == pl.Boolean:
                 # Boolean mask - determine if it's for data or metadata by length
-                if len(index) == len(
-                    self._data.collect()
-                    if isinstance(self._data, pl.LazyFrame)
-                    else self._data
+                if len(index) == _get_length(data):
+                    cell_ids = _filter_and_select(data, index)
+                elif metadata is not None and len(index) == _get_length(
+                    metadata
                 ):
-                    # Filter data, collect to get cell_ids
-                    if isinstance(self._data, pl.LazyFrame):
-                        cell_ids = (
-                            self._data.filter(index)
-                            .select("cell_id")
-                            .collect()
-                            .to_series()
-                        )
-                    else:
-                        cell_ids = (
-                            self._data.filter(index)
-                            .select("cell_id")
-                            .to_series()
-                        )
-                elif len(index) == len(
-                    self._metadata.collect()
-                    if isinstance(self._metadata, pl.LazyFrame)
-                    else self._metadata
-                ):
-                    # Filter metadata, collect to get cell_ids
-                    if isinstance(self._metadata, pl.LazyFrame):
-                        cell_ids = (
-                            self._metadata.filter(index)
-                            .select("cell_id")
-                            .collect()
-                            .to_series()
-                        )
-                    else:
-                        cell_ids = (
-                            self._metadata.filter(index)
-                            .select("cell_id")
-                            .to_series()
-                        )
+                    cell_ids = _filter_and_select(metadata, index)
                 else:
                     raise IndexError(
-                        f"Boolean mask length ({len(index)}) doesn't match data or metadata length"
+                        f"Boolean mask length ({len(index)}) doesn't match data or metadata length."
                     )
             else:
                 # Series of cell_ids
@@ -333,32 +289,10 @@ class DandelionPolars:
         elif isinstance(index, pl.Expr):
             # Try data first, fall back to metadata
             try:
-                if isinstance(self._data, pl.LazyFrame):
-                    cell_ids = (
-                        self._data.filter(index)
-                        .select("cell_id")
-                        .collect()
-                        .to_series()
-                    )
-                else:
-                    cell_ids = (
-                        self._data.filter(index).select("cell_id").to_series()
-                    )
+                cell_ids = _filter_and_select(data, index)
             except Exception:
                 try:
-                    if isinstance(self._metadata, pl.LazyFrame):
-                        cell_ids = (
-                            self._metadata.filter(index)
-                            .select("cell_id")
-                            .collect()
-                            .to_series()
-                        )
-                    else:
-                        cell_ids = (
-                            self._metadata.filter(index)
-                            .select("cell_id")
-                            .to_series()
-                        )
+                    cell_ids = _filter_and_select(metadata, index)
                 except Exception as e:
                     raise ValueError(f"Could not evaluate expression: {e}")
 
@@ -376,8 +310,12 @@ class DandelionPolars:
             raise TypeError(f"Unsupported index type: {type(index)}")
 
         # ---- Filter data & metadata, then collect and make lazy again ----
-        _data = self._data.filter(pl.col("cell_id").is_in(cell_ids))
-        _metadata = self._metadata.filter(pl.col("cell_id").is_in(cell_ids))
+        _data = data.filter(pl.col("cell_id").is_in(cell_ids))
+        _metadata = (
+            metadata.filter(pl.col("cell_id").is_in(cell_ids))
+            if metadata is not None
+            else None
+        )
 
         # Collect and convert back to lazy if original was lazy
         if isinstance(self._data, pl.LazyFrame):
@@ -388,17 +326,12 @@ class DandelionPolars:
         # ---- Distances matrix sync -----------------------------------
         if self.distances is not None:
             # Get metadata cell_ids for distance matrix indexing
-            if isinstance(self._metadata, pl.LazyFrame):
+            if isinstance(_metadata, pl.LazyFrame):
                 meta_cells = (
-                    self._metadata.select("cell_id")
-                    .collect()
-                    .to_series()
-                    .to_list()
+                    _metadata.select("cell_id").collect().to_series().to_list()
                 )
             else:
-                meta_cells = (
-                    self._metadata.select("cell_id").to_series().to_list()
-                )
+                meta_cells = _metadata.select("cell_id").to_series().to_list()
 
             keep_set = set(cell_ids.to_list())
             keep = np.array(
@@ -431,8 +364,7 @@ class DandelionPolars:
             )
         else:
             _graph = None
-
-        return DandelionPolars(
+        sliced = DandelionPolars(
             data=_data,
             metadata=_metadata,
             layout=_layout,
@@ -440,6 +372,9 @@ class DandelionPolars:
             distances=_distances,
             verbose=False,
         )
+        if original_backend == "pandas":
+            sliced.to_pandas()
+        return sliced
 
     @property
     def n_obs(self) -> int:
@@ -480,14 +415,9 @@ class DandelionPolars:
     ) -> None:
         """data setter"""
         value = load_polars(value)
-        # pandas path (legacy behavior)
-        if isinstance(value, pd.DataFrame):
-            self._set_dim_df(value, "data")
-            return
-        # polars path
-        if isinstance(value, (pl.DataFrame, pl.LazyFrame)):
-            self._data = value
-            return
+        self._data = value
+        self._backend = "polars"
+        return
 
     @property
     def data_names(self) -> SeriesAccessor | pd.Index:
@@ -529,16 +459,17 @@ class DandelionPolars:
     def metadata(self, value: pl.DataFrame | pl.LazyFrame | pd.DataFrame):
         """metadata setter"""
         if isinstance(value, pd.DataFrame):
-            value = pl.from_pandas(value)
+            if self._metadata_name_col not in value:
+                # change the name of the index first before resetting
+                if value.index.name is None:
+                    value.index.name = self._metadata_name_col
+                value = pl.from_pandas(value.reset_index(drop=False))
+            else:
+                value = pl.from_pandas(value)
             if self.lazy:
                 value = value.lazy()
-        if isinstance(value, pd.DataFrame):
-            self._set_dim_df(value, "metadata")
-            return
-        # polars path
-        if isinstance(value, (pl.DataFrame, pl.LazyFrame)):
-            self._metadata = value
-            return
+        self._metadata = value
+        return
 
     @property
     def metadata_names(self) -> pd.Index | pl.Series:
@@ -576,7 +507,7 @@ class DandelionPolars:
                     "The AIRR data needs to undergo sanitization, apologies for any delays..."
                 )
             if isinstance(self._data, (pl.DataFrame, pl.LazyFrame)):
-                self._data = sanitize_data_polars(self._data)
+                self._data = _sanitize_data_polars(self._data)
             elif isinstance(self._data, pd.DataFrame):
                 self._data = sanitize_data(self._data)
 
@@ -1437,6 +1368,11 @@ class DandelionPolars:
                 if len(merge_cols) > 0
                 else None
             )
+            if meta_0 is not None:
+                # For LazyFrame:
+                if clone_key in meta_0.collect_schema().names():
+                    meta_0 = _add_clone_info(meta_0, clone_key)
+
             meta_str = (
                 self._split(str_cols, key_added=swap_v_call, data=_data)
                 if len(str_cols) > 0
@@ -1542,7 +1478,7 @@ class DandelionPolars:
                     isotype_status = (
                         isotype_df.lazy()
                         .with_columns(
-                            classify_isotype().alias("isotype_status")
+                            _classify_isotype().alias("isotype_status")
                         )
                         .drop("isotype")
                     )
@@ -1562,16 +1498,16 @@ class DandelionPolars:
                     )
                     self._metadata = self._metadata.collect()
                 self._metadata = self._metadata.with_columns(
-                    classify_locus_pair().alias("locus_status")
+                    _classify_locus_pair().alias("locus_status")
                 )
                 self._metadata = self._metadata.with_columns(
-                    format_chain_status(pl.col("locus_status")).alias(
+                    _format_chain_status(pl.col("locus_status")).alias(
                         "chain_status"
                     )
                 )
                 if "isotype_status" in self._metadata.collect_schema().names():
                     self._metadata = self._metadata.lazy().with_columns(
-                        format_isotype().alias("isotype_status")
+                        _format_isotype().alias("isotype_status")
                     )
                 cols_to_clean = [
                     c
@@ -1585,7 +1521,7 @@ class DandelionPolars:
                 if cols_to_clean:
                     self._metadata = self._metadata.lazy().with_columns(
                         [
-                            clean_up_exception(pl.col(c)).alias(c)
+                            _clean_up_exception(pl.col(c)).alias(c)
                             for c in cols_to_clean
                         ]
                     )
@@ -1621,7 +1557,7 @@ class DandelionPolars:
 
     def _update_rearrangement_status(self, v_call_key: str) -> None:
         """Check rearrangement status."""
-        vcall = get_vcall_key_polars(self._data, v_call_key)
+        vcall = _get_vcall_key_polars(self._data, v_call_key)
         # Build the rearrangement status logic using Polars expressions
         status = (
             pl.when(~is_present(vcall))
@@ -1651,43 +1587,53 @@ class DandelionPolars:
 
     def to_pandas(self) -> None:
         """Convert self from Polars to Pandas implementation."""
-        if not isinstance(self._data, pd.DataFrame):
-            if isinstance(self._data, pl.LazyFrame):
-                self._data = self._data.collect().to_pandas()
-            if isinstance(self._metadata, pl.LazyFrame):
-                self._metadata = self._metadata.collect().to_pandas()
-            if isinstance(self._data, pl.DataFrame):
-                self._data = self._data.to_pandas()
-            if isinstance(self._metadata, pl.DataFrame):
-                self._metadata = self._metadata.to_pandas()
-            self._data.index = self._data[self._data_name_col]
-            self._metadata.set_index(self._metadata_name_col, inplace=True)
-            self.lazy = False
-            self._backend = "pandas"
-        else:
-            raise TypeError("The data is already in Pandas format.")
+        if self._backend == "pandas":
+            return
+        if isinstance(self._data, pl.LazyFrame):
+            self._data = self._data.collect().to_pandas()
+        if isinstance(self._data, pl.DataFrame):
+            self._data = self._data.to_pandas()
+        self._data.index = self._data[self._data_name_col]
+        if self._metadata is not None:
+            if (
+                self._metadata_name_col
+                in self._metadata.collect_schema().names()
+            ):
+                # if not isinstance(self._metadata, pd.DataFrame):
+                if isinstance(self._metadata, pl.LazyFrame):
+                    self._metadata = self._metadata.collect().to_pandas()
+                if isinstance(self._metadata, pl.DataFrame):
+                    self._metadata = self._metadata.to_pandas()
+                self._metadata.set_index(self._metadata_name_col, inplace=True)
+            else:
+                raise KeyError(
+                    f"{self._metadata_name_col} not found in metadata columns."
+                )
+        self.lazy = False
+        self._backend = "pandas"
 
     def to_polars(self, lazy: bool = True) -> None:
         """Convert self from Pandas to Polars implementation."""
-        if not isinstance(self._data, (pl.DataFrame, pl.LazyFrame)):
+        if self._backend == "polars":
+            return
+        if not isinstance(
+            self._data, (pl.DataFrame, pl.LazyFrame)
+        ) or not isinstance(self._metadata, (pl.DataFrame, pl.LazyFrame)):
+            self.lazy = lazy
             if isinstance(self._data, pd.DataFrame):
                 # drop index to avoid duplication
                 self._data = self._data.reset_index(drop=True)
                 self._data = pl.from_pandas(self._data)
-                self.lazy = False
-                if lazy:
+                if self.lazy:
                     self._data = self._data.lazy()
-                    self.lazy = True
-            if isinstance(self._metadata, pd.DataFrame):
-                self._metadata = self._metadata.reset_index(drop=False)
-                self._metadata = pl.from_pandas(self._metadata)
-                self.lazy = False
-                if lazy:
-                    self._metadata = self._metadata.lazy()
-                    self.lazy = True
+            if self._metadata is not None:
+                if not isinstance(self._metadata, (pl.DataFrame, pl.LazyFrame)):
+                    if isinstance(self._metadata, pd.DataFrame):
+                        self._metadata = self._metadata.reset_index(drop=False)
+                        self._metadata = pl.from_pandas(self._metadata)
+                        if self.lazy:
+                            self._metadata = self._metadata.lazy()
             self._backend = "polars"
-        else:
-            raise TypeError("The data is already in Polars format.")
 
     def to_anndata(self) -> AnnData:
         """Convert DandelionPolars.metadata to AnnData"""
@@ -2138,38 +2084,6 @@ class DandelionPolars:
         if as_pandas:
             self.to_pandas()
 
-    def write_pkl(
-        self, filename: str = "dandelion_data.pkl.pbz2", **kwargs
-    ) -> None:
-        """
-        Writes a Dandelion class to .pkl format.
-
-        Parameters
-        ----------
-        filename : str, optional
-            path to `.pkl` file.
-        **kwargs
-            passed to `_pickle`.
-        """
-        if isBZIP(str(filename)):
-            try:
-                with bz2.BZ2File(filename, "wb") as f:
-                    cPickle.dump(self, f, **kwargs)
-            except:
-                with bz2.BZ2File(filename, "wb") as f:
-                    cPickle.dump(self, f, protocol=4, **kwargs)
-        elif isGZIP(str(filename)):
-            try:
-                with gzip.open(filename, "wb") as f:
-                    cPickle.dump(self, f, **kwargs)
-            except:
-                with gzip.open(filename, "wb") as f:
-                    cPickle.dump(self, f, protocol=4, **kwargs)
-        else:
-            f = open(filename, "wb")
-            cPickle.dump(self, f, **kwargs)
-            f.close()
-
     def write_airr(
         self, filename: str = "dandelion_airr.tsv", **kwargs
     ) -> None:
@@ -2181,30 +2095,32 @@ class DandelionPolars:
         filename : str, optional
             path to `.tsv` file.
         **kwargs
-            passed to `pandas.DataFrame.to_csv`.
+            passed to `pandas.DataFrame.to_csv` or `polars.DataFrame.write_csv`.
         """
-        data = sanitize_data(self.data)
-        data.to_csv(filename, sep="\t", index=False, **kwargs)
+        if isinstance(self._data, pd.DataFrame):
+            data = sanitize_data(self._data)
+            data.to_csv(filename, sep="\t", index=False, **kwargs)
+        elif isinstance(self._data, (pl.DataFrame, pl.LazyFrame)):
+            data = _sanitize_data_polars(self._data)
+            if isinstance(data, pl.LazyFrame):
+                data = data.collect()
+            data.write_csv(filename, separator="\t", **kwargs)
 
-    def write_zarrddl(
+    def write_zipddl(
         self,
-        filename: str = "dandelion.zarrddl",
+        filename: str = "dandelion.zipddl",
         compress: bool = True,
     ):
         """
-        Write a Dandelion object to a single .zarrddl file (Zarr v3, hybrid storage)
+        Write a Dandelion object to a single .zipddl file (Zarr v3 ZipStore, hybrid storage)
         with optional compression.
 
         Storage scheme:
-        - _data and _metadata → Parquet blobs
-        - _distances → Zarr arrays
-        - _graph and _layout → HDF5 blobs
-        - _germline → JSON blob
+        - data and metadata → Parquet blobs
+        - distances → Zarr arrays
+        - graph, layout and germline → HDF5
         """
-
-        # ---------------------------
         # Create Zarr ZipStore container
-        # ---------------------------
         store = zarr.storage.ZipStore(filename, mode="w")
         root = zarr.group(store=store, overwrite=True)
         comp = (
@@ -2212,37 +2128,7 @@ class DandelionPolars:
             if compress
             else None
         )
-
-        # ---------------------------
-        # Tables: _data and _metadata as Parquet blobs
-        # ---------------------------
-        def _write_parquet_blob(
-            zarr_group,
-            name: str,
-            df: pl.DataFrame | pl.LazyFrame,
-            compressors=None,
-        ):
-            """
-            Accepts both Polars DataFrame and LazyFrame.
-            """
-            # Materialize if lazy
-            if isinstance(df, pl.LazyFrame):
-                df = df.collect()
-
-            with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp:
-                df.write_parquet(tmp.name)
-                tmp.seek(0)
-                arr = np.frombuffer(tmp.read(), dtype=np.uint8)
-            zarr_group.create_dataset(
-                name,
-                shape=arr.shape,
-                dtype=arr.dtype,
-                chunks=arr.shape,
-                data=arr,
-                overwrite=True,
-                compressors=compressors,
-            )
-
+        # Tables: .data and .metadata as Parquet blobs
         tables_grp = root.create_group("tables", overwrite=True)
         if self._data is not None:
             if isinstance(self._data, pd.DataFrame):
@@ -2264,10 +2150,7 @@ class DandelionPolars:
                 self._metadata,
                 compressors=[comp] if compress else None,
             )
-
-        # ---------------------------
-        # Arrays: distances as Zarr arrays
-        # ---------------------------
+        # .distances as Zarr arrays
         if getattr(self, "distances", None) is not None:
             arrays_grp = root.create_group("arrays", overwrite=True)
             arr = self.distances
@@ -2317,10 +2200,7 @@ class DandelionPolars:
                     overwrite=True,
                     compressors=[comp] if compress else None,
                 )
-
-        # ---------------------------
-        # Graph, layout, germline (HDF5)
-        # ---------------------------
+        # .graph, . layout, .germline as HDF5 files
         if getattr(self, "graph", None) is not None:
             graph_grp = root.create_group("graph", overwrite=True)
             for i, g in enumerate(self.graph):
@@ -2368,7 +2248,6 @@ class DandelionPolars:
                         overwrite=True,
                         compressors=[comp] if compress else None,
                     )
-
         if (
             getattr(self, "germline", None) is not None
             and len(self.germline) > 0
@@ -2389,11 +2268,50 @@ class DandelionPolars:
                     overwrite=True,
                     compressors=[comp] if compress else None,
                 )
-
-        # ---------------------------
         # Close store
-        # ---------------------------
         store.close()
+
+    @deprecated(
+        deprecated_in="1.0.0",
+        removed_in="1.1.0",
+        details="pickle format will removed from future versions.",
+    )
+    def write_pkl(
+        self, filename: str = "dandelion_data.pkl.pbz2", **kwargs
+    ) -> None:
+        """
+        Writes a Dandelion class to .pkl format.
+
+        Parameters
+        ----------
+        filename : str, optional
+            path to `.pkl` file.
+        **kwargs
+            passed to `_pickle`.
+        """
+        import bz2
+        import gzip
+        import _pickle as cPickle
+        from dandelion.utilities._utilities import isBZIP, isGZIP
+
+        if isBZIP(str(filename)):
+            try:
+                with bz2.BZ2File(filename, "wb") as f:
+                    cPickle.dump(self, f, **kwargs)
+            except:
+                with bz2.BZ2File(filename, "wb") as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
+        elif isGZIP(str(filename)):
+            try:
+                with gzip.open(filename, "wb") as f:
+                    cPickle.dump(self, f, **kwargs)
+            except:
+                with gzip.open(filename, "wb") as f:
+                    cPickle.dump(self, f, protocol=4, **kwargs)
+        else:
+            f = open(filename, "wb")
+            cPickle.dump(self, f, **kwargs)
+            f.close()
 
     @deprecated(
         deprecated_in="1.0.0",
@@ -2425,6 +2343,8 @@ class DandelionPolars:
         compression_level : int | None, optional
             Specifies a compression level for data. A value of 0 disables compression.
         """
+        if self._backend == "polars":
+            self.to_pandas()
         save_args = {
             "compression": compression,
             "compression_opts": (
@@ -2435,7 +2355,8 @@ class DandelionPolars:
             save_args.pop("compression", None)
             save_args.pop("compression_opts", None)
         clear_h5file(filename)
-
+        if self._backend == "polars":
+            self.to_pandas()
         # now to actually saving
         data = sanitize_data(self._data)
         data, data_dtypes = sanitize_data_for_saving(data)
@@ -2586,8 +2507,8 @@ class DandelionPolars:
         out_fasta = folder / f"{filename_prefix}_contig.fasta"
         out_anno_path = folder / f"{filename_prefix}_contig_annotations.csv"
 
-        seqs = self.data[sequence_key].to_dict()
-        write_fasta(seqs, out_fasta=out_fasta)
+        seqs = self._data[sequence_key].to_dict()
+        _write_fasta(seqs, out_fasta=out_fasta)
 
         # also create the contig_annotations.csv
         column_map = {
@@ -2638,269 +2559,6 @@ class DandelionPolars:
         anno = pd.DataFrame(anno)
         anno = anno.map(lambda x: bool_map[x] if x in bool_map.keys() else x)
         anno.to_csv(out_anno_path, index=False)
-
-
-def classify_isotype() -> pl.Expr:
-    """
-    Native Polars implementation of classify_isotype.
-
-    Args:
-        col: Column name containing list of isotypes
-
-    Returns:
-        Polars expression for isotype classification
-    """
-    col = "isotype"
-    isotype_col = pl.col(col)
-
-    # Check if null or empty
-    is_null_or_empty = isotype_col.is_null() | (isotype_col.list.len() == 0)
-
-    # Check list length > 2 -> "Multi"
-    list_len = isotype_col.list.len()
-
-    # Get unique values
-    # unique_values = flattened.list.unique()
-    unique_values = isotype_col.list.join(",").str.split(",").list.unique()
-    unique_count = unique_values.list.len()
-
-    # Check if exactly {"IgM", "IgD"}
-    is_igm_igd = (unique_count == 2) & (
-        unique_values.list.set_symmetric_difference(["IgM", "IgD"]) == []
-    )
-
-    # Single unique value
-    single_value = unique_values.list.first()
-
-    # Build classification
-    result = (
-        pl.when(is_null_or_empty)
-        .then(pl.lit(None))
-        .when(list_len > 2)
-        .then(pl.lit("Multi"))
-        .when(is_igm_igd)
-        .then(pl.lit("IgM/IgD"))
-        .when(unique_count == 1)
-        .then(single_value)
-        .when(unique_count > 2)
-        .then(pl.lit("Multi"))
-        .otherwise(pl.lit("Multi"))  # Exactly 2 unique values (not IgM/IgD)
-    )
-
-    return result
-
-
-def classify_locus_pair() -> pl.Expr:
-    """
-    Optimized Polars implementation of classify_locus_pair.
-    """
-    vdj_locus_col = "locus_VDJ"
-    vj_locus_col = "locus_VJ"
-    isotype_col = "isotype"
-
-    # Parse lists once
-    vdj_locus_list = (
-        pl.when(pl.col(vdj_locus_col).is_null())
-        .then(pl.lit(None, dtype=pl.List(pl.String)))
-        .otherwise(
-            pl.col(vdj_locus_col)
-            .str.split("|")
-            .list.eval(pl.element().filter(pl.element() != "None"))
-        )
-    )
-
-    vj_locus_list = (
-        pl.when(pl.col(vj_locus_col).is_null())
-        .then(pl.lit(None, dtype=pl.List(pl.String)))
-        .otherwise(
-            pl.col(vj_locus_col)
-            .str.split("|")
-            .list.eval(pl.element().filter(pl.element() != "None"))
-        )
-    )
-
-    # Simplified isotype check - much faster than splitting and checking lists
-    # isotype_list = (
-    #     pl.when(pl.col(isotype_col).is_null())
-    #     .then(pl.lit(None, dtype=pl.Boolean))
-    #     .otherwise(pl.col(isotype_col).str.contains_any(["IgM", "IgD"]))
-    # )
-    isotype_list = (
-        pl.when(pl.col(isotype_col).is_null())
-        .then(pl.lit(None, dtype=pl.Boolean))
-        .otherwise(
-            pl.col(isotype_col)
-            .str.split("|")
-            .list.unique()
-            .pipe(
-                lambda x: (
-                    # All elements must be in allowed set
-                    x.list.eval(
-                        pl.element().is_in(["IgM", "IgD", "IgM,IgD", "IgD,IgM"])
-                    ).list.all()
-                )
-                & (
-                    # Must contain IgM (either as "IgM" or in "IgM,IgD"/"IgD,IgM")
-                    x.list.eval(pl.element().str.contains("IgM")).list.any()
-                )
-                & (
-                    # Must contain IgD (either as "IgD" or in "IgM,IgD"/"IgD,IgM")
-                    x.list.eval(pl.element().str.contains("IgD")).list.any()
-                )
-            )
-        )
-    )
-
-    # Check if has values
-    loc1_has = vdj_locus_list.is_not_null() & (vdj_locus_list.list.len() > 0)
-    vj_locus_has = vj_locus_list.is_not_null() & (vj_locus_list.list.len() > 0)
-
-    # Process locus 1 - use fill_null instead of when-then for simpler cases
-    loc1_len = vdj_locus_list.list.len().fill_null(0)
-    loc1_unique_len = vdj_locus_list.list.n_unique().fill_null(0)
-    loc1_first = vdj_locus_list.list.first()
-
-    # Check for TRB/TRD exception
-    loc1_all_trb_trd = (
-        loc1_has
-        & vdj_locus_list.list.eval(
-            pl.element().is_in(["TRB", "TRD"])
-        ).list.all()
-    )
-
-    tmp1 = (
-        pl.when(~loc1_has)
-        .then(pl.lit("None"))
-        .when(loc1_unique_len > 1)
-        .then(pl.lit("Ambiguous"))
-        .when(
-            loc1_len > 1
-        )  # Changed from >= to > (only flag as extra if MORE than 1)
-        .then(
-            pl.when(
-                isotype_list.fill_null(False)
-                | (loc1_all_trb_trd & (loc1_unique_len <= 2))
-            )
-            .then(pl.lit("Extra VDJ-exception"))
-            .otherwise(pl.lit("Extra VDJ"))
-        )
-        .otherwise(loc1_first)  # Single locus returns the locus name
-    )
-
-    # Process locus 2
-    vj_locus_len = vj_locus_list.list.len().fill_null(0)
-    vj_locus_first = vj_locus_list.list.first()
-    vj_locus_unique_len = vj_locus_list.list.n_unique().fill_null(0)
-
-    # Check for TRA/TRG or IGK/IGL exception
-    vj_locus_all_tra_trg = (
-        vj_locus_has
-        & vj_locus_list.list.eval(pl.element().is_in(["TRA", "TRG"])).list.all()
-    )
-
-    vj_locus_all_igk_igl = (
-        vj_locus_has
-        & vj_locus_list.list.eval(pl.element().is_in(["IGK", "IGL"])).list.all()
-    )
-
-    tmp2 = (
-        pl.when(~vj_locus_has)
-        .then(pl.lit("None"))
-        .when(vj_locus_len > 1)
-        .then(
-            pl.when(
-                (vj_locus_all_tra_trg | vj_locus_all_igk_igl)
-                & (vj_locus_unique_len <= 2)
-            )
-            .then(pl.lit("Extra VJ"))
-            .otherwise(pl.lit("Ambiguous"))
-        )
-        .otherwise(vj_locus_first)
-    )
-
-    # Build the final classification
-    both_none = ~loc1_has & ~vj_locus_has
-
-    # Check if tmp1 and tmp2 are valid locus names
-    tmp1_is_locus = loc1_has & ~tmp1.is_in(
-        ["None", "Extra VDJ", "Extra VDJ-exception", "Ambiguous"]
-    )
-    tmp2_is_locus = vj_locus_has & ~tmp2.is_in(
-        ["None", "Extra VJ", "Extra VJ-exception", "Ambiguous"]
-    )
-
-    # Final result
-    result = (
-        pl.when(both_none)
-        .then(pl.lit("None + None"))
-        .when((tmp1 == "Ambiguous") | (tmp2 == "Ambiguous"))
-        .then(pl.lit("Ambiguous"))
-        .when(tmp1 == "None")
-        .then(pl.concat_str([pl.lit("Orphan "), tmp2]))
-        .when(tmp2 == "None")
-        .then(pl.concat_str([pl.lit("Orphan "), tmp1]))
-        .when(tmp1_is_locus & tmp2_is_locus)
-        .then(pl.concat_str([tmp1, pl.lit(" + "), tmp2]))
-        .otherwise(pl.concat_str([tmp1, pl.lit(" + "), tmp2]))
-    )
-
-    return result.alias("locus_classification")
-
-
-def format_chain_status(locus_status: pl.Expr) -> pl.Expr:
-    """Format chain status - vectorized for Polars."""
-
-    # Build conditions
-    has_orphan = locus_status.str.contains("Orphan")
-    has_exception = locus_status.str.contains("exception|IgM/IgD")
-    has_extra = locus_status.str.contains("Extra")
-    has_vdj = locus_status.str.contains("TRB|IGH|TRD|VDJ")
-    has_vj = locus_status.str.contains("TRA|TRG|IGK|IGL|VJ")
-    is_ambiguous = locus_status.str.contains("Ambiguous|None")
-
-    # Apply conditions using when/then/otherwise chain
-    return (
-        pl.when(is_ambiguous)
-        .then(pl.lit("Ambiguous"))
-        .when(has_orphan & has_vdj & ~has_extra & ~has_exception)
-        .then(pl.lit("Orphan VDJ"))
-        .when(has_orphan & has_vdj & has_extra & ~has_exception)
-        .then(pl.lit("Orphan Extra VDJ"))
-        .when(has_orphan & has_vdj & has_exception)
-        .then(pl.lit("Orphan VDJ-exception"))
-        .when(has_orphan & has_vj & ~has_extra & ~has_exception)
-        .then(pl.lit("Orphan VJ"))
-        .when(has_orphan & has_vj & has_extra & ~has_exception)
-        .then(pl.lit("Orphan Extra VJ"))
-        .when(has_orphan & has_vj & has_exception)
-        .then(pl.lit("Orphan VJ-exception"))
-        .when(has_exception & ~has_orphan)
-        .then(pl.lit("Extra pair-exception"))
-        .when(has_extra & ~has_orphan)
-        .then(pl.lit("Extra pair"))
-        .otherwise(pl.lit("Single pair"))
-    )
-
-
-def format_isotype() -> pl.Expr:
-    """Format isotype status - vectorized for Polars."""
-
-    isotype_status = pl.col("isotype_status")
-    chain_status = pl.col("chain_status")
-    # Vectorized conditions
-    has_exception = chain_status.str.contains("exception")
-    is_extra_pair = chain_status == "Extra pair"
-
-    return (
-        pl.when(~has_exception & is_extra_pair)
-        .then(pl.lit("Multi"))
-        .otherwise(isotype_status)
-    )
-
-
-def clean_up_exception(col: pl.Expr) -> pl.Expr:
-    """Strip 'exception' from chain status - vectorized for Polars."""
-    return col.str.replace("-exception", "")
 
 
 def load_polars(
@@ -2963,106 +2621,6 @@ def load_polars(
         return df
 
     return None  # Handle obj is None case
-
-
-def write_fasta(
-    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
-) -> None:
-    """
-    Generic fasta writer using fasta_iterator
-
-    Parameters
-    ----------
-    fasta_dict : dict[str, str]
-        dictionary containing fasta headers and sequences as keys and records respectively.
-    out_fasta : str
-        path to write fasta file to.
-    overwrite : bool, optional
-        whether or not to overwrite the output file (out_fasta).
-    """
-    if overwrite:
-        fh = open(out_fasta, "w")
-        fh.close()
-    out = ""
-    for l in fasta_dict:
-        out = ">" + l + "\n" + fasta_dict[l] + "\n"
-        write_output(out, out_fasta)
-
-
-def write_output(out: str, file: Path | str) -> None:
-    """General line writer."""
-    fh = open(file, "a")
-    fh.write(out)
-    fh.close()
-
-
-def check_travdv_polars(
-    data: pl.LazyFrame | pl.DataFrame,
-    lazy: bool = True,
-) -> pl.LazyFrame:
-    """Check if locus is TRA/D."""
-    # Vectorized approach - works on LazyFrame
-    if isinstance(data, pl.DataFrame):
-        data = data.lazy()
-    data = data.with_columns(
-        [
-            # Check if we need to update locus
-            pl.when(
-                # Condition 1: v_call matches TRAV.*/DV pattern
-                pl.col("v_call").str.contains(r"TRAV.*/DV")
-            )
-            .then(
-                # If j, c, d calls match TRA
-                pl.when(
-                    same_call_vectorized(
-                        pl.col("j_call"),
-                        pl.col("c_call"),
-                        pl.col("d_call"),
-                        "TRA",
-                    )
-                    & ~pl.col("locus").str.contains("TRA")
-                )
-                .then(pl.lit("TRA"))
-                # Elif j, c, d calls match TRD
-                .when(
-                    same_call_vectorized(
-                        pl.col("j_call"),
-                        pl.col("c_call"),
-                        pl.col("d_call"),
-                        "TRD",
-                    )
-                    & ~pl.col("locus").str.contains("TRD")
-                )
-                .then(pl.lit("TRD"))
-                # Otherwise keep original locus
-                .otherwise(pl.col("locus"))
-            )
-            # If v_call doesn't match pattern, keep original locus
-            .otherwise(pl.col("locus"))
-            .alias("locus")
-        ]
-    )
-    return data if lazy else data.collect()
-
-
-def same_call_vectorized(
-    j_col: pl.Expr, c_col: pl.Expr, d_col: pl.Expr, chain_type: str
-) -> pl.Expr:
-    """Vectorized version of same_call - returns a boolean expression."""
-    return (
-        j_col.str.contains(chain_type)
-        | c_col.str.contains(chain_type)
-        | d_col.str.contains(chain_type)
-    )
-
-
-def map_isotype(lst, isotype_conversion_dict):
-    return [
-        ",".join(
-            [isotype_conversion_dict.get(y[:4], None) for y in x.split(",")]
-        )
-        for x in lst
-    ]
 
 
 class DataFrameAccessor:
@@ -3239,191 +2797,7 @@ class SeriesAccessor:
         return self._series.__ge__(other)
 
 
-def sanitize_boolean_expr(col: str) -> pl.Expr:
-    """Sanitize boolean-like column using Polars expressions."""
-    return pl.col(col).map_elements(sanitize_boolean, return_dtype=pl.Utf8)
-
-
-def sanitize_data_polars(
-    data: pl.DataFrame | pl.LazyFrame,
-    ignore: str = "clone_id",
-) -> pl.DataFrame:
-    """
-    Sanitize dtypes using Polars.
-    Works for eager and lazy DataFrames.
-    """
-    lazy = isinstance(data, pl.LazyFrame)
-    df = data.collect() if lazy else data
-    exprs: list[pl.Expr] = []
-    for d in df.collect_schema().names():
-        is_string = is_polars_string_dtype(df, d)
-        col = pl.col(d)
-        # --- BOOLEAN-LIKE COLUMNS ---
-        if d in BOOLEAN_LIKE_COLUMNS:
-            exprs.append(sanitize_boolean_expr(d).alias(d))
-            continue
-        # --- SCHEMA-DEFINED COLUMNS ---
-        if d in RearrangementSchema.properties:
-            dtype = RearrangementSchema.properties[d]["type"]
-            if dtype in {"string", "boolean", "integer"}:
-                # replace empties with ""
-                # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
-                col = (
-                    pl.when(
-                            col.is_null()
-                            | (
-                                col.is_in(EMPTIES_STR)
-                                if is_string
-                                else pl.lit(False)
-                            )
-                    )
-                    .then(pl.lit(""))
-                    .otherwise(col)
-                )
-                if dtype == "integer":
-                    num = col.cast(pl.Int64, strict=False)
-                    col = (
-                        pl.when(num.is_null())
-                        .then(pl.lit(""))
-                        .otherwise(num.cast(pl.Utf8))
-                    )
-                if dtype == "boolean":
-                    col = col.map_elements(
-                        sanitize_boolean,
-                        return_dtype=pl.Utf8,
-                    )
-            else:
-                # non string/bool/int → replace empties with null
-                # col = pl.when(col.is_in(EMPTIES)).then(None).otherwise(col)
-                col = (
-                    pl.when(
-                            col.is_null()
-                            | (
-                                col.is_in(EMPTIES_STR)
-                                if is_string
-                                else pl.lit(False)
-                            )
-                    )
-                    .then(None)
-                    .otherwise(col)
-                )
-            exprs.append(col.alias(d))
-            continue
-        # --- OTHER COLUMNS ---
-        if d != ignore:
-            # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
-            col = (
-                pl.when(
-                        col.is_null()
-                        | (
-                            col.is_in(EMPTIES_STR)
-                            if is_string
-                            else pl.lit(False)
-                        )
-                )
-                .then(pl.lit(""))
-                .otherwise(col)
-            )
-            # try numeric coercion
-            col = col.cast(pl.Float64, strict=False).fill_null(col)
-        # --- REGEX SPECIAL CASES ---
-        if re.search("mu_freq", d):
-            col = col.cast(pl.Float64, strict=False)
-        if re.search("mu_count", d):
-            num = col.cast(pl.Int64, strict=False)
-            col = (
-                pl.when(num.is_null())
-                .then(pl.lit(""))
-                .otherwise(num.cast(pl.Utf8))
-            )
-        exprs.append(col.alias(d))
-    df = df.with_columns(exprs)
-    # --- AIRR VALIDATION (requires eager) ---
-    # out = df.collect()
-    validate_airr_polars(df)
-    return df.lazy() if lazy else df
-
-
-def is_polars_string_dtype(
-    df: pl.DataFrame | pl.LazyFrame, colname: str
-) -> bool:
-    schema = df.collect_schema() if isinstance(df, pl.LazyFrame) else df.schema
-    return schema.get(colname) == pl.Utf8
-
-
-def validate_airr_polars(data: pl.DataFrame) -> None:
-    """Validate dtypes in airr table (Polars)."""
-    # identify integer-like columns
-    int_columns = []
-    for d in data.collect_schema().names():
-        try:
-            data.select(pl.col(d).cast(pl.Int64, strict=False))
-            int_columns.append(d)
-        except Exception:
-            pass
-
-    for row in data.iter_rows(named=True):
-        contig = Contig(row).contig
-        for required in [
-            "sequence",
-            "rev_comp",
-            "sequence_alignment",
-            "germline_alignment",
-            "v_cigar",
-            "d_cigar",
-            "j_cigar",
-        ]:
-            if required not in contig:
-                contig[required] = ""
-
-        RearrangementSchema.validate_header(contig.keys())
-        RearrangementSchema.validate_row(contig)
-
-
-def get_vcall_key_polars(
-    data: pl.DataFrame | pl.LazyFrame, v_call_key: str
-) -> str:
-    """
-    Determine which V-call key to use based on the provided data and key.
-
-    Parameters
-    ----------
-    data : pl.DataFrame | pl.LazyFrame
-        The Polars DataFrame or LazyFrame containing rearrangement data.
-    v_call_key : str
-        The requested key to check (e.g. "v_call" or "v_call_genotyped").
-
-    Returns
-    -------
-    str
-        The best matching V-call key, following this priority:
-        1. "v_call_genotyped" if it exists in data and matches v_call_key
-        2. "v_call" if it exists in data and matches v_call_key
-        3. v_call_key if it exists in data
-        4. "v_call" as a default fallback
-    """
-    cols = data.collect_schema().names()
-    if "v_call_genotyped" in cols and v_call_key == "v_call_genotyped":
-        return "v_call_genotyped"
-    elif "v_call" in cols and v_call_key == "v_call":
-        return "v_call"
-    elif v_call_key in cols:
-        return v_call_key
-    else:
-        return "v_call"
-
-
-def is_present(col: str) -> pl.Expr:
-    """Helper function to check if a column value is present (not null and not empty)."""
-    return pl.col(col).is_not_null() & (pl.col(col).str.len_chars() > 0)
-
-
-def first_3(col: str) -> pl.Expr:
-    """Helper function to get the first 3 characters of a column."""
-    return pl.col(col).str.slice(0, 3)
-
-
-def read_zarrddl(
+def read_zipddl(
     filename: str,
     distance_zarr: Path | str | None = None,
     verbose: bool = False,
@@ -3539,6 +2913,55 @@ def read_zarrddl(
     return res
 
 
+### --- Helper functions for slicing ---
+def _get_length(df: pl.DataFrame | pl.LazyFrame) -> int:
+    """Get number of rows in Polars DataFrame or LazyFrame."""
+    if isinstance(df, pl.LazyFrame):
+        return df.collect().height
+    elif isinstance(df, pl.DataFrame):
+        return df.height
+    return len(df)
+
+
+def _filter_and_select(
+    df: pl.DataFrame | pl.LazyFrame, condition: pl.Expr
+) -> pl.Series:
+    """Filter DataFrame/LazyFrame by condition and select 'cell_id' column as Series."""
+    if isinstance(df, pl.LazyFrame):
+        return df.filter(condition).select("cell_id").collect().to_series()
+    else:
+        return df.filter(condition).select("cell_id").to_series()
+
+
+### --- Helper functions for read/write ---
+def _write_parquet_blob(
+    zarr_group,
+    name: str,
+    df: pl.DataFrame | pl.LazyFrame,
+    compressors=None,
+):
+    """
+    Save Polars DataFrame/LazyFrame as Parquet blob in Zarr group.
+    """
+    # Materialize if lazy
+    if isinstance(df, pl.LazyFrame):
+        df = df.collect()
+
+    with tempfile.NamedTemporaryFile(suffix=".parquet") as tmp:
+        df.write_parquet(tmp.name)
+        tmp.seek(0)
+        arr = np.frombuffer(tmp.read(), dtype=np.uint8)
+    zarr_group.create_dataset(
+        name,
+        shape=arr.shape,
+        dtype=arr.dtype,
+        chunks=arr.shape,
+        data=arr,
+        overwrite=True,
+        compressors=compressors,
+    )
+
+
 def _read_h5_csr_matrix_zarr(
     filename: Path | str, as_df: bool = True
 ) -> pd.DataFrame:
@@ -3610,3 +3033,673 @@ def _create_graph(
             d["weight"] -= adjust_adjacency
 
     return g
+
+
+def _write_fasta(
+    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
+) -> None:
+    """
+    Generic fasta writer using fasta_iterator
+
+    Parameters
+    ----------
+    fasta_dict : dict[str, str]
+        dictionary containing fasta headers and sequences as keys and records respectively.
+    out_fasta : str
+        path to write fasta file to.
+    overwrite : bool, optional
+        whether or not to overwrite the output file (out_fasta).
+    """
+    if overwrite:
+        fh = open(out_fasta, "w")
+        fh.close()
+    out = ""
+    for l in fasta_dict:
+        out = ">" + l + "\n" + fasta_dict[l] + "\n"
+        _write_output(out, out_fasta)
+
+
+def _write_output(out: str, file: Path | str) -> None:
+    """General line writer."""
+    fh = open(file, "a")
+    fh.write(out)
+    fh.close()
+
+
+### --- Helper functions for metadata initialization ---
+def is_present(col: str) -> pl.Expr:
+    """Helper function to check if a column value is present (not null and not empty)."""
+    return pl.col(col).is_not_null() & (pl.col(col).str.len_chars() > 0)
+
+
+def first_3(col: str) -> pl.Expr:
+    """Helper function to get the first 3 characters of a column."""
+    return pl.col(col).str.slice(0, 3)
+
+
+def _get_vcall_key_polars(
+    data: pl.DataFrame | pl.LazyFrame, v_call_key: str
+) -> str:
+    """
+    Determine which V-call key to use based on the provided data and key.
+
+    Parameters
+    ----------
+    data : pl.DataFrame | pl.LazyFrame
+        The Polars DataFrame or LazyFrame containing rearrangement data.
+    v_call_key : str
+        The requested key to check (e.g. "v_call" or "v_call_genotyped").
+
+    Returns
+    -------
+    str
+        The best matching V-call key, following this priority:
+        1. "v_call_genotyped" if it exists in data and matches v_call_key
+        2. "v_call" if it exists in data and matches v_call_key
+        3. v_call_key if it exists in data
+        4. "v_call" as a default fallback
+    """
+    cols = data.collect_schema().names()
+    if "v_call_genotyped" in cols and v_call_key == "v_call_genotyped":
+        return "v_call_genotyped"
+    elif "v_call" in cols and v_call_key == "v_call":
+        return "v_call"
+    elif v_call_key in cols:
+        return v_call_key
+    else:
+        return "v_call"
+
+
+def _classify_locus_pair() -> pl.Expr:
+    """
+    Classify locus pairs based on VDJ and VJ locus columns and isotype information.
+    """
+    vdj_locus_col = "locus_VDJ"
+    vj_locus_col = "locus_VJ"
+    isotype_col = "isotype"
+
+    # Parse lists once
+    vdj_locus_list = (
+        pl.when(pl.col(vdj_locus_col).is_null())
+        .then(pl.lit(None, dtype=pl.List(pl.String)))
+        .otherwise(
+            pl.col(vdj_locus_col)
+            .str.split("|")
+            .list.eval(pl.element().filter(pl.element() != "None"))
+        )
+    )
+
+    vj_locus_list = (
+        pl.when(pl.col(vj_locus_col).is_null())
+        .then(pl.lit(None, dtype=pl.List(pl.String)))
+        .otherwise(
+            pl.col(vj_locus_col)
+            .str.split("|")
+            .list.eval(pl.element().filter(pl.element() != "None"))
+        )
+    )
+
+    # Simplified isotype check - much faster than splitting and checking lists
+    isotype_list = (
+        pl.when(pl.col(isotype_col).is_null())
+        .then(pl.lit(None, dtype=pl.Boolean))
+        .otherwise(
+            pl.col(isotype_col)
+            .str.split("|")
+            .list.unique()
+            .pipe(
+                lambda x: (
+                    # All elements must be in allowed set
+                    x.list.eval(
+                        pl.element().is_in(["IgM", "IgD", "IgM,IgD", "IgD,IgM"])
+                    ).list.all()
+                )
+                & (
+                    # Must contain IgM (either as "IgM" or in "IgM,IgD"/"IgD,IgM")
+                    x.list.eval(pl.element().str.contains("IgM")).list.any()
+                )
+                & (
+                    # Must contain IgD (either as "IgD" or in "IgM,IgD"/"IgD,IgM")
+                    x.list.eval(pl.element().str.contains("IgD")).list.any()
+                )
+            )
+        )
+    )
+
+    # Check if has values
+    loc1_has = vdj_locus_list.is_not_null() & (vdj_locus_list.list.len() > 0)
+    vj_locus_has = vj_locus_list.is_not_null() & (vj_locus_list.list.len() > 0)
+
+    # Process locus 1 - use fill_null instead of when-then for simpler cases
+    loc1_len = vdj_locus_list.list.len().fill_null(0)
+    loc1_unique_len = vdj_locus_list.list.n_unique().fill_null(0)
+    loc1_first = vdj_locus_list.list.first()
+
+    # Check for TRB/TRD exception
+    loc1_all_trb_trd = (
+        loc1_has
+        & vdj_locus_list.list.eval(
+            pl.element().is_in(["TRB", "TRD"])
+        ).list.all()
+    )
+
+    tmp1 = (
+        pl.when(~loc1_has)
+        .then(pl.lit("None"))
+        .when(loc1_unique_len > 1)
+        .then(pl.lit("Ambiguous"))
+        .when(
+            loc1_len > 1
+        )  # Changed from >= to > (only flag as extra if MORE than 1)
+        .then(
+            pl.when(
+                isotype_list.fill_null(False)
+                | (loc1_all_trb_trd & (loc1_unique_len <= 2))
+            )
+            .then(pl.lit("Extra VDJ-exception"))
+            .otherwise(pl.lit("Extra VDJ"))
+        )
+        .otherwise(loc1_first)  # Single locus returns the locus name
+    )
+
+    # Process locus 2
+    vj_locus_len = vj_locus_list.list.len().fill_null(0)
+    vj_locus_first = vj_locus_list.list.first()
+    vj_locus_unique_len = vj_locus_list.list.n_unique().fill_null(0)
+
+    # Check for TRA/TRG or IGK/IGL exception
+    vj_locus_all_tra_trg = (
+        vj_locus_has
+        & vj_locus_list.list.eval(pl.element().is_in(["TRA", "TRG"])).list.all()
+    )
+
+    vj_locus_all_igk_igl = (
+        vj_locus_has
+        & vj_locus_list.list.eval(pl.element().is_in(["IGK", "IGL"])).list.all()
+    )
+
+    tmp2 = (
+        pl.when(~vj_locus_has)
+        .then(pl.lit("None"))
+        .when(vj_locus_len > 1)
+        .then(
+            pl.when(
+                (vj_locus_all_tra_trg | vj_locus_all_igk_igl)
+                & (vj_locus_unique_len <= 2)
+            )
+            .then(pl.lit("Extra VJ"))
+            .otherwise(pl.lit("Ambiguous"))
+        )
+        .otherwise(vj_locus_first)
+    )
+
+    # Build the final classification
+    both_none = ~loc1_has & ~vj_locus_has
+
+    # Check if tmp1 and tmp2 are valid locus names
+    tmp1_is_locus = loc1_has & ~tmp1.is_in(
+        ["None", "Extra VDJ", "Extra VDJ-exception", "Ambiguous"]
+    )
+    tmp2_is_locus = vj_locus_has & ~tmp2.is_in(
+        ["None", "Extra VJ", "Extra VJ-exception", "Ambiguous"]
+    )
+
+    # Final result
+    result = (
+        pl.when(both_none)
+        .then(pl.lit("None + None"))
+        .when((tmp1 == "Ambiguous") | (tmp2 == "Ambiguous"))
+        .then(pl.lit("Ambiguous"))
+        .when(tmp1 == "None")
+        .then(pl.concat_str([pl.lit("Orphan "), tmp2]))
+        .when(tmp2 == "None")
+        .then(pl.concat_str([pl.lit("Orphan "), tmp1]))
+        .when(tmp1_is_locus & tmp2_is_locus)
+        .then(pl.concat_str([tmp1, pl.lit(" + "), tmp2]))
+        .otherwise(pl.concat_str([tmp1, pl.lit(" + "), tmp2]))
+    )
+
+    return result.alias("locus_classification")
+
+
+def _check_travdv_polars(
+    data: pl.LazyFrame | pl.DataFrame | pd.DataFrame,
+    lazy: bool = True,
+) -> pl.LazyFrame:
+    """Check if locus is TRA/D."""
+    # Vectorized approach - works on LazyFrame
+    if isinstance(data, pd.DataFrame):
+        data = pl.from_pandas(data.reset_index(drop=True)).lazy()
+    elif isinstance(data, pl.DataFrame):
+        data = data.lazy()
+    data = data.with_columns(
+        [
+            # Check if we need to update locus
+            pl.when(
+                # Condition 1: v_call matches TRAV.*/DV pattern
+                pl.col("v_call").str.contains(r"TRAV.*/DV")
+            )
+            .then(
+                # If j, c, d calls match TRA
+                pl.when(
+                    _same_call_vectorized(
+                        pl.col("j_call"),
+                        pl.col("c_call"),
+                        pl.col("d_call"),
+                        "TRA",
+                    )
+                    & ~pl.col("locus").str.contains("TRA")
+                )
+                .then(pl.lit("TRA"))
+                # Elif j, c, d calls match TRD
+                .when(
+                    _same_call_vectorized(
+                        pl.col("j_call"),
+                        pl.col("c_call"),
+                        pl.col("d_call"),
+                        "TRD",
+                    )
+                    & ~pl.col("locus").str.contains("TRD")
+                )
+                .then(pl.lit("TRD"))
+                # Otherwise keep original locus
+                .otherwise(pl.col("locus"))
+            )
+            # If v_call doesn't match pattern, keep original locus
+            .otherwise(pl.col("locus"))
+            .alias("locus")
+        ]
+    )
+    return data if lazy else data.collect()
+
+
+def _same_call_vectorized(
+    j_col: pl.Expr, c_col: pl.Expr, d_col: pl.Expr, chain_type: str
+) -> pl.Expr:
+    """Vectorized version of same_call - returns a boolean expression."""
+    return (
+        j_col.str.contains(chain_type)
+        | c_col.str.contains(chain_type)
+        | d_col.str.contains(chain_type)
+    )
+
+
+def _classify_isotype() -> pl.Expr:
+    """
+    Classify isotype from list of isotypes - vectorized for Polars.
+
+    Args:
+        col: Column name containing list of isotypes
+
+    Returns:
+        Polars expression for isotype classification
+    """
+    col = "isotype"
+    isotype_col = pl.col(col)
+
+    # Check if null or empty
+    is_null_or_empty = isotype_col.is_null() | (isotype_col.list.len() == 0)
+
+    # Check list length > 2 -> "Multi"
+    list_len = isotype_col.list.len()
+
+    # Get unique values
+    # unique_values = flattened.list.unique()
+    unique_values = isotype_col.list.join(",").str.split(",").list.unique()
+    unique_count = unique_values.list.len()
+
+    # Check if exactly {"IgM", "IgD"}
+    is_igm_igd = (unique_count == 2) & (
+        unique_values.list.set_symmetric_difference(["IgM", "IgD"]) == []
+    )
+
+    # Single unique value
+    single_value = unique_values.list.first()
+
+    # Build classification
+    result = (
+        pl.when(is_null_or_empty)
+        .then(pl.lit(None))
+        .when(list_len > 2)
+        .then(pl.lit("Multi"))
+        .when(is_igm_igd)
+        .then(pl.lit("IgM/IgD"))
+        .when(unique_count == 1)
+        .then(single_value)
+        .when(unique_count > 2)
+        .then(pl.lit("Multi"))
+        .otherwise(pl.lit("Multi"))  # Exactly 2 unique values (not IgM/IgD)
+    )
+
+    return result
+
+
+def _format_chain_status(locus_status: pl.Expr) -> pl.Expr:
+    """Format chain status - vectorized for Polars."""
+
+    # Build conditions
+    has_orphan = locus_status.str.contains("Orphan")
+    has_exception = locus_status.str.contains("exception|IgM/IgD")
+    has_extra = locus_status.str.contains("Extra")
+    has_vdj = locus_status.str.contains("TRB|IGH|TRD|VDJ")
+    has_vj = locus_status.str.contains("TRA|TRG|IGK|IGL|VJ")
+    is_ambiguous = locus_status.str.contains("Ambiguous|None")
+
+    # Apply conditions using when/then/otherwise chain
+    return (
+        pl.when(is_ambiguous)
+        .then(pl.lit("Ambiguous"))
+        .when(has_orphan & has_vdj & ~has_extra & ~has_exception)
+        .then(pl.lit("Orphan VDJ"))
+        .when(has_orphan & has_vdj & has_extra & ~has_exception)
+        .then(pl.lit("Orphan Extra VDJ"))
+        .when(has_orphan & has_vdj & has_exception)
+        .then(pl.lit("Orphan VDJ-exception"))
+        .when(has_orphan & has_vj & ~has_extra & ~has_exception)
+        .then(pl.lit("Orphan VJ"))
+        .when(has_orphan & has_vj & has_extra & ~has_exception)
+        .then(pl.lit("Orphan Extra VJ"))
+        .when(has_orphan & has_vj & has_exception)
+        .then(pl.lit("Orphan VJ-exception"))
+        .when(has_exception & ~has_orphan)
+        .then(pl.lit("Extra pair-exception"))
+        .when(has_extra & ~has_orphan)
+        .then(pl.lit("Extra pair"))
+        .otherwise(pl.lit("Single pair"))
+    )
+
+
+def _format_isotype() -> pl.Expr:
+    """Format isotype status - vectorized for Polars."""
+
+    isotype_status = pl.col("isotype_status")
+    chain_status = pl.col("chain_status")
+    # Vectorized conditions
+    has_exception = chain_status.str.contains("exception")
+    is_extra_pair = chain_status == "Extra pair"
+
+    return (
+        pl.when(~has_exception & is_extra_pair)
+        .then(pl.lit("Multi"))
+        .otherwise(isotype_status)
+    )
+
+
+def _clean_up_exception(col: pl.Expr) -> pl.Expr:
+    """Strip 'exception' from chain status - vectorized for Polars."""
+    return col.str.replace("-exception", "")
+
+
+def _clean_single_entry(entry: str) -> str:
+    """Clean a single clone entry string."""
+    if entry is None or entry == "":
+        return "None"
+
+    # Split, filter out 'None', or return ['None'] if empty
+    parts = [c for c in entry.split("|") if c != "None"]
+    if not parts:
+        parts = ["None"]
+
+    # Sort and deduplicate
+    unique_sorted = sorted(
+        set(parts), key=cmp_to_key(lambda a, b: (a > b) - (a < b))
+    )
+    return "|".join(unique_sorted)
+
+
+def _map_clones_with_dict(entry: str, size_dict: dict) -> str:
+    """Map clone entries using the size dictionary."""
+    if entry is None or entry == "":
+        return "None"
+    return "|".join(size_dict.get(p, p) for p in entry.split("|"))
+
+
+def _add_clone_info(
+    df: pl.DataFrame | pl.LazyFrame, clonekey: str
+) -> pl.DataFrame | pl.LazyFrame:
+    """Add a `{clonekey}_rank` column to df with sequential numbering per receptor type based on clone size."""
+    is_lazy = isinstance(df, pl.LazyFrame)
+
+    # Step 1: Clean the clone column
+    df = df.with_columns(
+        pl.col(clonekey)
+        .map_elements(_clean_single_entry, return_dtype=pl.Utf8)
+        .alias(clonekey)
+    )
+
+    # Step 2: Flatten and count (requires collection for lazy)
+    if is_lazy:
+        clone_counts = _flatten_and_count(df.collect(), clonekey)
+    else:
+        clone_counts = _flatten_and_count(df, clonekey)
+
+    # Step 3: Assign clone numbers
+    size_dict = _assign_clone_numbers(clone_counts)
+
+    # Step 4: Map multi-clone entries
+    df = df.with_columns(
+        pl.col(clonekey)
+        .map_elements(
+            lambda x: _map_clones_with_dict(x, size_dict), return_dtype=pl.Utf8
+        )
+        .cast(pl.Categorical)
+        .alias(clonekey + "_rank")
+    )
+
+    # Step 5: Reorder columns - insert rank column right after clonekey
+    cols = df.collect_schema().names() if is_lazy else df.columns
+    clonekey_idx = cols.index(clonekey)
+
+    # Remove rank column from its current position and insert after clonekey
+    new_cols = (
+        cols[: clonekey_idx + 1]
+        + [clonekey + "_rank"]
+        + [c for c in cols[clonekey_idx + 1 :] if c != clonekey + "_rank"]
+    )
+
+    df = df.select(new_cols)
+
+    return df
+
+
+def _flatten_and_count(df: pl.DataFrame, clonekey: str) -> dict:
+    """Return a dict of clone counts for all unique clones."""
+    # Explode the pipe-separated values
+    flattened = (
+        df.select(pl.col(clonekey).str.split("|").alias("clones"))
+        .explode("clones")
+        .filter(pl.col("clones") != "None")
+        .group_by("clones")
+        .agg(pl.len().alias("count"))
+        .sort("count", descending=True)
+    )
+
+    # Convert to dict
+    clone_counts = dict(
+        zip(flattened["clones"].to_list(), flattened["count"].to_list())
+    )
+    return clone_counts
+
+
+def _get_receptor_prefix(clone: str) -> str | None:
+    """Return receptor type prefix if matches RECEPTOR_SET, else None."""
+    prefix = clone.split("_")[0]
+    return prefix if prefix in RECEPTOR_SET else None
+
+
+def _assign_clone_numbers(clone_counts: dict) -> dict:
+    """Assign sequential numbers, possibly grouped by receptor type."""
+    # Determine all receptor types present
+    prefixes = {_get_receptor_prefix(clone) for clone in clone_counts.keys()}
+    prefixes.discard(None)
+
+    size_dict = {}
+
+    if len(prefixes) <= 1:
+        # Only 1 receptor type (or none): number sequentially without prefix
+        for i, clone in enumerate(clone_counts.keys(), start=1):
+            size_dict[clone] = str(i)
+    else:
+        # Multiple receptor types: number sequentially per type
+        receptor_to_clones = {r: [] for r in RECEPTOR_SET}
+        other_clones = []
+
+        for clone in clone_counts.keys():
+            prefix = _get_receptor_prefix(clone)
+            if prefix in RECEPTOR_SET:
+                receptor_to_clones[prefix].append(clone)
+            else:
+                other_clones.append(clone)
+
+        # Sort each receptor group by descending size
+        for r in receptor_to_clones:
+            receptor_to_clones[r].sort(key=lambda c: -clone_counts[c])
+        other_clones.sort(key=lambda c: -clone_counts[c])
+
+        # Assign numbers
+        for r, clones in receptor_to_clones.items():
+            for i, clone in enumerate(clones, start=1):
+                size_dict[clone] = f"{r}_{i}"
+
+        for i, clone in enumerate(other_clones, start=1):
+            size_dict[clone] = f"other_{i}" if clone != "None" else "None"
+
+    return size_dict
+
+
+### --- Helper functions for data sanitization ---
+def _sanitize_boolean_expr(col: str) -> pl.Expr:
+    """Sanitize boolean-like column using Polars expressions."""
+    return pl.col(col).map_elements(sanitize_boolean, return_dtype=pl.Utf8)
+
+
+def _sanitize_data_polars(
+    data: pl.DataFrame | pl.LazyFrame,
+    ignore: str = "clone_id",
+) -> pl.DataFrame:
+    """
+    Sanitize dtypes using Polars.
+    Works for eager and lazy DataFrames.
+    """
+    lazy = isinstance(data, pl.LazyFrame)
+    df = data.collect() if lazy else data
+    exprs: list[pl.Expr] = []
+    for d in df.collect_schema().names():
+        is_string = _is_polars_string_dtype(df, d)
+        col = pl.col(d)
+        # --- BOOLEAN-LIKE COLUMNS ---
+        if d in BOOLEAN_LIKE_COLUMNS:
+            exprs.append(_sanitize_boolean_expr(d).alias(d))
+            continue
+        # --- SCHEMA-DEFINED COLUMNS ---
+        if d in RearrangementSchema.properties:
+            dtype = RearrangementSchema.properties[d]["type"]
+            if dtype in {"string", "boolean", "integer"}:
+                # replace empties with ""
+                # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
+                col = (
+                    pl.when(
+                        col.is_null()
+                        | (
+                            col.is_in(EMPTIES_STR)
+                            if is_string
+                            else pl.lit(False)
+                        )
+                    )
+                    .then(pl.lit(""))
+                    .otherwise(col)
+                )
+                if dtype == "integer":
+                    num = col.cast(pl.Int64, strict=False)
+                    col = (
+                        pl.when(num.is_null())
+                        .then(pl.lit(""))
+                        .otherwise(num.cast(pl.Utf8))
+                    )
+                if dtype == "boolean":
+                    col = col.map_elements(
+                        sanitize_boolean,
+                        return_dtype=pl.Utf8,
+                    )
+            else:
+                # non string/bool/int → replace empties with null
+                # col = pl.when(col.is_in(EMPTIES)).then(None).otherwise(col)
+                col = (
+                    pl.when(
+                        col.is_null()
+                        | (
+                            col.is_in(EMPTIES_STR)
+                            if is_string
+                            else pl.lit(False)
+                        )
+                    )
+                    .then(None)
+                    .otherwise(col)
+                )
+            exprs.append(col.alias(d))
+            continue
+        # --- OTHER COLUMNS ---
+        if d != ignore:
+            # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
+            col = (
+                pl.when(
+                    col.is_null()
+                    | (col.is_in(EMPTIES_STR) if is_string else pl.lit(False))
+                )
+                .then(pl.lit(""))
+                .otherwise(col)
+            )
+            # try numeric coercion
+            col = col.cast(pl.Float64, strict=False).fill_null(col)
+        # --- REGEX SPECIAL CASES ---
+        if re.search("mu_freq", d):
+            col = col.cast(pl.Float64, strict=False)
+        if re.search("mu_count", d):
+            num = col.cast(pl.Int64, strict=False)
+            col = (
+                pl.when(num.is_null())
+                .then(pl.lit(""))
+                .otherwise(num.cast(pl.Utf8))
+            )
+        exprs.append(col.alias(d))
+    df = df.with_columns(exprs)
+    # --- AIRR VALIDATION (requires eager) ---
+    # out = df.collect()
+    _validate_airr_polars(df)
+    return df.lazy() if lazy else df
+
+
+def _is_polars_string_dtype(
+    df: pl.DataFrame | pl.LazyFrame, colname: str
+) -> bool:
+    schema = df.collect_schema() if isinstance(df, pl.LazyFrame) else df.schema
+    return schema.get(colname) == pl.Utf8
+
+
+def _validate_airr_polars(data: pl.DataFrame) -> None:
+    """Validate dtypes in airr table (Polars)."""
+    # identify integer-like columns
+    int_columns = []
+    for d in data.collect_schema().names():
+        try:
+            data.select(pl.col(d).cast(pl.Int64, strict=False))
+            int_columns.append(d)
+        except Exception:
+            pass
+
+    for row in data.iter_rows(named=True):
+        contig = Contig(row).contig
+        for required in [
+            "sequence",
+            "rev_comp",
+            "sequence_alignment",
+            "germline_alignment",
+            "v_cigar",
+            "d_cigar",
+            "j_cigar",
+        ]:
+            if required not in contig:
+                contig[required] = ""
+
+        RearrangementSchema.validate_header(contig.keys())
+        RearrangementSchema.validate_row(contig)
