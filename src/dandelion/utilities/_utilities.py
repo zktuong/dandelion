@@ -62,7 +62,7 @@ EMPTIES = EMPTIES_STR + [
 
 
 DEFAULT_PREFIX = "all"
-BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
+BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous", "full_length", "complete_vdj"]
 
 
 class Tree(defaultdict):
@@ -481,6 +481,11 @@ def sanitize_boolean(value: str | bool) -> str:
             return "T"
         elif stripped_value in ["false", "f"]:
             return "F"
+    elif isinstance(value, (int, float)):
+        if value == 1:
+            return "T"
+        elif value == 0:
+            return "F"
     return value
 
 
@@ -512,11 +517,15 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
             .astype(str)
             .apply(clean_unicode)
         )
-    elif dtype in ["integer", "number"]:
+    elif dtype in ["number"]:
         series = series.apply(lambda x: np.nan if pd.isna(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
         # for dtype to be float
         return series.astype("float64").fillna(np.nan)
+    elif dtype in ["integer"]:
+        series = series.apply(lambda x: "" if pd.isna(x) else int(x))
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+        return series.astype(str).apply(clean_unicode)
     return series
 
 
