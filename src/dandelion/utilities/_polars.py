@@ -5,6 +5,7 @@ import h5py
 import os
 import re
 import tempfile
+import unicodedata
 import warnings
 import zarr
 
@@ -2134,6 +2135,7 @@ class DandelionPolars:
             if isinstance(self._data, pd.DataFrame):
                 # convert to Polars first
                 self.to_polars(lazy=False)
+            self._data = _sanitize_data_polars(self._data)
             _write_parquet_blob(
                 tables_grp,
                 "data.parquet",
@@ -2563,6 +2565,7 @@ class DandelionPolars:
 
 def load_polars(
     obj: pl.LazyFrame | pl.DataFrame | pd.DataFrame | Path | str | None,
+    as_pandas: bool = False,
 ) -> pl.LazyFrame:
     """
     Read in or copy dataframe object and set sequence_id as index without dropping.
@@ -2571,8 +2574,8 @@ def load_polars(
     ----------
     obj : pl.LazyFrame | pl.DataFrame | pd.DataFrame | Path | str | None
         airr rearrangement file path or pandas/polars DataFrame.
-    lazy: bool, optional
-        whether or not to return a lazy polars DataFrame.
+    as_pandas : bool, optional
+        whether to return as pandas DataFrame. Default is False.
 
     Returns
     -------
@@ -2617,6 +2620,9 @@ def load_polars(
             if "umi_count" not in df.collect_schema():
                 df = df.rename({"duplicate_count": "umi_count"}).collect()
 
+        if as_pandas:
+            df = df.collect().to_pandas()
+            df.set_index("sequence_id", inplace=True, drop=False)
         # Collect to execute operations, then convert back to lazy or pandas
         return df
 
@@ -3066,6 +3072,14 @@ def _write_output(out: str, file: Path | str) -> None:
     fh.close()
 
 
+def _write_airr(
+    data: pd.DataFrame | pl.DataFrame | pl.LazyFrame, save: Path | str
+) -> None:
+    """Save as airr formatted file."""
+    data = _sanitize_data_polars(data)
+    data.write_csv(save, separator="\t")
+
+
 ### --- Helper functions for metadata initialization ---
 def is_present(col: str) -> pl.Expr:
     """Helper function to check if a column value is present (not null and not empty)."""
@@ -3316,12 +3330,16 @@ def _check_travdv_polars(
 def _same_call_vectorized(
     j_col: pl.Expr, c_col: pl.Expr, d_col: pl.Expr, chain_type: str
 ) -> pl.Expr:
-    """Vectorized version of same_call - returns a boolean expression."""
-    return (
-        j_col.str.contains(chain_type)
-        | c_col.str.contains(chain_type)
-        | d_col.str.contains(chain_type)
-    )
+    """Vectorized version of same_call - returns a boolean expression.
+
+    Checks that all non-null values contain the chain_type pattern.
+    """
+    j_match = j_col.is_null() | j_col.str.contains(chain_type)
+    c_match = c_col.is_null() | c_col.str.contains(chain_type)
+    d_match = d_col.is_null() | d_col.str.contains(chain_type)
+
+    # All present calls must match the chain type (AND logic)
+    return j_match & c_match & d_match
 
 
 def _classify_isotype() -> pl.Expr:
@@ -3574,13 +3592,14 @@ def _sanitize_boolean_expr(col: str) -> pl.Expr:
 
 
 def _sanitize_data_polars(
-    data: pl.DataFrame | pl.LazyFrame,
-    ignore: str = "clone_id",
+    data: pl.DataFrame | pl.LazyFrame | pd.DataFrame,
 ) -> pl.DataFrame:
     """
     Sanitize dtypes using Polars.
     Works for eager and lazy DataFrames.
     """
+    if isinstance(data, pd.DataFrame):
+        data = pl.from_pandas(data.reset_index(drop=True))
     lazy = isinstance(data, pl.LazyFrame)
     df = data.collect() if lazy else data
     exprs: list[pl.Expr] = []
@@ -3595,8 +3614,6 @@ def _sanitize_data_polars(
         if d in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[d]["type"]
             if dtype in {"string", "boolean", "integer"}:
-                # replace empties with ""
-                # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
                 col = (
                     pl.when(
                         col.is_null()
@@ -3606,24 +3623,31 @@ def _sanitize_data_polars(
                             else pl.lit(False)
                         )
                     )
-                    .then(pl.lit(""))
+                    .then(pl.lit(None))
                     .otherwise(col)
                 )
                 if dtype == "integer":
-                    num = col.cast(pl.Int64, strict=False)
                     col = (
-                        pl.when(num.is_null())
-                        .then(pl.lit(""))
-                        .otherwise(num.cast(pl.Utf8))
+                        pl.when(col.is_null())
+                        .then(None)
+                        .otherwise(col.cast(pl.Int64, strict=False))
                     )
                 if dtype == "boolean":
-                    col = col.map_elements(
-                        sanitize_boolean,
-                        return_dtype=pl.Utf8,
+                    col = (
+                        pl.when(col.is_null())
+                        .then(None)
+                        .otherwise(
+                            col.map_elements(
+                                sanitize_boolean,
+                                return_dtype=pl.Utf8,
+                            )
+                        )
+                    )
+                if dtype == "string":
+                    col = col.cast(pl.Utf8).map_elements(
+                        clean_unicode, return_dtype=pl.Utf8
                     )
             else:
-                # non string/bool/int → replace empties with null
-                # col = pl.when(col.is_in(EMPTIES)).then(None).otherwise(col)
                 col = (
                     pl.when(
                         col.is_null()
@@ -3638,35 +3662,21 @@ def _sanitize_data_polars(
                 )
             exprs.append(col.alias(d))
             continue
-        # --- OTHER COLUMNS ---
-        if d != ignore:
-            # col = pl.when(col.is_in(EMPTIES)).then("").otherwise(col)
-            col = (
-                pl.when(
-                    col.is_null()
-                    | (col.is_in(EMPTIES_STR) if is_string else pl.lit(False))
-                )
-                .then(pl.lit(""))
-                .otherwise(col)
-            )
-            # try numeric coercion
-            col = col.cast(pl.Float64, strict=False).fill_null(col)
-        # --- REGEX SPECIAL CASES ---
-        if re.search("mu_freq", d):
-            col = col.cast(pl.Float64, strict=False)
-        if re.search("mu_count", d):
-            num = col.cast(pl.Int64, strict=False)
-            col = (
-                pl.when(num.is_null())
-                .then(pl.lit(""))
-                .otherwise(num.cast(pl.Utf8))
-            )
         exprs.append(col.alias(d))
     df = df.with_columns(exprs)
     # --- AIRR VALIDATION (requires eager) ---
-    # out = df.collect()
     _validate_airr_polars(df)
     return df.lazy() if lazy else df
+
+
+def clean_unicode(x: str) -> str:
+    """Normalize and ensure valid UTF-8 text."""
+    if not isinstance(x, str):
+        return ""
+    # Normalize to NFKC form (handles Greek/Unicode nicely)
+    x = unicodedata.normalize("NFKC", x)
+    # Remove invalid or unencodable characters safely
+    return x.encode("utf-8", "ignore").decode("utf-8")
 
 
 def _is_polars_string_dtype(
@@ -3676,17 +3686,25 @@ def _is_polars_string_dtype(
     return schema.get(colname) == pl.Utf8
 
 
-def _validate_airr_polars(data: pl.DataFrame) -> None:
+def _validate_airr_polars(data: pl.DataFrame | pl.LazyFrame) -> None:
     """Validate dtypes in airr table (Polars)."""
     # identify integer-like columns
     int_columns = []
+    if isinstance(data, pl.LazyFrame):
+        data = data.collect()
     for d in data.collect_schema().names():
         try:
             data.select(pl.col(d).cast(pl.Int64, strict=False))
             int_columns.append(d)
         except Exception:
             pass
-
+    if len(int_columns) > 0:
+        data = data.with_columns(
+            [
+                pl.col(d).cast(pl.Int64, strict=False).alias(d)
+                for d in int_columns
+            ]
+        )
     for row in data.iter_rows(named=True):
         contig = Contig(row).contig
         for required in [
