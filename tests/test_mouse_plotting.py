@@ -16,8 +16,8 @@ def test_clone_overlap(
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="test_filtered")
     ddl.pp.check_contigs(vdj)
     ddl.tl.find_clones(vdj)
-    assert vdj.data.shape[0] == 1987
-    assert vdj.metadata.shape[0] == 547
+    assert vdj._data.shape[0] == 1987
+    assert vdj._metadata.shape[0] == 547
     ddl.tl.transfer(dummy_adata_mouse, vdj)
     assert dummy_adata_mouse.n_obs == 547
     # create a sample column

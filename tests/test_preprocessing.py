@@ -21,7 +21,7 @@ except KeyError:
 def test_write_fasta(create_testfolder, fasta_10x, filename, expected):
     """test_write_fasta"""
     out_fasta = create_testfolder / (filename + "_contig.fasta")
-    ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=out_fasta)
+    ddl.utl._core.write_fasta(fasta_dict=fasta_10x, out_fasta=out_fasta)
     assert len(list(create_testfolder.iterdir())) == expected
 
 
@@ -255,11 +255,11 @@ def test_quantify_mut_2(create_testfolder, processed_files, freq, colname):
         ddl.pp.quantify_mutations(vdj, frequency=freq)
     except:
         pytest.skip("R package 'shazam' not installed")
-    assert not vdj.data[colname].empty
+    assert not vdj._data[colname].empty
     if colname == "mu_freq":
-        assert vdj.data[colname].dtype == float
+        assert vdj._data[colname].dtype == float
     else:
-        assert vdj.data[colname].dtype == int
+        assert vdj._data[colname].dtype == int
 
 
 @pytest.mark.usefixtures("create_testfolder", "processed_files", "dummy_adata")
@@ -278,8 +278,8 @@ def test_checkcontigs(
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.check_contigs(dat, dummy_adata)
     assert dat.shape[0] == 9
-    assert vdj.data.shape[0] == 8
-    assert vdj.metadata.shape[0] == 5
+    assert vdj._data.shape[0] == 8
+    assert vdj._metadata.shape[0] == 5
     assert adata.n_obs == 5
 
 

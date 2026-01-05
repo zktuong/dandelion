@@ -1,51 +1,84 @@
-#!/usr/bin/env python
+from __future__ import annotations
+
 import multiprocessing
+import re
+import time
 
 import networkx as nx
 import numpy as np
 import pandas as pd
 
+from collections import defaultdict
 from joblib import Parallel, delayed
+from pathlib import Path
 from polyleven import levenshtein
 from scanpy import logging as logg
 from scipy.spatial.distance import pdist, squareform
+from scipy.sparse.csgraph import csgraph_from_dense
+from sklearn.metrics import pairwise_distances
+from scipy.sparse import csr_matrix
 from tqdm import tqdm
-from typing import Literal
+from typing import Callable, Literal, TYPE_CHECKING
 
-try:
-    from networkx.utils import np_random_state as random_state
-except:
-    from networkx.utils import random_state
+if TYPE_CHECKING:
+    from anndata import AnnData
 
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+
+from dandelion.tools._tools import vdj_sample
+from dandelion.tools._layout import generate_layout
+from dandelion.utilities._core import Dandelion, Query
+from dandelion.utilities._distances import (
+    Metric,
+    dist_func_long_sep,
+    resolve_metric,
+)
+from dandelion.utilities._utilities import (
+    flatten,
+    present,
+    sanitize_data,
+    Tree,
+    FALSES,
+)
 
 
 def generate_network(
-    vdj_data: Dandelion | pd.DataFrame | str,
+    vdj_data: Dandelion,
+    gex_data: AnnData | None = None,
     key: str | None = None,
     clone_key: str | None = None,
     min_size: int = 2,
-    downsample: int | None = None,
+    sample: int | None = None,
+    force_replace: bool = False,
     verbose: bool = True,
+    compute_graph: bool = True,
     compute_layout: bool = True,
-    layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
+    layout_method: Literal["mod_fr", "sfdp"] = "mod_fr",
     expanded_only: bool = False,
     use_existing_graph: bool = True,
-    num_cores: int = 1,
+    n_cpus: int = 1,
+    sequential_chain: bool = False,
+    distance_mode: Literal["clone", "full"] = "clone",
+    dist_func: Callable | str | None = None,
+    pad_to_max: bool = False,
+    lazy: bool = False,
+    zarr_path: Path | str | None = None,
+    chunk_size: int | None = None,
+    chunk_clone_limit: int | None = None,
+    memory_limit_gb: float | None = None,
+    memory_safety_fraction: float = 0.3,
+    compress: bool = True,
+    random_state: int | np.random.RandomState | None = None,
     **kwargs,
-) -> Dandelion:
+) -> Dandelion | tuple[Dandelion, AnnData]:
     """
-    Generate a Levenshtein distance network based on full length VDJ sequence alignments for heavy and light chain(s).
+    Generate a Levenshtein distance network based on VDJ and VJ sequences.
 
     The distance matrices are then combined into a singular matrix.
 
     Parameters
     ----------
-    vdj_data : Dandelion | pd.DataFrame | str
-        `Dandelion` object, pandas `DataFrame` in changeo/airr format, or file path to changeo/airr file after clones
-        have been determined.
+    vdj_data : Dandelion
+        Dandelion object.
     key : str | None, optional
         column name for distance calculations. None defaults to 'sequence_alignment_aa'.
     clone_key : str | None, optional
@@ -53,41 +86,99 @@ def generate_network(
     min_size : int, optional
         For visualization purposes, two graphs are created where one contains all cells and a trimmed second graph.
         This value specifies the minimum number of edges required otherwise node will be trimmed in the secondary graph.
-    downsample : int | None, optional
-        whether or not to downsample the number of cells prior to construction of network. If provided, cells will be
-        randomly sampled to the integer provided. A new Dandelion class will be returned.
+    sample : int | None, optional
+        If specified, cells will be randomly sampled to the integer provided. If the integer is larger than the number of cells,
+        sampling with replacement is used and the same cell may appear multiple times with different sequence and cell ids. If None,
+        no resampling is performed. A new Dandelion class will be returned.
+    force_replace : bool, optional
+        whether or not to sample with replacement when `sample` is smaller or equal to than the number of cells.
     verbose : bool, optional
         whether or not to print the progress bars.
+    compute_graph : bool, optional
+        whether or not to generate the graph after distance matrix calculation.
     compute_layout : bool, optional
         whether or not to generate the layout. May be time consuming if too many cells.
     layout_method : Literal["sfdp", "mod_fr"], optional
         accepts one of 'sfdp' or 'mod_fr'. 'sfdp' refers to `sfdp_layout` from `graph_tool` (C++ implementation; fast)
         whereas 'mod_fr' refers to modified Fruchterman-Reingold layout originally implemented in dandelion (python
-        implementation; slow).
+        implementation; slightly slower).
     expanded_only : bool, optional
         whether or not to only compute layout on expanded clonotypes.
     use_existing_graph : bool, optional
-        whether or not to just compute the layout using the existing graph if it exists in the `Dandelion` object.
-    num_cores : int, optional
-        if more than 1, parallelise the minimum spanning tree calculation step.
+        whether or not to just compute the layout using the existing graph if it exists in the object.
+    n_cpus : int, optional
+        number of cores to use for parallelizable steps. -1 uses all available cores.
+    sequential_chain : bool, optional
+        whether or not to use the original method for distance calculation method where each chain is calculated
+        separately and sequentially added to the total distance matrix. This method is slower but would be more
+        precise calculation. If False, concatenated sequences with a long separator are used for distance calculation.
+        Ignored if lazy=True as the lazy method always uses the long separator approach. The long separator approach
+        inserts a long string of consistent characters on a per-chain basis to ensure that distances between chains are large
+        and do not interfere with intra-chain distances.
+    distance_mode : Literal["clone", "full"], optional
+        method to compute distance matrix. 'clone' refers to the original membership-based distance calculation where
+        only distances within clones are calculated. Whereas 'full' computes the full pairwise distance matrix.
+    dist_func : Callable | str | None, optional
+        distance function to use. If None, `polyleven.levenshtein` is used. If a string is provided, it will use Bio.Align's
+        substitution matrices (e.g., 'BLOSUM62', 'PAM250'). See `Bio.Align.substitution_matrices.load` for available options.
+    blosom_matrix : str | None, optional
+        If provided, dist_func is ignored and this substitution matrix from Bio.Align is used instead.
+    pad_to_max : bool, optional
+        whether or not to pad sequences to the maximum length in the dataset before distance calculation. This will
+        allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
+        may increase memory usage and computation time.
+    lazy: bool, optional
+        If True, computation will be performed lazily using Dask/Zarr arrays. True will also return a Dask array view of the
+        distance matrix stored on disk instead of a numpy array stored in memory.
+    zarr_path: Path | str | None, optional
+        Path to store Zarr array when using lazy mode. If None, "distance_matrix.zarr" will be created in the current working directory.
+    chunk_size: int | None, optional
+        Chunk size for distance matrix computation when using lazy mode. If None, chunk size is automatically computed
+        based on available memory and number of cores. The automatic chunk size can be further adjusted using
+        `memory_limit_gb` and `memory_safety_fraction` parameters.
+    chunk_clone_limit: int | None, optional
+        Maximum number of clones to process per chunk when using lazy mode and distance method = "clone". If None, chunk sizes will be
+        automatically determined based on available memory and number of cores.
+    memory_limit_gb: float | None, optional
+        Memory limit per worker in GB for Dask. None defaults to all available memory/cores.
+    memory_safety_fraction: float, optional
+        Fraction of available memory to use. Defaults to 0.3 (i.e., 30% of available memory will be used for chunk size calculation).
+    compress: bool, optional
+        Whether to compress the Zarr array using Blosc with zstd.
+    rnandom_state : int | np.random.RandomState | None, optional
+        Random state for reproducible sampling.
     **kwargs
         additional kwargs passed to options specified in `networkx.drawing.layout.spring_layout` or
         `graph_tool.draw.sfdp_layout`.
 
     Returns
     -------
-    Dandelion
-        `Dandelion` object with `.edges`, `.layout`, `.graph` initialized.
+    Dandelion | tuple[Dandelion, AnnData]
+        Dandelionbject with `.edges`, `.layout`, `.graph` initialized.
 
     Raises
     ------
     ValueError
         if any errors with dandelion input.
-
     """
+    # normalize n_cpus convention (-1 => use all CPUs)
+    if n_cpus == -1:
+        n_cpus = multiprocessing.cpu_count()
+    n_cpus = max(1, int(n_cpus))
+    clone_key = clone_key if clone_key is not None else "clone_id"
+    dist_func = levenshtein if dist_func is None else dist_func
+    metric = resolve_metric(dist_func)
+    if not compute_graph:
+        compute_layout = False
+
+    if distance_mode == "clone" or compute_graph or compute_layout:
+        if clone_key not in vdj_data._data:
+            raise ValueError(
+                "Data does not contain clone information. Please run ddl.tl.find_clones."
+            )
     regenerate = True
     if vdj_data.graph is not None:
-        if (min_size != 2) or (downsample is not None):
+        if (min_size != 2) or (sample is not None):
             pass
         elif use_existing_graph:
             start = logg.info(
@@ -95,7 +186,7 @@ def generate_network(
             )
             if isinstance(vdj_data, Dandelion):
                 regenerate = False
-                g, g_, lyt, lyt_ = _generate_layout(
+                g, g_, lyt, lyt_ = generate_layout(
                     vertices=None,
                     edges=None,
                     min_size=min_size,
@@ -107,175 +198,173 @@ def generate_network(
                     graphs=(vdj_data.graph[0], vdj_data.graph[1]),
                     **kwargs,
                 )
+
     if regenerate:
         start = logg.info("Generating network")
-        if isinstance(vdj_data, Dandelion):
-            dat = load_data(vdj_data.data)
-            if "ambiguous" in vdj_data.data:
-                dat = dat[dat["ambiguous"] == "F"].copy()
-        else:
-            dat = load_data(data)
 
-        if key is None:
-            key_ = "sequence_alignment_aa"  # default
-        else:
-            key_ = key
+        key_ = key if key is not None else "sequence_alignment_aa"
 
-        if key_ not in dat:
-            raise ValueError("key {} not found in input table.".format(key_))
+        if key_ not in vdj_data._data:
+            raise ValueError(f"key {key_} not found in data.")
 
-        clonekey = clone_key if clone_key is not None else "clone_id"
-        if clonekey not in dat:
-            raise ValueError(
-                "Data does not contain clone information. Please run find_clones."
-            )
+        if lazy:
+            from dandelion.tools._lazydistances import dask_safe_slice_square
 
-        # calculate distance
-        if downsample is not None:
-            if downsample >= vdj_data.metadata.shape[0]:
-                logg.info(
-                    "Cannot downsample to {} cells. Using all {} cells.".format(
-                        str(downsample), vdj_data.metadata.shape[0]
-                    )
+        if sample is not None:
+            if gex_data is not None:
+                vdj_data, gex_data = vdj_sample(
+                    vdj_data=vdj_data,
+                    size=sample,
+                    gex_data=gex_data,
+                    force_replace=force_replace,
+                    random_state=random_state,
                 )
-                dat_ = sanitize_data(dat, ignore=clonekey)
             else:
-                logg.info("Downsampling to {} cells.".format(str(downsample)))
-                keep_cells = vdj_data.metadata.sample(downsample)
-                keep_cells = list(keep_cells.index)
-                # dat = load_data(
-                #     dat.set_index("cell_id").loc[keep_cells].reset_index()
-                # )
-                dat = dat[dat["cell_id"].isin(keep_cells)]
-                dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
-                dat_l = dat[
-                    dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])
-                ].copy()
-                dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
-                dat_ = sanitize_data(dat_, ignore=clonekey)
+                vdj_data = vdj_sample(
+                    vdj_data=vdj_data,
+                    size=sample,
+                    force_replace=force_replace,
+                    random_state=random_state,
+                )
+            dat = vdj_data._data.copy()
         else:
-            dat_ = sanitize_data(dat, ignore=clonekey)
+            if "ambiguous" in vdj_data._data:
+                dat = vdj_data._data[
+                    vdj_data._data["ambiguous"].isin(FALSES)
+                ].copy()
+            else:
+                dat = vdj_data._data.copy()
 
+        dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+        dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
+        dat_ = pd.concat([dat_h, dat_l], ignore_index=True)
+        dat_ = sanitize_data(dat_, ignore=clone_key)
+
+        # retrieve sequence columns and clone info (unchanged)
         querier = Query(dat_, verbose=verbose)
         dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
+        # ensure that dat_seq matches order of vdj_data.metadata
+        dat_seq = dat_seq.reindex(vdj_data._metadata.index)
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
-        dat_clone = querier.retrieve(
-            query=clonekey, retrieve_mode="merge and unique only"
-        )
-
-        dat_clone = dat_clone[clonekey].str.split("|", expand=True)
-        membership = Tree()
-        for i, j in dat_clone.iterrows():
-            jjj = [jj for jj in j if present(jj)]
-            for ij in jjj:
-                membership[ij][i].value = 1
-        membership = {i: list(j) for i, j in dict(membership).items()}
-        tmp_ = np.zeros((dat_seq.shape[0], dat_seq.shape[0]))
-        df = pd.DataFrame(tmp_)
-        df.index = dat_seq.index
-        df.columns = dat_seq.index
-        dmat = Tree()
-        for t in tqdm(
-            membership,
-            desc="Calculating distances ",
-            disable=not verbose,
-            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-        ):
-            tmp = dat_seq.loc[membership[t]]
-            if tmp.shape[0] > 1:
-                tmp = tmp.replace(
-                    "[.]", "", regex=True
-                )  # replace gaps before calculating distances
-                for x in tmp.columns:
-                    tdarray = np.array(np.array(tmp[x])).reshape(-1, 1)
-                    d_mat_tmp = squareform(
-                        pdist(
-                            tdarray,
-                            lambda x, y: (
-                                levenshtein(x[0], y[0])
-                                if (x[0] == x[0]) and (y[0] == y[0])
-                                else 0
-                            ),
-                        )
-                    )
-                    dmat[x][t] = pd.DataFrame(
-                        d_mat_tmp, index=tmp.index, columns=tmp.index
-                    )
-        if len(dmat) > 0:
-            for x in tqdm(
-                dmat,
-                desc="Aggregating distances ",
-                disable=not verbose,
-                bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-            ):
-                dmat[x] = pd.concat(dmat[x])
-                dmat[x] = dmat[x].droplevel(level=0)
-                # give the index a name
-                dmat[x].index.name = "indices"
-                if any(dmat[x].index.duplicated()):
-                    tmp_dmat = dmat[x]
-                    dup_indices = dmat[x].index[dmat[x].index.duplicated()]
-                    tmp_dmatx1 = tmp_dmat.drop(dup_indices)
-                    tmp_dmatx2 = tmp_dmat.loc[dup_indices]
-                    tmp_dmatx2 = tmp_dmatx2.groupby("indices").apply(sum_col)
-                    dmat[x] = pd.concat([tmp_dmatx1, tmp_dmatx2])
-
-                # if any(dmat[x].index.duplicated()):
-                #     tmp_dmat = dmat[x].copy()
-                #     dup_indices = tmp_dmat.index[tmp_dmat.index.duplicated()]
-                #     tmp_dmatx = tmp_dmat.drop(dup_indices)
-                #     for di in list(set(dup_indices)):
-                #         _tmpdmat = tmp_dmat.loc[di]
-                #         _tmpdmat = _tmpdmat.apply(lambda r: sum_col(r), axis=0)
-                #         tmp_dmatx = pd.concat(
-                #             [tmp_dmatx, pd.DataFrame(_tmpdmat, columns=[di]).T]
-                #         )
-                #     dmat[x] = tmp_dmatx.copy()
-
-                dmat[x] = dmat[x].reindex(index=df.index, columns=df.columns)
-                dmat[x] = dmat[x].values
-
-            dist_mat_list = [
-                dmat[x] for x in dmat if type(dmat[x]) is np.ndarray
-            ]
-
-            total_dist = np.sum(dist_mat_list, axis=0)
-            np.fill_diagonal(total_dist, np.nan)
-
-            # free up memory
-            del dmat
-            del dist_mat_list
-
-            # generate edge list
-            if isinstance(vdj_data, Dandelion):
-                if downsample is not None:
-                    vdj_data = vdj_data[vdj_data.data.cell_id.isin(keep_cells)]
-                out = vdj_data.copy()
-
-            else:  # re-initiate a Dandelion class object
-                out = Dandelion(dat_)
-
-            tmp_totaldist = pd.DataFrame(
-                total_dist, index=dat_seq.index, columns=dat_seq.index
+        if compute_graph or compute_layout or distance_mode == "clone":
+            dat_clone = querier.retrieve(
+                query=clone_key, retrieve_mode="merge and unique only"
             )
+
+            dat_clone = dat_clone[clone_key].str.split("|", expand=True)
+            membership = Tree()
+            for i, j in dat_clone.iterrows():
+                jjj = [jj for jj in j if present(jj)]
+                for ij in jjj:
+                    membership[ij][i].value = 1
+            membership = {i: list(j) for i, j in dict(membership).items()}
+
+        # compute total_dist using chosen mode (original uses membership)
+        logg.info(
+            f"Calculating distance matrix {'lazily' if lazy else ''} with distance_mode = '{distance_mode}'\n"
+        )
+        if distance_mode == "clone":
+            if lazy:
+                from dandelion.tools._lazydistances import (
+                    calculate_distance_matrix_zarr,
+                )
+
+                total_dist = calculate_distance_matrix_zarr(
+                    dat_seq,
+                    metric=metric,
+                    pad_to_max=pad_to_max,
+                    membership=membership,
+                    zarr_path=zarr_path,
+                    chunk_size=chunk_size,
+                    max_clones_per_chunk=chunk_clone_limit,
+                    n_cpus=n_cpus,
+                    memory_limit_gb=memory_limit_gb,
+                    memory_safety_fraction=memory_safety_fraction,
+                    compress=compress,
+                    lazy=lazy,
+                    verbose=verbose,
+                )
+            else:
+                if sequential_chain:
+                    total_dist = calculate_distance_matrix_original(
+                        dat_seq,
+                        membership,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        verbose=verbose,
+                    )
+                else:
+                    total_dist = calculate_distance_matrix_long(
+                        dat_seq,
+                        membership=membership,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        n_cpus=n_cpus,
+                        verbose=verbose,
+                    )
+        elif distance_mode == "full":
+            if lazy:
+                from dandelion.tools._lazydistances import (
+                    calculate_distance_matrix_zarr,
+                )
+
+                total_dist = calculate_distance_matrix_zarr(
+                    dat_seq,
+                    metric=metric,
+                    pad_to_max=pad_to_max,
+                    membership=None,
+                    zarr_path=zarr_path,
+                    chunk_size=chunk_size,
+                    n_cpus=n_cpus,
+                    memory_limit_gb=memory_limit_gb,
+                    memory_safety_fraction=memory_safety_fraction,
+                    compress=compress,
+                    lazy=lazy,
+                    verbose=verbose,
+                )
+            else:
+                if sequential_chain:
+                    total_dist = calculate_distance_matrix_original_full(
+                        dat_seq,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        n_cpus=n_cpus,
+                        verbose=verbose,
+                    )
+                else:
+                    total_dist = calculate_distance_matrix_long(
+                        dat_seq,
+                        membership=None,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        n_cpus=n_cpus,
+                        verbose=verbose,
+                    )
+        if compute_graph:
             tmp_clusterdist = Tree()
+            cluster_dist = {}
             overlap = []
-            for i in out.metadata.index:
-                if len(out.metadata.loc[i, str(clonekey)].split("|")) > 1:
+            for i in vdj_data._metadata.index:
+                if (
+                    len(vdj_data._metadata.loc[i, str(clone_key)].split("|"))
+                    > 1
+                ):
                     overlap.append(
                         [
                             c
-                            for c in out.metadata.loc[i, str(clonekey)].split(
-                                "|"
-                            )
+                            for c in vdj_data._metadata.loc[
+                                i, str(clone_key)
+                            ].split("|")
                             if c != "None"
                         ]
                     )
-                    for c in out.metadata.loc[i, str(clonekey)].split("|"):
+                    for c in vdj_data._metadata.loc[i, str(clone_key)].split(
+                        "|"
+                    ):
                         if c != "None":
                             tmp_clusterdist[c][i].value = 1
                 else:
-                    cx = out.metadata.loc[i, str(clonekey)]
+                    cx = vdj_data._metadata.loc[i, str(clone_key)]
                     if cx != "None":
                         tmp_clusterdist[cx][i].value = 1
             tmp_clusterdist2 = {}
@@ -288,6 +377,11 @@ def generate_network(
                 disable=not verbose,
                 bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             ):
+                idxs = [
+                    i
+                    for i in tmp_clusterdist2[c_]
+                    if i in vdj_data._metadata.index
+                ]
                 if c_ in list(flatten(overlap)):
                     for ol in overlap:
                         if c_ in ol:
@@ -299,22 +393,48 @@ def generate_network(
                                 )
                             )
                             if len(list(set(idx))) > 1:
-                                dist_mat_ = tmp_totaldist.loc[idx, idx]
+                                pos = [dat_seq.index.get_loc(i) for i in idxs]
+                                # dist_mat_ = tmp_totaldist.loc[idx, idx]
+                                if lazy:
+                                    dist_mat_ = pd.DataFrame(
+                                        dask_safe_slice_square(
+                                            total_dist, pos
+                                        ).compute(),
+                                        index=idxs,
+                                        columns=idxs,
+                                    )
+                                else:
+                                    dist_mat_ = pd.DataFrame(
+                                        total_dist[np.ix_(pos, pos)],
+                                        index=idxs,
+                                        columns=idxs,
+                                    )
                                 s1, s2 = dist_mat_.shape
                                 if s1 > 1 and s2 > 1:
                                     cluster_dist["|".join(ol)] = dist_mat_
                 else:
-                    dist_mat_ = tmp_totaldist.loc[
-                        tmp_clusterdist2[c_], tmp_clusterdist2[c_]
+                    pos = [
+                        dat_seq.index.get_loc(i) for i in tmp_clusterdist2[c_]
                     ]
+                    if lazy:
+                        dist_mat_ = pd.DataFrame(
+                            dask_safe_slice_square(total_dist, pos).compute(),
+                            index=tmp_clusterdist2[c_],
+                            columns=tmp_clusterdist2[c_],
+                        )
+                    else:
+                        dist_mat_ = pd.DataFrame(
+                            total_dist[np.ix_(pos, pos)],
+                            index=idxs,
+                            columns=idxs,
+                        )
                     s1, s2 = dist_mat_.shape
                     if s1 > 1 and s2 > 1:
                         cluster_dist[c_] = dist_mat_
-
-            # to improve the visualisation and plotting efficiency, i will build a minimum spanning tree for
-            # each group/clone to connect the shortest path
-            mst_tree = mst(cluster_dist, num_cores=num_cores, verbose=verbose)
-
+            # Minimum spanning trees (unchanged)
+            # mst_tree = mst(cluster_dist, n_cpus=n_cpus, verbose=verbose)
+            mst_tree = mst(cluster_dist, n_cpus=1, verbose=verbose)
+            # generate edge list
             edge_list = Tree()
             for c in tqdm(
                 mst_tree,
@@ -325,14 +445,12 @@ def generate_network(
                 edge_list[c] = nx.to_pandas_edgelist(mst_tree[c])
                 if edge_list[c].shape[0] > 0:
                     edge_list[c]["weight"] = edge_list[c]["weight"] - 1
-                    edge_list[c].loc[
-                        edge_list[c]["weight"] < 0, "weight"
-                    ] = 0  # just in case
+                    edge_list[c].loc[edge_list[c]["weight"] < 0, "weight"] = 0
 
-            clone_ref = dict(out.metadata[clonekey])
+            clone_ref = dict(vdj_data._metadata[clone_key])
             clone_ref = {k: r for k, r in clone_ref.items() if r != "None"}
             tmp_clone_tree = Tree()
-            for x in out.metadata.index:
+            for x in vdj_data._metadata.index:
                 if x in clone_ref:
                     if "|" in clone_ref[x]:
                         for x_ in clone_ref[x].split("|"):
@@ -403,18 +521,49 @@ def generate_network(
             # link them up if they were identical but clipped off during the mst step
 
             # create a data frame to recall the actual distance quickly
-            tmp_totaldiststack = adjacency_to_edge_list(
-                tmp_totaldist, rename_index=True
+            # convert total_dist to DataFrame to become adjacency matrix
+            # tmp_totaldist = pd.DataFrame(
+            #     total_dist.compute() if lazy else total_dist,
+            #     index=vdj_data.metadata.index,
+            #     columns=vdj_data.metadata.index,
+            # )
+
+            # tmp_totaldiststack = adjacency_to_edge_list(
+            #     tmp_totaldist, rename_index=True
+            # )
+
+            # tmp_totaldiststack["keep"] = [
+            #     False if len(set(i.split("|"))) == 1 else True
+            #     for i in tmp_totaldiststack.index
+            # ]
+
+            # tmp_totaldiststack = tmp_totaldiststack[
+            #     tmp_totaldiststack.keep
+            # ].drop("keep", axis=1)
+            # convert total_dist to sparse graph
+            tmp_g = csgraph_from_dense(
+                total_dist.compute() + 1
+                if lazy
+                else total_dist + 1  # +1 to keep zeros as infinite distance
             )
-
-            tmp_totaldiststack["keep"] = [
-                False if len(list(set(i.split("|")))) == 1 else True
-                for i in tmp_totaldiststack.index
-            ]
-            tmp_totaldiststack = tmp_totaldiststack[
-                tmp_totaldiststack.keep
-            ].drop("keep", axis=1)
-
+            # construct edge list as a dictionary
+            Gcoo = tmp_g.tocoo()
+            # remove self-loops
+            mask = Gcoo.row != Gcoo.col
+            rows = Gcoo.row[mask]
+            cols = Gcoo.col[mask]
+            weights = (
+                Gcoo.data[mask] - 1
+            )  # -1 to revert back to original distance
+            tmp_totaldiststack = {
+                vdj_data._metadata.index[r]
+                + "|"
+                + vdj_data._metadata.index[c]: w
+                for r, c, w in zip(rows, cols, weights)
+            }
+            tmp_totaldiststack = pd.DataFrame(
+                pd.Series(tmp_totaldiststack, name="weight")
+            )
             # convert tmp_totaldist to edge list and rename the index
             tmp_edge_list = Tree()
             for c in tqdm(
@@ -428,6 +577,7 @@ def generate_network(
                         tmp_clone_tree3[c],
                         drop_zero=True,
                     )
+                    G.remove_edges_from(nx.selfloop_edges(G))
                     tmp_edge_list[c] = nx.to_pandas_edgelist(G)
                     set_edge_list_index(tmp_edge_list[c])
 
@@ -447,125 +597,101 @@ def generate_network(
                 tmp_edge_listx = pd.concat(
                     [tmp_edge_list[x] for x in tmp_edge_list]
                 )
-                tmp_edge_listx.drop("index", axis=1, inplace=True)
+                tmp_edge_listx = tmp_edge_listx.drop("index", axis=1)
                 set_edge_list_index(tmp_edge_listx)
 
                 edge_list_final = edge_listx.combine_first(tmp_edge_listx)
-                for i, row in tmp_totaldiststack.iterrows():
-                    if i in edge_list_final.index:
-                        edge_list_final.at[i, "weight"] = row["weight"]
+
+                common_idx = edge_list_final.index.intersection(
+                    tmp_totaldiststack.index
+                )
+                edge_list_final.loc[common_idx, "weight"] = (
+                    tmp_totaldiststack.loc[common_idx, "weight"]
+                )
+
+                # for i, row in tmp_totaldiststack.iterrows():
+                #     if i in edge_list_final.index:
+                #         edge_list_final.at[i, "weight"] = row["weight"]
 
                 # return the edge list
-                edge_list_final.reset_index(drop=True, inplace=True)
-            except:
+                edge_list_final = edge_list_final.reset_index(drop=True)
+            except Exception:
                 edge_list_final = None
 
-            # free up memory
-            # del tmp_totaldiststack
-            del tmp_totaldist
-            del tmp_edge_list
-            # remove vertices if the out.metadata.clone_id == "None"
-            vertice_list = list(
-                out.metadata[out.metadata[clonekey] != "None"].index
+            # final layout + graph creation (unchanged)
+            g, g_, lyt, lyt_ = generate_layout(
+                vertices=vdj_data._metadata.index.tolist(),
+                edges=edge_list_final,
+                min_size=min_size,
+                weight=None,
+                verbose=verbose,
+                compute_layout=compute_layout,
+                layout_method=layout_method,
+                expanded_only=expanded_only,
+                **kwargs,
             )
-
-        else:
-            edge_list_final = None
-            vertice_list = list(df.index)
-        # and finally the vertex list which is super easy
-
-        # and now to actually generate the network
-        g, g_, lyt, lyt_ = _generate_layout(
-            vertices=vertice_list,
-            edges=edge_list_final,
-            min_size=min_size,
-            weight=None,
-            verbose=verbose,
-            compute_layout=compute_layout,
-            layout_method=layout_method,
-            expanded_only=expanded_only,
-            **kwargs,
-        )
 
     logg.info(
-        " finished",
+        " finished.\n   Updated Dandelion object\n",
         time=start,
         deep=(
-            "Updated Dandelion object: \n"
-            "   'data', contig-indexed AIRR table\n"
-            "   'metadata', cell-indexed observations table\n"
             "   'layout', graph layout\n"
-            "   'graph', network constructed from distance matrices of VDJ- and VJ- chains"
+            if compute_layout
+            else (
+                ""
+                "   'graph', network constructed from distance matrices of VDJ- and VJ- chains\n"
+                if compute_graph
+                else (
+                    "" "   'distances', VDJ + VJ distance matrix\n"
+                    if regenerate
+                    else ""
+                )
+            )
         ),
     )
-    if isinstance(vdj_data, Dandelion):
-        if vdj_data.germline is not None:
-            germline_ = vdj_data.germline
-        else:
-            germline_ = None
-        if vdj_data.threshold is not None:
-            threshold_ = vdj_data.threshold
-        else:
-            threshold_ = None
-        if downsample is not None:
-            if (lyt and lyt_) is not None:
-                out = Dandelion(
-                    data=dat_,
-                    metadata=vdj_data.metadata,
-                    layout=(lyt, lyt_),
-                    graph=(g, g_),
-                    germline=germline_,
-                )
-            else:
-                out = Dandelion(
-                    data=dat_,
-                    metadata=vdj_data.metadata,
-                    graph=(g, g_),
-                    germline=germline_,
-                )
-            out.threshold = threshold_
+
+    # return or re-initialize vdj_data
+    germline = getattr(vdj_data, "germline", None)
+    if regenerate:
+        distances = total_dist if lazy else csr_matrix(total_dist)
+        if not lazy:
+            distances._index_names = vdj_data.metadata_names
+    else:
+        distances = vdj_data.distances
+    graph = (g, g_) if compute_graph else None
+    layout = (lyt, lyt_) if compute_graph and compute_layout else None
+    if sample is not None:
+        out = Dandelion(
+            data=dat_,
+            metadata=vdj_data._metadata,
+            clone_key=clone_key,
+            layout=layout,
+            graph=graph,
+            distances=distances,
+            germline=germline,
+            verbose=False,
+        )
+        if gex_data is None:
             return out
         else:
-            if (lyt and lyt_) is not None:
-                vdj_data.__init__(
-                    data=vdj_data.data,
-                    metadata=vdj_data.metadata,
-                    layout=(lyt, lyt_),
-                    graph=(g, g_),
-                    germline=germline_,
-                    initialize=False,
-                )
-            else:
-                vdj_data.__init__(
-                    data=vdj_data.data,
-                    metadata=vdj_data.metadata,
-                    layout=None,
-                    graph=(g, g_),
-                    germline=germline_,
-                    initialize=False,
-                )
-            vdj_data.threshold = threshold_
+            return out, gex_data
     else:
-        if (lyt and lyt_) is not None:
-            out = Dandelion(
-                data=dat_,
-                layout=(lyt, lyt_),
-                graph=(g, g_),
-                clone_key=clone_key,
-            )
-        else:
-            out = Dandelion(
-                data=dat_,
-                layout=None,
-                graph=(g, g_),
-                clone_key=clone_key,
-            )
-        return out
+        vdj_data.__init__(
+            data=vdj_data._data,
+            metadata=vdj_data._metadata,
+            clone_key=clone_key,
+            layout=layout,
+            graph=graph,
+            distances=distances,
+            germline=germline,
+            initialize=False,
+            verbose=False,
+        )
 
 
 def mst(
     mat: dict,
-    num_cores: int | None = None,
+    n_cpus: int | None = None,
     verbose: bool = True,
 ) -> Tree:
     """
@@ -575,8 +701,8 @@ def mst(
     ----------
     mat : dict
         Dictionary containing numpy ndarrays.
-    num_cores: int, optional
-        Number of cores to run this step. Parallelise using joblib if more than 1.
+    n_cpus: int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1..
     verbose : bool, optional
         Whether or not to show logging information.
 
@@ -587,7 +713,7 @@ def mst(
     """
     mst_tree = Tree()
 
-    if num_cores == 1:
+    if n_cpus == 1:
         for c in tqdm(
             mat,
             desc="Calculating minimum spanning tree ",
@@ -596,11 +722,11 @@ def mst(
         ):
             _, mst_tree[c] = process_mst_per_clonotype(mat=mat, c=c)
     else:
-        results = Parallel(n_jobs=num_cores)(
+        results = Parallel(n_jobs=n_cpus)(
             delayed(process_mst_per_clonotype)(mat, c)
             for c in tqdm(
                 mat,
-                desc=f"Calculating minimum spanning tree, parallelized across {num_cores} cores ",
+                desc=f"Calculating minimum spanning tree, parallelized across {n_cpus} cores ",
                 disable=not verbose,
                 bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
             )
@@ -671,10 +797,13 @@ def set_edge_list_index(edge_list: pd.DataFrame) -> None:
     edge_list : pd.DataFrame
         Edge list.
     """
-    edge_list.index = [
-        str(s) + "|" + str(t)
-        for s, t in zip(edge_list["source"], edge_list["target"])
-    ]
+    # edge_list.index = [
+    #     str(s) + "|" + str(t)
+    #     for s, t in zip(edge_list["source"], edge_list["target"])
+    # ]
+    edge_list.index = (
+        edge_list["source"].astype(str) + "|" + edge_list["target"].astype(str)
+    )
 
 
 def adjacency_to_edge_list(
@@ -713,7 +842,7 @@ def clone_degree(vdj_data: Dandelion, weight: str | None = None) -> Dandelion:
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
+        Dandelionect after `tl.generate_network` has been run.
     weight : str | None, optional
         Attribute name for retrieving edge weight in graph. None defaults to ignoring this. See `networkx.Graph.degree`.
 
@@ -733,7 +862,7 @@ def clone_degree(vdj_data: Dandelion, weight: str | None = None) -> Dandelion:
             G = vdj_data.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
-            vdj_data.metadata["clone_degree"] = pd.Series(cd[1])
+            vdj_data._metadata["clone_degree"] = pd.Series(cd[1])
     else:
         raise TypeError("Input object must be of {}".format(Dandelion))
 
@@ -745,7 +874,7 @@ def clone_centrality(vdj_data: Dandelion):
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
+        Dandelion object after `tl.generate_network` has been run.
 
     Raises
     ------
@@ -765,662 +894,300 @@ def clone_centrality(vdj_data: Dandelion):
             cc = pd.DataFrame.from_dict(
                 cc, orient="index", columns=["clone_centrality"]
             )
-            vdj_data.metadata["clone_centrality"] = pd.Series(
+            vdj_data._metadata["clone_centrality"] = pd.Series(
                 cc["clone_centrality"]
             )
     else:
         raise TypeError("Input object must be of {}".format(Dandelion))
 
 
-def _generate_layout(
-    vertices: list | None = None,
-    edges: pd.DataFrame | None = None,
-    min_size: int = 2,
-    weight: str | None = None,
+def calculate_distance_matrix_original(
+    dat_seq: pd.DataFrame,
+    membership: dict,
+    metric: Metric,
+    pad_to_max: bool = False,
     verbose: bool = True,
-    compute_layout: bool = True,
-    layout_method: Literal["sfdp", "mod_fr"] = "sfdp",
-    expanded_only: bool = False,
-    graphs: tuple[nx.Graph, nx.Graph] = None,
-    **kwargs,
-) -> tuple[nx.Graph, nx.Graph, dict, dict]:
-    """Generate layout.
+) -> np.ndarray:
+    """
+    Re-implementation of original membership-based distance calculation.
 
     Parameters
     ----------
-    vertices : list
-        list of vertices
-    edges : pd.DataFrame, optional
-        edge list in a pandas data frame.
-    min_size : int, optional
-        minimum clone size.
-    weight : str | None, optional
-        name of weight column.
+    dat_seq : pd.DataFrame
+        DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
+    membership : dict
+        Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
+    metric : Metric
+        Distance metric to use.
+    pad_to_max : bool, optional
+        Whether to pad sequences to maximum length before distance calculation.
     verbose : bool, optional
-        whether or not to print status
-    compute_layout : bool, optional
-        whether or not to compute layout.
-    layout_method : Literal["sfdp", "mod_fr"], optional
-        layout method.
-    expanded_only : bool, optional
-        whether or not to only compute layout on expanded clones.
-    graphs: tuple[nx.Graph, nx.Graph], optional
-        tuple of graphs.
-    **kwargs
-        passed to fruchterman_reingold_layout.
+        Whether to show progress.
 
     Returns
     -------
-    tuple[nx.Graph, nx.Graph, dict, dict]
-        graphs and layout positions.
+    total_dist : np.ndarray
+        Aggregated distance matrix across all columns; diagonal set to NaN by caller.
     """
-    if graphs is None:
-        if vertices is not None:
-            G = nx.Graph()
-            G.add_nodes_from(vertices)
-            if edges is not None:
-                G.add_weighted_edges_from(
-                    [
-                        (x, y, z)
-                        for x, y, z in zip(
-                            edges["source"], edges["target"], edges["weight"]
+    n = dat_seq.shape[0]
+    index_list = list(dat_seq.index)
+    # dmat_per_column will collect for each column a list of DataFrames (one per clone) to concat
+    dmat_per_column = defaultdict(list)
+    # iterate clones (membership) exactly like original
+    for clone in tqdm(
+        membership,
+        disable=not verbose,
+        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+    ):
+        tmp = dat_seq.loc[membership[clone]]
+        if tmp.shape[0] > 1:
+            tmp = (
+                tmp.replace("[.]", "", regex=True)
+                .fillna("")
+                .replace("None", "")
+            )
+            for col in tmp.columns:
+                tdarray = np.array(tmp[col]).reshape(-1, 1)
+                # keep the original NaN-check logic: return 0 when either is NaN
+                d_mat_tmp = squareform(
+                    pdist(
+                        tdarray,
+                        lambda x, y: (
+                            dist_func_long_sep(
+                                x[0],
+                                y[0],
+                                metric=metric,
+                                pad_to_max=pad_to_max,
+                                sep="" if not pad_to_max else "#",
+                            )
+                            if (pd.notnull(x[0]) and pd.notnull(y[0]))
+                            else 0
+                        ),
+                    )
+                )
+                df_block = pd.DataFrame(
+                    d_mat_tmp, index=tmp.index, columns=tmp.index
+                )
+                dmat_per_column[col].append(df_block)
+    # For each column, concat its blocks, resolve duplicates (sum), reindex to full index
+    dist_matrices = []
+    for col, blocks in dmat_per_column.items():
+        if not blocks:
+            continue
+        full = pd.concat(blocks)
+        # If duplicates occur at the index-level, group & sum them (same as original)
+        if any(full.index.duplicated()):
+            dup_indices = full.index[full.index.duplicated()]
+            tmp1 = full.drop(dup_indices)
+            tmp2 = full.loc[dup_indices]
+            tmp2 = tmp2.groupby(level=0).apply(lambda df: df.sum(axis=0))
+            full = pd.concat([tmp1, tmp2])
+        # reindex to full matrix indices (missing rows/cols -> fill with zeros)
+        full = full.reindex(index=index_list, columns=index_list).fillna(0.0)
+        dist_matrices.append(full.values)
+    if len(dist_matrices) == 0:
+        total_dist = np.zeros((n, n))
+    else:
+        total_dist = np.sum(dist_matrices, axis=0)
+
+    np.fill_diagonal(total_dist, np.nan)
+    return total_dist
+
+
+def calculate_distance_matrix_original_full(
+    dat_seq: pd.DataFrame,
+    metric: Metric,
+    pad_to_max: bool = False,
+    n_cpus: int = 1,
+    verbose: bool = True,
+) -> np.ndarray:
+    """
+    Re-implementation of original membership-based distance calculation.
+
+    Parameters
+    ----------
+    dat_seq : pd.DataFrame
+        DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
+    metric : Metric
+        Distance metric to use.
+    pad_to_max : bool, optional
+        Whether to pad sequences to maximum length before distance calculation.
+    n_cpus : int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1.
+    verbose : bool, optional
+        Whether to show progress.
+
+    Returns
+    -------
+    total_dist : np.ndarray
+        Aggregated distance matrix across all columns; diagonal set to NaN by caller.
+    """
+    start_time = time.time()
+    n = dat_seq.shape[0]
+    total_dist = np.zeros((n, n), dtype=float)
+
+    for col in dat_seq.columns:
+        seq_series = (
+            dat_seq[col]
+            .replace("[.]", "", regex=True)
+            .fillna("")
+            .replace("None", "")
+        )
+        nonnull = seq_series.dropna()
+        if nonnull.shape[0] <= 1:
+            continue
+        # seq_indices = list(nonnull.index)
+        seqs = nonnull.to_numpy(dtype=object)
+        if n_cpus > 1:
+            results = pairwise_distances(
+                seqs,
+                metric=lambda x, y: (
+                    dist_func_long_sep(
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep="" if not pad_to_max else "#",
+                    )
+                ),
+                n_jobs=n_cpus,
+            )
+        else:
+            results = squareform(
+                pdist(
+                    seqs.reshape(-1, 1),
+                    lambda x, y: (
+                        dist_func_long_sep(
+                            x[0],
+                            y[0],
+                            metric=metric,
+                            pad_to_max=pad_to_max,
+                            sep="" if not pad_to_max else "#",
                         )
-                    ]
+                        if (pd.notnull(x[0]) and pd.notnull(y[0]))
+                        else 0
+                    ),
                 )
-        G_ = G.copy()
-    else:
-        G = graphs[0]
-        G_ = graphs[1]
-    if min_size == 2:
-        if edges is not None:
-            G_.remove_nodes_from(nx.isolates(G))
-        else:
-            pass
-    elif min_size > 2:
-        if edges is not None:
-            for component in list(nx.connected_components(G_)):
-                if len(component) < min_size:
-                    for node in component:
-                        G_.remove_node(node)
-        else:
-            pass
-    if compute_layout:
-        if layout_method == "mod_fr":
-            if not expanded_only:
-                if verbose:
-                    print("Computing network layout")
-                pos = _fruchterman_reingold_layout(G, weight=weight, **kwargs)
-            else:
-                pos = None
-            if verbose:
-                print("Computing expanded network layout")
-            pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
-        elif layout_method == "sfdp":
-            try:
-                from graph_tool.all import sfdp_layout
-            except ImportError:
-                print(
-                    "To benefit from faster layout computation, please install graph-tool: "
-                    "conda install -c conda-forge graph-tool"
-                )
-                nographtool = True
-            if "nographtool" in locals():
-                if not expanded_only:
-                    if verbose:
-                        print("Computing network layout")
-                    pos = _fruchterman_reingold_layout(
-                        G, weight=weight, **kwargs
+            )
+        total_dist += results
+
+    np.fill_diagonal(total_dist, np.nan)
+    if verbose:
+        end_time = time.time()
+        logg.info(
+            f"Distances calculated in {end_time - start_time:.2f} seconds"
+        )
+    return total_dist
+
+
+def calculate_distance_matrix_long(
+    dat_seq: pd.DataFrame,
+    membership: dict | None,
+    metric: Metric,
+    pad_to_max: bool = False,
+    n_cpus: int = 1,
+    verbose: bool = True,
+) -> np.ndarray:
+    """
+    Re-implementation of original membership-based distance calculation but using concatenated sequences
+    using a long separator.
+
+    Parameters
+    ----------
+    dat_seq : pd.DataFrame
+        DataFrame with sequence columns; index corresponds to cell IDs (or whatever unique ids you use).
+    membership : dict | None
+        Mapping from clone_id -> list of indices (these indices must be present in dat_seq.index).
+        None indicates full pairwise distance calculation.
+    metric : Metric
+        Distance metric to use.
+    pad_to_max : bool, optional
+        whether or not to pad sequences to the maximum length in the dataset before distance calculation. This will
+        allow for distance calculations that need sequences of the same length (e.g., Hamming distance). Note that this
+        may increase memory usage and computation time.
+    n_cpus : int, optional
+        Number of cores to run this step. Parallelise using `sklearn.metrics.pairwise_distances` if n_cpus > 1..
+    verbose : bool, optional
+        Whether to show progress.
+
+    Returns
+    -------
+    total_dist : np.ndarray (n x n)
+        Aggregated distance matrix across all columns; diagonal set to NaN by caller.
+    """
+    start_time = time.time()
+    # Step 1: clean sequences
+    dat_seq_clean = (
+        dat_seq.replace("[.]", "", regex=True).fillna("").replace("None", "")
+    )
+    # Step 2: initialize distance matrix
+    n = dat_seq_clean.shape[0]
+    index_list = list(dat_seq_clean.index)
+    total_dist = np.zeros((n, n))
+    if membership is None:
+        # Step 3: compute full distance matrix at once
+        seqs = dat_seq_clean.values
+        if n_cpus > 1:
+            results = pairwise_distances(
+                seqs,
+                metric=lambda x, y: (
+                    dist_func_long_sep(
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep="#",  # always pad with some sep
                     )
-                else:
-                    pos = None
-                if verbose:
-                    print("Computing expanded network layout")
-                pos_ = _fruchterman_reingold_layout(G_, weight=weight, **kwargs)
-            else:
-                if not expanded_only:
-                    gtg = nx2gt(G)
-                    if verbose:
-                        print("Computing network layout")
-                    posx = sfdp_layout(gtg, **kwargs)
-                    pos = dict(
-                        zip(list(gtg.vertex_properties["id"]), list(posx))
-                    )
-                else:
-                    pos = None
-                gtg_ = nx2gt(G_)
-                if verbose:
-                    print("Computing expanded network layout")
-                posx_ = sfdp_layout(gtg_, **kwargs)
-                pos_ = dict(
-                    zip(list(gtg_.vertex_properties["id"]), list(posx_))
-                )
-        if pos is None:
-            G = G_
-            pos = pos_
-
-        return (G, G_, pos, pos_)
-    else:
-        return (G, G_, None, None)
-
-
-# when dealing with a lot of unconnected vertices, the pieces fly out to infinity and the original fr layout can't be
-# used
-# work around from https://stackoverflow.com/questions/14283341/how-to-increase-node-spacing-for-networkx-spring-layout
-# code chunk from networkx's layout.py https://github.com/networkx/networkx/blob/master/networkx/drawing/layout.py
-
-
-def _process_params(G, center, dim):
-    """Some boilerplate code."""
-    if not isinstance(G, nx.Graph):
-        empty_graph = nx.Graph()
-        empty_graph.add_nodes_from(G)
-        G = empty_graph
-
-    if center is None:
-        center = np.zeros(dim)
-    else:
-        center = np.asarray(center)
-
-    if len(center) != dim:
-        msg = "length of center coordinates must match dimension of layout"
-        raise ValueError(msg)
-
-    return G, center
-
-
-def _fruchterman_reingold_layout(
-    G,
-    k=None,
-    pos=None,
-    fixed=None,
-    iterations=50,
-    threshold=1e-4,
-    weight="weight",
-    scale=1,
-    center=None,
-    dim=2,
-    seed=None,
-    **kwargs,
-):
-    """
-    Position nodes using Fruchterman-Reingold force-directed algorithm.
-
-    The algorithm simulates a force-directed representation of the network
-    treating edges as springs holding nodes close, while treating nodes
-    as repelling objects, sometimes called an anti-gravity force.
-    Simulation continues until the positions are close to an equilibrium.
-    There are some hard-coded values: minimal distance between
-    nodes (0.01) and "temperature" of 0.1 to ensure nodes don't fly away.
-    During the simulation, `k` helps determine the distance between nodes,
-    though `scale` and `center` determine the size and place after
-    rescaling occurs at the end of the simulation.
-    Fixing some nodes doesn't allow them to move in the simulation.
-    It also turns off the rescaling feature at the simulation's end.
-    In addition, setting `scale` to `None` turns off rescaling.
-
-    Parameters
-    ----------
-    G : NetworkX graph or list of nodes
-        A position will be assigned to every node in G.
-    k : float (default=None)
-        Optimal distance between nodes.  If None the distance is set to
-        1/sqrt(n) where n is the number of nodes.  Increase this value
-        to move nodes farther apart.
-    pos : dict or None  Optional (default=None)
-        Initial positions for nodes as a dictionary with node as keys
-        and values as a coordinate list or tuple.  If None, then use
-        random initial positions.
-    fixed : list or None  Optional (default=None)
-        Nodes to keep fixed at initial position.
-        ValueError raised if `fixed` specified and `pos` not.
-    iterations : int  Optional (default=50)
-        Maximum number of iterations taken
-    threshold: float Optional (default = 1e-4)
-        Threshold for relative error in node position changes.
-        The iteration stops if the error is below this threshold.
-    weight : string or None   Optional (default='weight')
-        The edge attribute that holds the numerical value used for
-        the edge weight.  If None, then all edge weights are 1.
-    scale : number or None (default: 1)
-        Scale factor for positions. Not used unless `fixed is None`.
-        If scale is None, no rescaling is performed.
-    center : array-like or None
-        Coordinate pair around which to center the layout.
-        Not used unless `fixed is None`.
-    dim : int
-        Dimension of layout.
-    seed : int, RandomState instance or None  Optional (default=None)
-        Set the random state for deterministic node layouts.
-        If int, `seed` is the seed used by the random number generator,
-        if numpy.random.RandomState instance, `seed` is the random
-        number generator,
-        if None, the random number generator is the RandomState instance used
-        by numpy.random.
-
-    Returns
-    -------
-    pos : dict
-        A dictionary of positions keyed by node
-
-    Examples
-    --------
-    >>> G = nx.path_graph(4)
-    >>> pos = nx.spring_layout(G)
-    # The same using longer but equivalent function name
-    >>> pos = nx.fruchterman_reingold_layout(G)
-    """
-    G, center = _process_params(G, center, dim)
-
-    if fixed is not None:
-        if pos is None:
-            raise ValueError("nodes are fixed without positions given")
-        for node in fixed:
-            if node not in pos:
-                raise ValueError("nodes are fixed without positions given")
-        nfixed = {node: i for i, node in enumerate(G)}
-        fixed = np.asarray([nfixed[node] for node in fixed])
-
-    if pos is not None:
-        # Determine size of existing domain to adjust initial positions
-        dom_size = max(coord for pos_tup in pos.values() for coord in pos_tup)
-        if dom_size == 0:
-            dom_size = 1
-        pos_arr = seed.rand(len(G), dim) * dom_size + center
-
-        for i, n in enumerate(G):
-            if n in pos:
-                pos_arr[i] = np.asarray(pos[n])
-    else:
-        pos_arr = None
-        dom_size = 1
-
-    if len(G) == 0:
-        return {}
-    if len(G) == 1:
-        return {nx.utils.arbitrary_element(G.nodes()): center}
-
-    try:
-        # Sparse matrix
-        if len(G) < 500:  # sparse solver for large graphs
-            raise ValueError
-        if int(nx.__version__[0]) > 2:
-            A = nx.to_scipy_sparse_array(G, weight=weight, dtype="f")
+                ),
+                n_jobs=n_cpus,
+            )
         else:
-            A = nx.to_scipy_sparse_matrix(G, weight=weight, dtype="f")
-        if k is None and fixed is not None:
-            # We must adjust k by domain size for layouts not near 1x1
-            nnodes, _ = A.shape
-            k = dom_size / np.sqrt(nnodes)
-        pos = _sparse_fruchterman_reingold(
-            A, k, pos_arr, fixed, iterations, threshold, dim, seed
-        )
-    except ValueError:
-        A = nx.to_numpy_array(G, weight=weight)
-        if k is None and fixed is not None:
-            # We must adjust k by domain size for layouts not near 1x1
-            nnodes, _ = A.shape
-            k = dom_size / np.sqrt(nnodes)
-        pos = _fruchterman_reingold(
-            A, k, pos_arr, fixed, iterations, threshold, dim, seed
-        )
-    if fixed is None and scale is not None:
-        pos = _rescale_layout(pos, scale=scale) + center
-    pos = dict(zip(G, pos))
-    return pos
-
-
-@random_state(7)
-def _fruchterman_reingold(
-    A,
-    k=None,
-    pos=None,
-    fixed=None,
-    iterations=50,
-    threshold=1e-4,
-    dim=2,
-    seed=None,
-    **kwargs,
-):
-    """Fruchterman Reingold algorithm."""
-    # Position nodes in adjacency matrix A using Fruchterman-Reingold
-    # Entry point for NetworkX graph is fruchterman_reingold_layout()
-    import numpy as np
-
-    try:
-        nnodes, _ = A.shape
-    except AttributeError as e:
-        msg = "fruchterman_reingold() takes an adjacency matrix as input"
-        raise nx.NetworkXError(msg) from e
-
-    if pos is None:
-        # random initial positions
-        pos = np.asarray(seed.rand(nnodes, dim), dtype=A.dtype)
-    else:
-        # make sure positions are of same type as matrix
-        pos = pos.astype(A.dtype)
-
-    # optimal distance between nodes
-    if k is None:
-        k = np.sqrt(1.0 / nnodes)
-    # the initial "temperature"  is about .1 of domain area (=1x1)
-    # this is the largest step allowed in the dynamics.
-    # We need to calculate this in case our fixed positions force our domain
-    # to be much bigger than 1x1
-    t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1])) * 0.1
-    # simple cooling scheme.
-    # linearly step down by dt on each iteration so last iteration is size dt.
-    dt = t / float(iterations + 1)
-    delta = np.zeros((pos.shape[0], pos.shape[0], pos.shape[1]), dtype=A.dtype)
-    # the inscrutable (but fast) version
-    # this is still O(V^2)
-    # could use multilevel methods to speed this up significantly
-    for iteration in range(iterations):
-        # matrix of difference between points
-        delta = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]
-        # distance between points
-        distance = np.linalg.norm(delta, axis=-1)
-        # enforce minimum distance of 0.01
-        np.clip(distance, 0.001, None, out=distance)
-        # displacement "force"
-        displacement = np.einsum(
-            "ijk,ij->ik", delta, (k * k / distance**2 - A * distance / k)
-        )
-        displacement = displacement - pos / (k * np.sqrt(nnodes))
-        # update positions
-        length = np.linalg.norm(displacement, axis=-1)
-        length = np.where(length < 0.01, 0.1, length)
-        delta_pos = np.einsum("ij,i->ij", displacement, t / length)
-        if fixed is not None:
-            # don't change positions of fixed nodes
-            delta_pos[fixed] = 0.0
-        pos += delta_pos
-        # cool temperature
-        t -= dt
-        err = np.linalg.norm(delta_pos) / nnodes
-        if err < threshold:
-            break
-    return pos
-
-
-@random_state(7)
-def _sparse_fruchterman_reingold(
-    A,
-    k=None,
-    pos=None,
-    fixed=None,
-    iterations=50,
-    threshold=1e-4,
-    dim=2,
-    seed=None,
-    **kwargs,
-):
-    """Sparse Fruchterman Reingold algorithm."""
-    # Position nodes in adjacency matrix A using Fruchterman-Reingold
-    # Entry point for NetworkX graph is fruchterman_reingold_layout()
-    # Sparse version
-    import numpy as np
-
-    try:
-        nnodes, _ = A.shape
-    except AttributeError as e:
-        msg = "fruchterman_reingold() takes an adjacency matrix as input"
-        raise nx.NetworkXError(msg) from e
-    try:
-        from scipy.sparse import coo_matrix
-    except ImportError as e:
-        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
-        raise ImportError(msg) from e
-    # make sure we have a LIst of Lists representation
-    try:
-        A = A.tolil()
-    except AttributeError:
-        A = (coo_matrix(A)).tolil()
-
-    if pos is None:
-        # random initial positions
-        pos = np.asarray(seed.rand(nnodes, dim), dtype=A.dtype)
-    else:
-        # make sure positions are of same type as matrix
-        pos = pos.astype(A.dtype)
-
-    # no fixed nodes
-    if fixed is None:
-        fixed = []
-
-    # optimal distance between nodes
-    if k is None:
-        k = np.sqrt(1.0 / nnodes)
-    # the initial "temperature"  is about .1 of domain area (=1x1)
-    # this is the largest step allowed in the dynamics.
-    t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1])) * 0.1
-    # simple cooling scheme.
-    # linearly step down by dt on each iteration so last iteration is size dt.
-    dt = t / float(iterations + 1)
-
-    displacement = np.zeros((dim, nnodes))
-    for iteration in range(iterations):
-        displacement *= 0
-        # loop over rows
-        for i in range(A.shape[0]):
-            if i in fixed:
-                continue
-            # difference between this row's node position and all others
-            delta = (pos[i] - pos).T
-            # distance between points
-            distance = np.sqrt((delta**2).sum(axis=0))
-            # enforce minimum distance of 0.01
-            distance = np.where(distance < 0.01, 0.01, distance)
-            # the adjacency matrix row
-            Ai = np.asarray(A.getrowview(i).toarray())
-            # displacement "force"
-            displacement[:, i] += (
-                delta * (k * k / distance**2 - Ai * distance / k)
-            ).sum(axis=1)
-        displacement = displacement - pos / (k * np.sqrt(nnodes))
-        # update positions
-        length = np.sqrt((displacement**2).sum(axis=0))
-        length = np.where(length < 0.01, 0.1, length)
-        delta_pos = (displacement * t / length).T
-        pos += delta_pos
-        # cool temperature
-        t -= dt
-        err = np.linalg.norm(delta_pos) / nnodes
-        if err < threshold:
-            break
-    return pos
-
-
-def _rescale_layout(pos, scale=1):
-    """
-    Return scaled position array to (-scale, scale) in all axes.
-
-    The function acts on NumPy arrays which hold position information.
-    Each position is one row of the array. The dimension of the space
-    equals the number of columns. Each coordinate in one column.
-    To rescale, the mean (center) is subtracted from each axis separately.
-    Then all values are scaled so that the largest magnitude value
-    from all axes equals `scale` (thus, the aspect ratio is preserved).
-    The resulting NumPy Array is returned (order of rows unchanged).
-
-    Parameters
-    ----------
-    pos : numpy array
-        positions to be scaled. Each row is a position.
-    scale : number (default: 1)
-        The size of the resulting extent in all directions.
-
-    Returns
-    -------
-    pos : numpy array
-        scaled positions. Each row is a position.
-    """
-    # Find max length over all dimensions
-    lim = 0  # max coordinate for all axes
-    for i in range(pos.shape[1]):
-        pos[:, i] -= pos[:, i].mean()
-        lim = max(abs(pos[:, i]).max(), lim)
-    # rescale to (-scale, scale) in all directions, preserves aspect
-    if lim > 0:
-        for i in range(pos.shape[1]):
-            pos[:, i] *= scale / lim
-    return pos
-
-
-def extract_edge_weights(
-    vdj_data: Dandelion, expanded_only: bool = False
-) -> list:
-    """
-    Retrieve edge weights (BCR levenshtein distance) from graph.
-
-    Parameters
-    ----------
-    vdj_data : Dandelion
-        `Dandelion` object after `tl.generate_network` has been run.
-    expanded_only : bool, optional
-        whether to retrieve the edge weights from the expanded only graph or entire graph.
-
-    Returns
-    -------
-    list
-        list of edge weights.
-    """
-    if expanded_only:
-        try:
-            edges, weights = zip(
-                *nx.get_edge_attributes(vdj_data.graph[1], "weight").items()
-            )
-        except ValueError as e:
-            print(
-                "{} i.e. the graph does not contain edges. Therefore, edge weights not returned.".format(
-                    e
+            results = squareform(
+                pdist(
+                    seqs,
+                    metric=lambda x, y: dist_func_long_sep(
+                        x,
+                        y,
+                        metric=metric,
+                        pad_to_max=pad_to_max,
+                        sep="#",  # always pad with some sep
+                    ),
                 )
             )
+        total_dist += results
     else:
-        try:
-            edges, weights = zip(
-                *nx.get_edge_attributes(vdj_data.graph[0], "weight").items()
-            )
-        except ValueError as e:
-            print(
-                "{} i.e. the graph does not contain edges. Therefore, edge weights not returned.".format(
-                    e
+        # Step 3: iterate over clone memberships
+        for clone in tqdm(
+            membership,
+            disable=not verbose,
+            bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
+        ):
+            tmp = dat_seq_clean.loc[membership[clone]]
+            if tmp.shape[0] > 1:
+                seqs = tmp.values
+                d_mat_tmp = squareform(
+                    pdist(
+                        seqs,
+                        metric=lambda x, y: dist_func_long_sep(
+                            x,
+                            y,
+                            metric=metric,
+                            pad_to_max=pad_to_max,
+                            sep="#",  # always pad with some sep
+                        ),
+                    )
                 )
-            )
-    if "weights" in locals():
-        return weights
+                total_dist[
+                    np.ix_(
+                        [index_list.index(i) for i in tmp.index],
+                        [index_list.index(j) for j in tmp.index],
+                    )
+                ] += d_mat_tmp
 
-
-# from https://bbengfort.github.io/2016/06/graph-tool-from-networkx/
-def nx2gt(nxG):
-    """Convert a networkx graph to a graph-tool graph."""
-    try:
-        import graph_tool as gt
-    except ImportError:
-        raise ImportError(
-            "Please install graph-tool: conda install -c conda-forge graph-tool"
+    np.fill_diagonal(total_dist, np.nan)
+    if verbose:
+        end_time = time.time()
+        logg.info(
+            f"Distances calculated in {end_time - start_time:.2f} seconds"
         )
-    # Phase 0: Create a directed or undirected graph-tool Graph
-    gtG = gt.Graph(directed=nxG.is_directed())
-
-    # Add the Graph properties as "internal properties"
-    for key, value in nxG.graph.items():
-        # Convert the value and key into a type for graph-tool
-        tname, value, key = get_prop_type(value, key)
-
-        prop = gtG.new_graph_property(tname)  # Create the PropertyMap
-        gtG.graph_properties[key] = prop  # Set the PropertyMap
-        gtG.graph_properties[key] = value  # Set the actual value
-
-    # Phase 1: Add the vertex and edge property maps
-    # Go through all nodes and edges and add seen properties
-    # Add the node properties first
-    nprops = set()  # cache keys to only add properties once
-    for node, data in list(nxG.nodes(data=True)):
-        # Go through all the properties if not seen and add them.
-        for key, val in data.items():
-            if key in nprops:
-                continue  # Skip properties already added
-
-            # Convert the value and key into a type for graph-tool
-            tname, _, key = get_prop_type(val, key)
-
-            prop = gtG.new_vertex_property(tname)  # Create the PropertyMap
-            gtG.vertex_properties[key] = prop  # Set the PropertyMap
-
-            # Add the key to the already seen properties
-            nprops.add(key)
-
-    # Also add the node id: in NetworkX a node can be any hashable type, but
-    # in graph-tool node are defined as indices. So we capture any strings
-    # in a special PropertyMap called 'id' -- modify as needed!
-    gtG.vertex_properties["id"] = gtG.new_vertex_property("string")
-
-    # Add the edge properties second
-    eprops = set()  # cache keys to only add properties once
-    for src, dst, data in list(nxG.edges(data=True)):
-        # Go through all the edge properties if not seen and add them.
-        for key, val in data.items():
-            if key in eprops:
-                continue  # Skip properties already added
-
-            # Convert the value and key into a type for graph-tool
-            tname, _, key = get_prop_type(val, key)
-
-            prop = gtG.new_edge_property(tname)  # Create the PropertyMap
-            gtG.edge_properties[key] = prop  # Set the PropertyMap
-
-            # Add the key to the already seen properties
-            eprops.add(key)
-
-    # Phase 2: Actually add all the nodes and vertices with their properties
-    # Add the nodes
-    vertices = {}  # vertex mapping for tracking edges later
-    for node, data in list(nxG.nodes(data=True)):
-        # Create the vertex and annotate for our edges later
-        v = gtG.add_vertex()
-        vertices[node] = v
-
-        # Set the vertex properties, not forgetting the id property
-        data["id"] = str(node)
-        for key, value in data.items():
-            gtG.vp[key][v] = value  # vp is short for vertex_properties
-
-    # Add the edges
-    for src, dst, data in list(nxG.edges(data=True)):
-        # Look up the vertex structs from our vertices mapping and add edge.
-        e = gtG.add_edge(vertices[src], vertices[dst])
-
-        # Add the edge properties
-        for key, value in data.items():
-            gtG.ep[key][e] = value  # ep is short for edge_properties
-
-    # Done, finally!
-    return gtG
-
-
-def get_prop_type(value, key=None):
-    """
-    Perform typing and value conversion for the graph_tool PropertyMap class.
-
-    If a key is provided, it also ensures the key is in a format that can be
-    used with the PropertyMap. Returns a tuple, (type name, value, key)
-    """
-    # Deal with the value
-    if isinstance(value, bool):
-        tname = "bool"
-
-    elif isinstance(value, int):
-        tname = "float"
-        value = float(value)
-
-    elif isinstance(value, float):
-        tname = "float"
-
-    elif isinstance(value, dict):
-        tname = "object"
-
-    else:
-        tname = "string"
-        value = str(value)
-
-    return tname, value, key
+    return total_dist

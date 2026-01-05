@@ -1,5 +1,6 @@
 """fixtures"""
 
+import dandelion as ddl
 import pandas as pd
 import pytest
 import scipy.sparse
@@ -13504,3 +13505,17 @@ def airr_bd():
         ],
     )
     return airr
+
+
+@pytest.fixture
+def vdj_small():
+    """Small dandelion object for testing."""
+    data_path = Path(__file__).parent / "vdj_processed.h5ddl"
+    return ddl.read_h5ddl(data_path)
+
+
+@pytest.fixture
+def vdj_smaller():
+    """Smaller dandelion object for testing."""
+    data_path = Path(__file__).parent / "vdj_processed_smaller.h5ddl"
+    return ddl.read_h5ddl(data_path)

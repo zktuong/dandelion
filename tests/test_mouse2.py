@@ -7,7 +7,7 @@ import dandelion as ddl
 def test_write_fasta(create_testfolder, fasta_10x_mouse):
     """test_write_fasta"""
     out_fasta = create_testfolder / "filtered_contig.fasta"
-    ddl.utl.write_fasta(fasta_dict=fasta_10x_mouse, out_fasta=out_fasta)
+    ddl.utl._core.write_fasta(fasta_dict=fasta_10x_mouse, out_fasta=out_fasta)
     assert len(list(create_testfolder.iterdir())) == 1
 
 

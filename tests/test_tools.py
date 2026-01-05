@@ -1,9 +1,12 @@
-#!/usr/bin/env python
 import pytest
 import json
+
 import pandas as pd
-import dandelion as ddl
 import scanpy as sc
+
+from unittest.mock import patch
+
+import dandelion as ddl
 
 
 # convert from airr_Reannotate to airr, replicate this, run scirpy chainqc, test mudata as well
@@ -18,10 +21,10 @@ def test_setup(
     vdj2 = ddl.pp.check_contigs(airr_reannotated2)
     assert airr_reannotated.shape[0] == 8
     assert airr_reannotated2.shape[0] == 15
-    assert vdj.data.shape[0] == 8
-    assert vdj2.data.shape[0] == 14
-    assert vdj.metadata.shape[0] == 5
-    assert vdj2.metadata.shape[0] == 8
+    assert vdj._data.shape[0] == 8
+    assert vdj2._data.shape[0] == 14
+    assert vdj._metadata.shape[0] == 5
+    assert vdj2._metadata.shape[0] == 8
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test2.h5ddl"
@@ -41,12 +44,12 @@ def test_find_clones(create_testfolder):
     vdj2 = ddl.read_h5ddl(f2)
     ddl.tl.find_clones(vdj)
     ddl.tl.find_clones(vdj2)
-    assert not vdj.data.clone_id.empty
-    assert not vdj.metadata.clone_id.empty
-    assert not vdj2.data.clone_id.empty
-    assert not vdj2.metadata.clone_id.empty
-    assert len({x for x in vdj.metadata["clone_id"] if pd.notnull(x)}) == 5
-    assert len({x for x in vdj2.metadata["clone_id"] if pd.notnull(x)}) == 5
+    assert not vdj._data.clone_id.empty
+    assert not vdj._metadata.clone_id.empty
+    assert not vdj2._data.clone_id.empty
+    assert not vdj2._metadata.clone_id.empty
+    assert len({x for x in vdj._metadata["clone_id"] if pd.notnull(x)}) == 5
+    assert len({x for x in vdj2._metadata["clone_id"] if pd.notnull(x)}) == 5
     vdj.write_h5ddl(f)
     vdj2.write_h5ddl(f2)
 
@@ -57,14 +60,14 @@ def test_clone_size(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_size(vdj)
-    assert not vdj.metadata.clone_id_size.empty
+    assert not vdj._metadata.clone_id_size.empty
     ddl.tl.clone_size(vdj, max_size=3)
-    assert not vdj.metadata.clone_id_size.empty
+    assert not vdj._metadata.clone_id_size.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "resample,expected", [pytest.param(None, 8), pytest.param(3, 5)]
+    "resample,expected", [pytest.param(None, 8), pytest.param(16, 16)]
 )
 def test_generate_network(create_testfolder, resample, expected):
     """test generate network"""
@@ -72,9 +75,11 @@ def test_generate_network(create_testfolder, resample, expected):
     f2 = create_testfolder / "test2.h5ddl"
     vdj = ddl.read_h5ddl(f)
     vdj2 = ddl.read_h5ddl(f2)
+    # create anndata from here
+    adata = ddl.tl.to_scirpy(vdj, to_mudata=False)
     if resample is not None:
-        vdj = ddl.tl.generate_network(
-            vdj, downsample=resample, layout_method="mod_fr"
+        vdj, adata = ddl.tl.generate_network(
+            vdj, gex_data=adata, sample=resample, layout_method="mod_fr"
         )
         assert vdj.n_obs == expected
         assert vdj.layout is not None
@@ -84,9 +89,9 @@ def test_generate_network(create_testfolder, resample, expected):
         assert vdj2.n_obs == expected
         assert vdj2.layout is not None
         assert vdj2.graph is not None
-    vdj.data["clone_id"] = "1"
-    vdj = ddl.Dandelion(vdj.data)
-    assert vdj.data.clone_id.dtype == "object"
+    vdj._data["clone_id"] = "1"
+    vdj = ddl.Dandelion(vdj._data)
+    assert vdj._data.clone_id.dtype == "object"
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
     assert vdj.layout is not None
 
@@ -97,8 +102,8 @@ def test_find_clones_key(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.find_clones(vdj, key_added="test_clone")
-    assert not vdj.metadata.test_clone.empty
-    assert vdj.data.test_clone.dtype == "object"
+    assert not vdj._metadata.test_clone.empty
+    assert vdj._data.test_clone.dtype == "object"
     ddl.tl.generate_network(vdj, clone_key="test_clone", layout_method="mod_fr")
     assert vdj.layout is not None
     assert vdj.graph is not None
@@ -120,123 +125,99 @@ def test_transfer(create_testfolder, dummy_adata2):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_gini(create_testfolder):
-    """test gini"""
-    f = create_testfolder / "test2.h5ddl"
-    vdj = ddl.read_h5ddl(f)
-    ddl.tl.clone_diversity(vdj, groupby="sample_id")
-    assert not vdj.metadata.clone_network_vertex_size_gini.empty
-    assert not vdj.metadata.clone_network_cluster_size_gini.empty
-    ddl.tl.generate_network(vdj, layout_method="mod_fr")
-    ddl.tl.clone_diversity(vdj, groupby="sample_id", metric="clone_centrality")
-    assert not vdj.metadata.clone_centrality_gini.empty
-    assert not vdj.metadata.clone_size_gini.empty
-    tmp = ddl.tl.clone_diversity(
-        vdj,
-        groupby="sample_id",
-        metric="clone_centrality",
-        return_table=True,
-    )
-    assert isinstance(tmp, pd.DataFrame)
-
-
-@pytest.mark.usefixtures("create_testfolder")
-def test_diversity_gini2(create_testfolder):
-    """test gini 2"""
-    f = create_testfolder / "test.h5ddl"
-    vdj = ddl.read_h5ddl(f)
-    ddl.tl.clone_diversity(vdj, groupby="sample_id")
-    tmp = ddl.tl.clone_diversity(vdj, groupby="sample_id", return_table=True)
-    assert isinstance(tmp, pd.DataFrame)
-
-
-@pytest.mark.usefixtures("create_testfolder")
-@pytest.mark.parametrize("resample", [True, False])
-def test_diversity_chao(create_testfolder, resample):
-    """test chao"""
-    f = create_testfolder / "test2.h5ddl"
-    vdj = ddl.read_h5ddl(f)
-    if resample:
-        ddl.tl.clone_diversity(
-            vdj,
-            groupby="sample_id",
-            method="chao1",
-            resample=resample,
-            downsample=6,
-        )
-    else:
-        ddl.tl.clone_diversity(
-            vdj, groupby="sample_id", method="chao1", resample=resample
-        )
-    assert not vdj.metadata.clone_size_chao1.empty
-    tmp = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", method="chao1", return_table=True
-    )
-    assert isinstance(tmp, pd.DataFrame)
-
-
-@pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "method,diversitykey",
+    "method",
     [
-        pytest.param("chao1", None),
-        pytest.param("chao1", "test_diversity_key"),
-        pytest.param("shannon", None),
-        pytest.param("shannon", "test_diversity_key"),
+        "chao1",
+        "shannon",
+        "gini",
     ],
 )
-def test_diversity_anndata(create_testfolder, method, diversitykey):
+def test_diversity_anndata(create_testfolder, method):
     """test div anndata"""
     f = create_testfolder / "test2.h5ad"
     adata = sc.read_h5ad(f)
-    ddl.tl.clone_diversity(
-        adata, groupby="sample_id", method=method, diversity_key=diversitykey
+    res, _ = ddl.tl.clone_diversity(
+        adata,
+        groupby="sample_id",
+        method=method,
+        n_boot=5,
     )
-    if diversitykey is None:
-        assert "diversity" in adata.uns
-    else:
-        assert "test_diversity_key" in adata.uns
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "resample,normalize",
-    [
-        pytest.param(True, True),
-        pytest.param(False, True),
-        pytest.param(True, False),
-        pytest.param(False, False),
-    ],
+    "normalize",
+    [True, False],
 )
-def test_diversity_shannon(create_testfolder, resample, normalize):
+def test_diversity_shannon(create_testfolder, normalize):
     """test shannon"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    if resample:
-        ddl.tl.clone_diversity(
-            vdj,
-            groupby="sample_id",
-            method="shannon",
-            resample=resample,
-            normalize=normalize,
-            downsample=6,
-        )
-    else:
-        ddl.tl.clone_diversity(
-            vdj,
-            groupby="sample_id",
-            method="shannon",
-            resample=resample,
-            normalize=normalize,
-        )
-    if normalize:
-        assert not vdj.metadata.clone_size_normalized_shannon.empty
-    else:
-        assert not vdj.metadata.clone_size_shannon.empty
-    tmp = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", method="shannon", return_table=True
+    # create random 3 sample ids to vdj.metadata
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
+    ]
+    vdj.update_data()
+    res, _ = ddl.tl.clone_diversity(
+        vdj,
+        groupby="sample_id",
+        method="shannon",
+        normalize=normalize,
+        n_boot=5,
+        verbose=True,
     )
-    assert isinstance(tmp, pd.DataFrame)
+    assert res
+
+
+@pytest.mark.usefixtures("create_testfolder")
+@pytest.mark.parametrize(
+    "method",
+    ["shannon", "chao1", "gini"],
+)
+def test_diversity_min_size_too_small(create_testfolder, method):
+    """test shannon"""
+    f = create_testfolder / "test.h5ddl"
+    vdj = ddl.read_h5ddl(f)
+    # create random 3 sample ids to vdj.metadata
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
+    ]
+    vdj.update_data()
+    with pytest.raises(ValueError):
+        ddl.tl.clone_diversity(
+            vdj,
+            groupby="sample_id",
+            method=method,
+            min_size=6,
+            n_boot=5,
+            verbose=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "method",
+    ["shannon", "chao1", "gini"],
+)
+def test_diversity_min_size_ok(create_testfolder, method):
+    """test shannon"""
+    f = create_testfolder / "test2.h5ddl"
+    vdj = ddl.read_h5ddl(f)
+    # create random 3 sample ids to vdj.metadata
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
+    ]
+    vdj.update_data()
+    res, _ = ddl.tl.clone_diversity(
+        vdj,
+        groupby="sample_id",
+        method=method,
+        min_size=3,
+        n_boot=5,
+        verbose=True,
+    )
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder", "json_10x_cr6", "dummy_adata_cr6")
@@ -247,8 +228,8 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(create_testfolder)
     vdj, adata = ddl.pp.check_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 19
-    assert vdj.metadata.shape[0] == 10
+    assert vdj._data.shape[0] == 19
+    assert vdj._metadata.shape[0] == 10
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)
@@ -258,83 +239,76 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
     adata.write_h5ad(f2)
 
 
+@patch("matplotlib.pyplot.show")
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction(create_testfolder):
+def test_diversity_rarefaction_ad(mock_show, create_testfolder):
     """test rarefaction"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
     ddl.tl.clone_rarefaction(adata, groupby="sample_id")
-    assert "diversity" in adata.uns
-    ddl.tl.clone_rarefaction(
-        adata, groupby="sample_id", diversity_key="test_diversity_key"
-    )
-    assert "test_diversity_key" in adata.uns
-    p = ddl.pl.clone_rarefaction(adata, color="sample_id")
-    assert p is not None
+    ddl.tl.clone_rarefaction(adata, groupby="sample_id", plot=True)
 
 
+@patch("matplotlib.pyplot.show")
 @pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction2(create_testfolder):
-    """test rarefaction2"""
-    f = create_testfolder / "test.h5ad"
-    adata = sc.read_h5ad(f)
-    ddl.tl.clone_rarefaction(adata, groupby="sample_id", clone_key="clone_id")
-    assert "diversity" in adata.uns
-    p = ddl.pl.clone_rarefaction(adata, color="sample_id")
-    assert p is not None
-    adata = sc.read_h5ad(f)
-    p = ddl.pl.clone_rarefaction(adata, color="sample_id")
-    assert p is not None
-
-
-@pytest.mark.usefixtures("create_testfolder")
-def test_diversity_rarefaction3(create_testfolder):
+def test_diversity_rarefaction_ddl(mock_show, create_testfolder):
     """test rarefaction3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    df = ddl.tl.clone_rarefaction(vdj, groupby="sample_id")
-    assert isinstance(df, dict)
-    p = ddl.pl.clone_rarefaction(vdj, color="sample_id")
-    assert p is not None
+    ddl.tl.clone_rarefaction(vdj, groupby="sample_id")
+    ddl.tl.clone_rarefaction(vdj, groupby="sample_id", plot=True)
+
+
+@pytest.mark.usefixtures("create_testfolder")
+@pytest.mark.parametrize("use_network", [True, False])
+def test_diversity_gini2(create_testfolder, use_network):
+    """test gini more"""
+    f = create_testfolder / "test.h5ddl"
+    vdj = ddl.read_h5ddl(f)
+    vdj._data["sample_id"] = "sample_test"
+    vdj.update_metadata(
+        retrieve=["sample_id"],
+        retrieve_mode=["merge and unique only"],
+    )
+    res, _ = ddl.tl.clone_diversity(
+        vdj,
+        groupby="sample_id",
+        min_size=6,
+        key="sequence",
+        n_boot=5,
+        method="gini",
+        use_network=use_network,
+    )
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
 @pytest.mark.parametrize(
-    "metric", ["clone_network", None, "clone_degree", "clone_centrality"]
+    "metric", ["clone_network", "clone_degree", "clone_centrality"]
 )
 def test_diversity_gini3(create_testfolder, metric):
     """test gini more"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    ddl.tl.clone_diversity(
+    res, _ = ddl.tl.clone_diversity(
         vdj,
         groupby="sample_id",
-        resample=True,
-        downsample=6,
+        min_size=6,
         key="sequence",
-        n_resample=5,
-        metric=metric,
+        n_boot=5,
+        network_metric=metric,
     )
-    if metric == "clone_network" or metric is None:
-        assert not vdj.metadata.clone_network_cluster_size_gini.empty
-        assert not vdj.metadata.clone_network_vertex_size_gini.empty
-    if metric == "clone_degree":
-        assert not vdj.metadata.clone_degree.empty
-        assert not vdj.metadata.clone_size_gini.empty
-        assert not vdj.metadata.clone_degree_gini.empty
-    if metric == "clone_centrality":
-        assert not vdj.metadata.clone_centrality.empty
-        assert not vdj.metadata.clone_centrality_gini.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -342,16 +316,19 @@ def test_diversity2a(create_testfolder):
     """test div"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", reconstruct_network=False, key="sequence"
+    res, _ = ddl.tl.clone_diversity(
+        vdj,
+        groupby="sample_id",
+        reconstruct_network=False,
+        key="sequence",
+        n_boot=5,
     )
-    assert not vdj.metadata.clone_network_cluster_size_gini.empty
-    assert not vdj.metadata.clone_network_vertex_size_gini.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -359,16 +336,15 @@ def test_diversity2b(create_testfolder):
     """test div2"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", use_contracted=True, key="sequence"
+    res, _ = ddl.tl.clone_diversity(
+        vdj, groupby="sample_id", use_contracted=True, key="sequence", n_boot=5
     )
-    assert not vdj.metadata.clone_network_cluster_size_gini.empty
-    assert not vdj.metadata.clone_network_vertex_size_gini.empty
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -376,15 +352,15 @@ def test_diversity2c(create_testfolder):
     """test div3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
     )
-    x = ddl.tl.clone_diversity(
-        vdj, groupby="sample_id", key="sequence", return_table=True
+    res, _ = ddl.tl.clone_diversity(
+        vdj, groupby="sample_id", key="sequence", return_table=True, n_boot=5
     )
-    assert isinstance(x, pd.DataFrame)
+    assert res
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -410,7 +386,7 @@ def test_diversity_anndata2(create_testfolder, method):
     """test div4"""
     f = create_testfolder / "test.h5ad"
     adata = sc.read_h5ad(f)
-    tmp = ddl.tl.clone_diversity(
-        adata, groupby="sample_id", method=method, return_table=True
+    res, _ = ddl.tl.clone_diversity(
+        adata, groupby="sample_id", method=method, n_boot=5
     )
-    assert isinstance(tmp, pd.DataFrame)
+    assert res

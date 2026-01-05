@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 # @author: chenqu, kp9, kelvin
+from __future__ import annotations
+
 import re
-import numpy as np
-import pandas as pd
-import scanpy as sc
-import scipy as sp
 
 from anndata import AnnData
-from typing import Literal
+import numpy as np
+import pandas as pd
+import scipy as sp
 
-from dandelion.utilities._utilities import bh, PResults
+from scanpy import logging as logg
+from typing import Literal, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from palantir.presults import PResults
+
+from dandelion.utilities._utilities import bh
 
 
 def _filter_cells(
@@ -137,15 +143,10 @@ def setup_vdj_pseudobulk(
 
     if extract_cols is None:
         if not any([re.search("_VDJ_main|_VJ_main", i) for i in adata.obs]):
-            v_call = (
-                "v_call_genotyped_"
-                if "v_call_genotyped_VDJ" in adata.obs
-                else "v_call_"
-            )
             if mode is not None:
                 adata.obs["v_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VDJ"]
+                    for x in adata.obs["v_call_" + mode + "_VDJ"]
                 ]
                 adata.obs["d_call_" + mode + "_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -157,7 +158,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + mode + "_VJ"]
+                    for x in adata.obs["v_call_" + mode + "_VJ"]
                 ]
                 adata.obs["j_call_" + mode + "_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -166,7 +167,7 @@ def setup_vdj_pseudobulk(
             else:
                 adata.obs["v_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VDJ"]
+                    for x in adata.obs["v_call_VDJ"]
                 ]
                 adata.obs["d_call_VDJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -178,7 +179,7 @@ def setup_vdj_pseudobulk(
                 ]
                 adata.obs["v_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
-                    for x in adata.obs[v_call + "VJ"]
+                    for x in adata.obs["v_call_VJ"]
                 ]
                 adata.obs["j_call_VJ_main"] = [
                     x.split("|")[0] if x != "None" else "None"
@@ -442,7 +443,7 @@ def vdj_pseudobulk(
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata)
 
     # store our feature space and derived metadata into an AnnData
-    pb_adata = sc.AnnData(
+    pb_adata = AnnData(
         np.array(df), var=pd.DataFrame(index=df.columns), obs=pbs_obs
     )
     # store the pseudobulk assignments, as a sparse for storage efficiency
@@ -468,7 +469,7 @@ def pseudotime_transfer(
     Returns
     -------
     AnnData
-        transferred `AnnData`.
+        transferred AnnData.
     """
     adata.obs["pseudotime" + suffix] = pr_res.pseudotime.copy()
 
@@ -506,9 +507,8 @@ def project_pseudotime_to_cell(
     # leave out cells that don't belong to any neighbourhood
     nhoodsum = np.sum(nhoods, axis=1)
     cdata = adata[nhoodsum > 0].copy()
-    print(
-        "number of cells removed due to not belonging to any neighbourhood",
-        sum(nhoodsum == 0),
+    logg.info(
+        f"number of cells removed due to not belonging to any neighbourhood: {sum(nhoodsum == 0),}",
     )  # print how many cells removed
     # also subset the pseudobulk_assignments
     pb_assign_trim = nhoods[nhoodsum > 0]
@@ -575,96 +575,96 @@ def pseudobulk_gex(
     pbs_obs = _get_pbs_obs(pbs, obs_to_take, adata_raw)
 
     ## Make new anndata object
-    pb_adata = sc.AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
+    pb_adata = AnnData(pbs_X.T, obs=pbs_obs, var=adata_raw.var)
     # store the pseudobulk assignments, as a sparse for storage efficiency
     # transpose as the original matrix is cells x pseudobulks
     pb_adata.obsm["pbs"] = sp.sparse.csr_matrix(pbs.T)
     return pb_adata
 
 
-def bin_expression(
-    adata: AnnData, bin_no: int, genes: list[str], pseudotime_col: str
-) -> pd.DataFrame:
-    """Function to compute average gene expression in bins along pseudotime.
+# def bin_expression(
+#     adata: AnnData, bin_no: int, genes: list[str], pseudotime_col: str
+# ) -> pd.DataFrame:
+#     """Function to compute average gene expression in bins along pseudotime.
 
-    Parameters
-    ----------
-    adata : AnnData
-        cell adata.
-    bin_no : int
-        number of bins to be divided along pseudotime.
-    genes : list[str]
-        list of genes for the computation
-    pseudotime_col : str
-        column in adata.obs where pseudotime is stored
+#     Parameters
+#     ----------
+#     adata : AnnData
+#         cell adata.
+#     bin_no : int
+#         number of bins to be divided along pseudotime.
+#     genes : list[str]
+#         list of genes for the computation
+#     pseudotime_col : str
+#         column in adata.obs where pseudotime is stored
 
-    Returns
-    -------
-    pd.DataFrame
-        a data frame with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
-    """
-    # define bins
-    bins = np.linspace(0, 1, bin_no + 1)
+#     Returns
+#     -------
+#     pd.DataFrame
+#         a data frame with genes as rows, and pseudotime bins as columns, and averaged gene expression as the data
+#     """
+#     # define bins
+#     bins = np.linspace(0, 1, bin_no + 1)
 
-    # get gene expression
-    x = np.array(adata[:, genes].X.todense())
-    # get pseudotime
-    y = np.array(adata.obs[pseudotime_col])
+#     # get gene expression
+#     x = np.array(adata[:, genes].X.todense())
+#     # get pseudotime
+#     y = np.array(adata.obs[pseudotime_col])
 
-    # calculate average gene expression in each bin
-    gene_summary = pd.DataFrame(columns=bins[:-1], index=genes)
-    for i in range(gene_summary.shape[1]):
-        time = bins[i]
-        select = np.array(bins[i] <= y) & np.array(y < bins[i + 1])
-        gene_summary.loc[:, time] = np.mean(x[select, :], axis=0)
+#     # calculate average gene expression in each bin
+#     gene_summary = pd.DataFrame(columns=bins[:-1], index=genes)
+#     for i in range(gene_summary.shape[1]):
+#         time = bins[i]
+#         select = np.array(bins[i] <= y) & np.array(y < bins[i + 1])
+#         gene_summary.loc[:, time] = np.mean(x[select, :], axis=0)
 
-    return gene_summary
+#     return gene_summary
 
 
-def chatterjee_corr(
-    adata: AnnData, genes: list[str], pseudotime_col: str
-) -> pd.DataFrame:
-    """Function to compute chatterjee correlation of gene expression with pseudotime.
+# def chatterjee_corr(
+#     adata: AnnData, genes: list[str], pseudotime_col: str
+# ) -> pd.DataFrame:
+#     """Function to compute chatterjee correlation of gene expression with pseudotime.
 
-    Parameters
-    ----------
-    adata : AnnData
-        cell adata
-    genes : list[str]
-        List of genes selected to compute the correlation
-    pseudotime_col : str
-        column in adata.obs where pseudotime is stored
+#     Parameters
+#     ----------
+#     adata : AnnData
+#         cell adata
+#     genes : list[str]
+#         List of genes selected to compute the correlation
+#     pseudotime_col : str
+#         column in adata.obs where pseudotime is stored
 
-    Returns
-    -------
-    pd.DataFrame
-        a data frame with genes as rows, with cor_res (correlation statistics),
-        pval (p-value),  adj_pval (p-value adjusted by BH method) as columns.
-    """
-    # get gene expression
-    x = np.array(adata[:, genes].X.todense())
-    # add small perturbation for random tie breaking
-    x = x + np.random.randn(x.shape[0], x.shape[1]) * 1e-15
-    # get pseudotime
-    y = list(adata.obs[pseudotime_col])
+#     Returns
+#     -------
+#     pd.DataFrame
+#         a data frame with genes as rows, with cor_res (correlation statistics),
+#         pval (p-value),  adj_pval (p-value adjusted by BH method) as columns.
+#     """
+#     # get gene expression
+#     x = np.array(adata[:, genes].X.todense())
+#     # add small perturbation for random tie breaking
+#     x = x + np.random.randn(x.shape[0], x.shape[1]) * 1e-15
+#     # get pseudotime
+#     y = list(adata.obs[pseudotime_col])
 
-    # compute chatterjee correlation
-    # ref: Sourav Chatterjee (2021) A New Coefficient of Correlation, Journal of the American Statistical Association, 116:536, 2009-2022, DOI: 10.1080/01621459.2020.1758115
-    stat = 1 - np.sum(
-        np.abs(np.diff(np.argsort(x[np.argsort(y), :], axis=0), axis=0)), axis=0
-    ) * 3 / (x.shape[0] ** 2 - 1)
-    stat = np.array(stat).flatten()
+#     # compute chatterjee correlation
+#     # ref: Sourav Chatterjee (2021) A New Coefficient of Correlation, Journal of the American Statistical Association, 116:536, 2009-2022, DOI: 10.1080/01621459.2020.1758115
+#     stat = 1 - np.sum(
+#         np.abs(np.diff(np.argsort(x[np.argsort(y), :], axis=0), axis=0)), axis=0
+#     ) * 3 / (x.shape[0] ** 2 - 1)
+#     stat = np.array(stat).flatten()
 
-    pval = 1 - sp.stats.norm.cdf(stat, loc=0, scale=np.sqrt(2 / 5 / x.shape[0]))
+#     pval = 1 - sp.stats.norm.cdf(stat, loc=0, scale=np.sqrt(2 / 5 / x.shape[0]))
 
-    # put results into data frame cor_res
-    cor_res = pd.DataFrame({"cor_stat": stat, "pval": pval})
-    cor_res.index = genes
+#     # put results into data frame cor_res
+#     cor_res = pd.DataFrame({"cor_stat": stat, "pval": pval})
+#     cor_res.index = genes
 
-    # compute adjusted pval using BH method
-    cor_res["adj_pval"] = bh(cor_res["pval"].to_numpy())
+#     # compute adjusted pval using BH method
+#     cor_res["adj_pval"] = bh(cor_res["pval"].to_numpy())
 
-    # sort genes based on adjusted pval
-    cor_res = cor_res.sort_values(by="adj_pval")
+#     # sort genes based on adjusted pval
+#     cor_res = cor_res.sort_values(by="adj_pval")
 
-    return cor_res
+#     return cor_res

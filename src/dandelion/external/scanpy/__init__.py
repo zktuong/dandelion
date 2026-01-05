@@ -60,7 +60,7 @@ def recipe_scanpy_qc(
     Raises
     ------
     ImportError
-        if `scrublet` not installed.
+        if scrublet not installed.
     """
     _adata = adata.copy()
     # run basic scanpy pipeline

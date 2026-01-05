@@ -56,7 +56,7 @@ addopts = "--cov src/dandelion --cov-report=xml -rP"
 testpaths = ["tests"]
 
 [tool.coverage.run]
-omit = ["containter/*", "src/dandelion/external/*"]
+omit = ["containter/*", "src/dandelion/external/*", "src/dandelion/tutorial/*"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.0"]
@@ -70,9 +70,9 @@ description = "sc-TCR/BCR-seq analysis tool"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "GNU Affero General Public License v3 or later (AGPLv3+)" }
 classifiers = [
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
 ]
 keywords = ["dandelion", "single-cell", "immune", "TCR", "BCR"]
@@ -98,6 +98,8 @@ dependencies = [
   "palettable<3.3.4",
   "mizani<0.13.2",
   "nxviz<0.7.7",
+  "zarr<3.1.6",
+  # "polars<1.36.2",
 ]
 
 [project.urls]
@@ -122,7 +124,8 @@ docs = [
 ]
 scirpy = ["scirpy<0.23.0", "awkward<2.8.11", "mudata<0.3.3"]
 scrubet = ["scrublet<0.2.4", "annoy<1.17.0"]
-palantir = ["palantir<1.4.3", "jax<0.8.2"]
+palantir = ["palantir<1.4.3", "jax<0.8.3"]
+dask = ["dask<2025.11.1", "distributed<2025.11.1", "psutil<6.1.2"]
 
 [tool.setuptools]
 include-package-data = true
