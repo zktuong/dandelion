@@ -2354,8 +2354,7 @@ def run_blastn(
             bdb = bdb / "database" / (db + "_" + org + "_" + loci + "_" + call)
     else:
         env, bdb, fasta = set_blast_env(blast_db=database, input_file=fasta)
-        # if database is None:
-        #     bdb = bdb / org / (org + "_BCR_C.fasta")
+        bdb = bdb / org / (org + "_BCR_C.fasta") if database is None else bdb
         # else:
         #     if not bdb.stem.endswith("_" + loci + "_" + call):
         #         bdb = (
