@@ -508,8 +508,7 @@ def project_pseudotime_to_cell(
     nhoodsum = np.sum(nhoods, axis=1)
     cdata = adata[nhoodsum > 0].copy()
     logg.info(
-        "number of cells removed due to not belonging to any neighbourhood",
-        sum(nhoodsum == 0),
+        f"number of cells removed due to not belonging to any neighbourhood: {sum(nhoodsum == 0),}",
     )  # print how many cells removed
     # also subset the pseudobulk_assignments
     pb_assign_trim = nhoods[nhoodsum > 0]
