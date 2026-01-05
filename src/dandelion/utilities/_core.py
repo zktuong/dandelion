@@ -164,8 +164,8 @@ class Dandelion:
             self.n_contigs = 0
             self.n_obs = 0
 
-        self._original_data_ids = self._data.index.copy()
-        self._original_metadata_ids = self._metadata.index.copy()
+        # self._original_data_ids = self._data.index.copy()
+        # self._original_metadata_ids = self._metadata.index.copy()
         self._original_sequence_ids = self._data["sequence_id"].copy()
         self._original_cell_ids = self._data["cell_id"].copy()
 
@@ -649,16 +649,16 @@ class Dandelion:
             **kwargs,
         )
 
-    def reset_ids(self) -> None:
-        """
-        Reset both IDs to their original values.
+    # def reset_ids(self) -> None:
+    #     """
+    #     Reset both IDs to their original values.
 
-        This method restores both sequence_id and cell_id in the .data and .metadata slots to their original state when the Dandelion class was initialized.
-        """
-        self._data.index = self._original_data_ids
-        self._metadata.index = self._original_metadata_ids
-        self._data["sequence_id"] = self._original_sequence_ids
-        self._data["cell_id"] = self._original_cell_ids
+    #     This method restores both sequence_id and cell_id in the .data and .metadata slots to their original state when the Dandelion class was initialized.
+    #     """
+    #     self._data.index = self._original_data_ids
+    #     self._metadata.index = self._original_metadata_ids
+    #     self._data["sequence_id"] = self._original_sequence_ids
+    #     self._data["cell_id"] = self._original_cell_ids
 
     def simplify(self, **kwargs) -> None:
         """Disambiguate VDJ and C gene calls when there's multiple calls separated by commas and strip the alleles."""
