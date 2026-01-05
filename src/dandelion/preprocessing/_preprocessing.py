@@ -3333,22 +3333,22 @@ class MarkAmbiguousContigs:
                                             vdj_ccall_p_igm_count = dict(
                                                 data1[
                                                     data1["c_call"] == "IGHM"
-                                                ]["umi_count"]
+                                                ]["umi_count"].astype(int)
                                             )
                                             vdj_ccall_c_igm_count = dict(
                                                 data1[
                                                     data1["c_call"] == "IGHM"
-                                                ]["consensus_count"]
+                                                ]["consensus_count"].astype(int)
                                             )
                                             vdj_ccall_p_igd_count = dict(
                                                 data1[
                                                     data1["c_call"] == "IGHD"
-                                                ]["umi_count"]
+                                                ]["umi_count"].astype(int)
                                             )
                                             vdj_ccall_c_igd_count = dict(
                                                 data1[
                                                     data1["c_call"] == "IGHD"
-                                                ]["consensus_count"]
+                                                ]["consensus_count"].astype(int)
                                             )
                                         else:
                                             (
@@ -3358,10 +3358,12 @@ class MarkAmbiguousContigs:
                                                 vdj_ccall_c_igd_count,
                                             ) = ({}, {}, {}, {})
                                             vdj_ccall_p_count = dict(
-                                                data1["umi_count"]
+                                                data1["umi_count"].astype(int)
                                             )
                                             vdj_ccall_c_count = dict(
-                                                data1["consensus_count"]
+                                                data1["consensus_count"].astype(
+                                                    int
+                                                )
                                             )
                                             if len(vdj_ccall_p_count) > 1:
                                                 (
@@ -3439,9 +3441,11 @@ class MarkAmbiguousContigs:
                                             ambiguous_igm + ambiguous_igd
                                         )
                                 else:
-                                    vdj_ccall_p_count = dict(data1["umi_count"])
+                                    vdj_ccall_p_count = dict(
+                                        data1["umi_count"].astype(int)
+                                    )
                                     vdj_ccall_c_count = dict(
-                                        data1["consensus_count"]
+                                        data1["consensus_count"].astype(int)
                                     )
                                     if len(vdj_ccall_p_count) > 1:
                                         (
@@ -3466,22 +3470,22 @@ class MarkAmbiguousContigs:
                                     vdj_locus_p_trb_count = dict(
                                         data1[data1["locus"] == "TRB"][
                                             "umi_count"
-                                        ]
+                                        ].astype(int)
                                     )
                                     vdj_locus_p_trd_count = dict(
                                         data1[data1["locus"] == "TRD"][
                                             "umi_count"
-                                        ]
+                                        ].astype(int)
                                     )
                                     vdj_locus_c_trb_count = dict(
                                         data1[data1["locus"] == "TRB"][
                                             "consensus_count"
-                                        ]
+                                        ].astype(int)
                                     )
                                     vdj_locus_c_trd_count = dict(
                                         data1[data1["locus"] == "TRD"][
                                             "consensus_count"
-                                        ]
+                                        ].astype(int)
                                     )
                                     if len(vdj_locus_p_trb_count) > 1:
                                         (
@@ -3527,9 +3531,11 @@ class MarkAmbiguousContigs:
                                         ambiguous_trb + ambiguous_trd
                                     )
                                 else:
-                                    vdj_ccall_p_count = dict(data1["umi_count"])
+                                    vdj_ccall_p_count = dict(
+                                        data1["umi_count"].astype(int)
+                                    )
                                     vdj_ccall_c_count = dict(
-                                        data1["consensus_count"]
+                                        data1["consensus_count"].astype(int)
                                     )
                                     if len(vdj_ccall_p_count) > 1:
                                         (
@@ -3550,9 +3556,11 @@ class MarkAmbiguousContigs:
                                             [],
                                         )
                             else:
-                                vdj_ccall_p_count = dict(data1["umi_count"])
+                                vdj_ccall_p_count = dict(
+                                    data1["umi_count"].astype(int)
+                                )
                                 vdj_ccall_c_count = dict(
-                                    data1["consensus_count"]
+                                    data1["consensus_count"].astype(int)
                                 )
                                 if len(vdj_ccall_p_count) > 1:
                                     (
@@ -3567,8 +3575,12 @@ class MarkAmbiguousContigs:
                                         ntop=ntop_vdj,
                                     )
                         else:
-                            vdj_ccall_p_count = dict(data1["umi_count"])
-                            vdj_ccall_c_count = dict(data1["consensus_count"])
+                            vdj_ccall_p_count = dict(
+                                data1["umi_count"].astype(int)
+                            )
+                            vdj_ccall_c_count = dict(
+                                data1["consensus_count"].astype(int)
+                            )
                             if len(vdj_ccall_p_count) > 1:
                                 (
                                     vdj_p,
@@ -3621,8 +3633,12 @@ class MarkAmbiguousContigs:
                             for avdj in ambi_cont_vdjnp:
                                 self.ambiguous_contigs.append(avdj)
                     if len(vdj_np) > 1:
-                        vdj_ccall_np_count = dict(data2["umi_count"])
-                        vdj_ccall_c_count = dict(data2["consensus_count"])
+                        vdj_ccall_np_count = dict(
+                            data2["umi_count"].astype(int)
+                        )
+                        vdj_ccall_c_count = dict(
+                            data2["consensus_count"].astype(int)
+                        )
                         if len(vdj_ccall_np_count) > 1:
                             vdj_np, extra_vdjnp, ambiguous_vdjnp = (
                                 check_productive_chain(
@@ -3670,8 +3686,10 @@ class MarkAmbiguousContigs:
                             for avj in ambi_cont_vj:
                                 self.ambiguous_contigs.append(avj)
                     if len(vj_p) > 1:
-                        vj_ccall_p_count = dict(data3["umi_count"])
-                        vj_ccall_c_count = dict(data3["consensus_count"])
+                        vj_ccall_p_count = dict(data3["umi_count"].astype(int))
+                        vj_ccall_c_count = dict(
+                            data3["consensus_count"].astype(int)
+                        )
                         vj_p, extra_vj, ambiguous_vj = check_productive_chain(
                             umi_counts=vj_ccall_p_count,
                             consensus_counts=vj_ccall_c_count,
@@ -3718,8 +3736,10 @@ class MarkAmbiguousContigs:
                             for avj in ambi_cont_vjnp:
                                 self.ambiguous_contigs.append(avj)
                     if len(vj_np) > 1:
-                        vj_ccall_np_count = dict(data4["umi_count"])
-                        vj_ccall_c_count = dict(data4["consensus_count"])
+                        vj_ccall_np_count = dict(data4["umi_count"].astype(int))
+                        vj_ccall_c_count = dict(
+                            data4["consensus_count"].astype(int)
+                        )
                         if len(vj_ccall_np_count) > 1:
                             vj_np, extra_vjnp, ambiguous_vjnp = (
                                 check_productive_chain(
@@ -4213,7 +4233,9 @@ def check_update_same_seq(
                 k: r for k, r in dict(data[sequencecol]).items() if present(r)
             }
             _count = {
-                k: r for k, r in dict(data.umi_count).items() if k in _seq
+                k: r
+                for k, r in dict(data.umi_count.astype(int)).items()
+                if k in _seq
             }
             rep_seq = [
                 seq
