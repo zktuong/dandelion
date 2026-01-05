@@ -100,7 +100,7 @@ dependencies = [
   "mizani<0.13.2",
   "nxviz<0.7.7",
   "zarr<3.1.6",
-  "polars<1.36.2",
+  # "polars<1.36.2",
 ]
 
 [project.urls]
