@@ -96,7 +96,7 @@ def find_clones(
     start = logg.info("Finding clonotypes")
     pd.set_option("mode.chained_assignment", None)
     if isinstance(vdj_data, Dandelion):
-        dat_ = load_data(vdj_data.data)
+        dat_ = load_data(vdj_data._data)
     else:
         dat_ = load_data(vdj_data)
 
@@ -235,7 +235,7 @@ def find_clones(
     if verbose:
         logg.info("Initialising Dandelion object")
     if isinstance(vdj_data, Dandelion):
-        vdj_data.data[str(clone_key)] = dat_[str(clone_key)]
+        vdj_data._data[str(clone_key)] = dat_[str(clone_key)]
         vdj_data.update_metadata(clone_key=str(clone_key))
         logg.info(
             " finished",
@@ -322,15 +322,16 @@ def transfer(
     # we just associate recipient to adata directly
     else:
         recipient = adata
-
+    # if dandelion._backend == "polars":
+    # dandelion.to_pandas()
     # --- 1) metadata -> adata.obs (preserve original overwrite semantics) ---
     if obs:
-        for x in dandelion.metadata.columns:
+        for x in dandelion._metadata.columns:
             if x not in recipient.obs.columns:
-                recipient.obs[x] = pd.Series(dandelion.metadata[x])
+                recipient.obs[x] = pd.Series(dandelion._metadata[x])
             elif overwrite is True:
-                recipient.obs[x] = pd.Series(dandelion.metadata[x])
-            if type_check(dandelion.metadata, x):
+                recipient.obs[x] = pd.Series(dandelion._metadata[x])
+            if type_check(dandelion._metadata, x):
                 recipient.obs[x] = recipient.obs[x].replace(np.nan, "No_contig")
             if recipient.obs[x].dtype == "bool":
                 recipient.obs[x] = recipient.obs[x].astype(str)
@@ -340,16 +341,16 @@ def transfer(
             if not isinstance(overwrite, list):
                 overwrite = [overwrite]
             for ow in overwrite:
-                recipient.obs[ow] = pd.Series(dandelion.metadata[ow])
-                if type_check(dandelion.metadata, ow):
+                recipient.obs[ow] = pd.Series(dandelion._metadata[ow])
+                if type_check(dandelion._metadata, ow):
                     recipient.obs[ow] = recipient.obs[ow].replace(
                         np.nan, "No_contig"
                     )
 
     # also check that all the cells in dandelion are in recipient
-    common_cells = recipient.obs_names.intersection(dandelion.metadata.index)
+    common_cells = recipient.obs_names.intersection(dandelion._metadata.index)
     # subset to common cells only
-    dandelion = dandelion[dandelion.metadata.index.isin(common_cells)].copy()
+    dandelion = dandelion[dandelion._metadata.index.isin(common_cells)].copy()
 
     # If there's no graph, we're done with metadata only
     if dandelion.graph is None:
@@ -803,7 +804,7 @@ def define_clones(
     clone_key = key_added if key_added is not None else "clone_id"
 
     if isinstance(vdj_data, Dandelion):
-        dat_ = load_data(vdj_data.data)
+        dat_ = load_data(vdj_data._data)
     else:
         dat_ = load_data(vdj_data)
     if "ambiguous" in dat_:
@@ -1097,7 +1098,7 @@ def define_clones(
     dat_[str(clone_key)] = pd.Series(cloned_["clone_id"])
     dat_[str(clone_key)] = dat_[str(clone_key)].fillna("")
     if isinstance(vdj_data, Dandelion):
-        vdj_data.data[str(clone_key)] = dat_[str(clone_key)]
+        vdj_data._data[str(clone_key)] = dat_[str(clone_key)]
         vdj_data.update_metadata(clone_key=str(clone_key))
     else:
         out = Dandelion(
@@ -1187,7 +1188,7 @@ def clone_size(
     elif isinstance(vdj_data, AnnData):
         metadata_ = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
-        metadata_ = vdj_data.metadata.copy()
+        metadata_ = vdj_data._metadata.copy()
 
     clone_key = "clone_id" if clone_key is None else clone_key
     if clone_key not in metadata_.columns:
@@ -1327,15 +1328,15 @@ def clone_size(
     col_key = key_added if key_added is not None else clone_key
 
     if isinstance(vdj_data, Dandelion):
-        vdj_data.metadata[f"{col_key}_size"] = metadata_[f"{clone_key}_size"]
-        vdj_data.metadata[f"{col_key}_size_prop"] = metadata_[
+        vdj_data._metadata[f"{col_key}_size"] = metadata_[f"{clone_key}_size"]
+        vdj_data._metadata[f"{col_key}_size_prop"] = metadata_[
             f"{clone_key}_size_prop"
         ]
-        vdj_data.metadata[f"{col_key}_size_category"] = metadata_[
+        vdj_data._metadata[f"{col_key}_size_category"] = metadata_[
             f"{clone_key}_size_category"
         ]
         if max_size is not None:
-            vdj_data.metadata[f"{col_key}_size_max_{max_size}"] = metadata_[
+            vdj_data._metadata[f"{col_key}_size_max_{max_size}"] = metadata_[
                 f"{clone_key}_size_max_{max_size}"
             ]
     elif isinstance(vdj_data, AnnData):
@@ -1402,7 +1403,7 @@ def clone_overlap(
     """
     start = logg.info("Calculating clone overlap")
     if isinstance(vdj_data, Dandelion):
-        data = vdj_data.metadata.copy()
+        data = vdj_data._metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
     elif isinstance(vdj_data, MuData):
@@ -1573,20 +1574,20 @@ def productive_ratio(
         One of the accepted locuses to perform the tabulation
     """
     start = logg.info("Tabulating productive ratio")
-    vdjx = vdj[(vdj.data.cell_id.isin(adata.obs_names))].copy()
-    if "ambiguous" in vdjx.data:
+    vdjx = vdj[(vdj._data.cell_id.isin(adata.obs_names))].copy()
+    if "ambiguous" in vdjx._data:
         tmp = vdjx[
-            (vdjx.data.locus == locus) & (vdjx.data.ambiguous == "F")
+            (vdjx._data.locus == locus) & (vdjx._data.ambiguous == "F")
         ].copy()
     else:
-        tmp = vdjx[(vdjx.data.locus == locus)].copy()
+        tmp = vdjx[(vdjx._data.locus == locus)].copy()
 
     if groups is None:
         if is_categorical(adata.obs[groupby]):
             groups = list(adata.obs[groupby].cat.categories)
         else:
             groups = list(set(adata.obs[groupby]))
-    df = tmp.data.drop_duplicates(subset="cell_id")
+    df = tmp._data.drop_duplicates(subset="cell_id")
     dict_df = dict(zip(df.cell_id, df.productive))
     res = pd.DataFrame(
         columns=["productive", "non-productive", "total"],
@@ -2190,10 +2191,10 @@ def vdj_sample(
     """
     logg.info("Resampling to {} cells.".format(str(size)))
     if gex_data is None:
-        replace = True if size > vdj_data.metadata.shape[0] else False
+        replace = True if size > vdj_data._metadata.shape[0] else False
         if force_replace:
             replace = True
-        keep_cells = vdj_data.metadata.sample(
+        keep_cells = vdj_data._metadata.sample(
             size, replace=replace, random_state=random_state, weights=p
         )
         keep_cells = list(keep_cells.index)
@@ -2205,11 +2206,11 @@ def vdj_sample(
             adata = gex_data.copy()
         # ensure only cells present in both vdj_data and adata are sampled
         common_cells = list(
-            set(vdj_data.metadata.index).intersection(set(adata.obs_names))
+            set(vdj_data._metadata.index).intersection(set(adata.obs_names))
         )
         adata = adata[adata.obs_names.isin(common_cells)].copy()
-        vdj_data = vdj_data[vdj_data.metadata_names.isin(common_cells)].copy()
-        replace = True if size > vdj_data.metadata.shape[0] else False
+        vdj_data = vdj_data[vdj_data._metadata.index.isin(common_cells)].copy()
+        replace = True if size > vdj_data._metadata.shape[0] else False
         if force_replace:
             replace = True
         # use scanpy to sample
@@ -2217,10 +2218,12 @@ def vdj_sample(
         keep_cells = list(adata.obs_names)
 
     # get the .data without ambiguous assignments
-    if "ambiguous" in vdj_data.data:
-        vdj_dat = vdj_data.data[vdj_data.data["ambiguous"].isin(FALSES)].copy()
+    if "ambiguous" in vdj_data._data:
+        vdj_dat = vdj_data._data[
+            vdj_data._data["ambiguous"].isin(FALSES)
+        ].copy()
     else:
-        vdj_dat = vdj_data.data.copy()
+        vdj_dat = vdj_data._data.copy()
 
     vdj_dat = vdj_dat[vdj_dat["cell_id"].isin(keep_cells)].copy()
 
@@ -2325,8 +2328,8 @@ def to_scirpy(
     else:
         tmp_gex = None
 
-    if "umi_count" not in vdj.data and "duplicate_count" in vdj.data:
-        vdj.data["umi_count"] = vdj.data["duplicate_count"]
+    if "umi_count" not in vdj._data and "duplicate_count" in vdj._data:
+        vdj._data["umi_count"] = vdj._data["duplicate_count"]
     for h in [
         "sequence",
         "rev_comp",
@@ -2336,10 +2339,10 @@ def to_scirpy(
         "d_cigar",
         "j_cigar",
     ]:
-        if h not in vdj.data:
-            vdj.data[h] = None
+        if h not in vdj._data:
+            vdj._data[h] = None
 
-    airr, obs = to_ak(vdj.data, **kwargs)
+    airr, obs = to_ak(vdj._data, **kwargs)
     if to_mudata:
         airr_adata = _create_anndata(airr, obs)
         if tmp_gex is not None:
@@ -2411,8 +2414,8 @@ def _reverse_transfer(
 
     # --- Copy metadata ---
     for col in adata.obs:
-        if col not in dandelion.metadata.columns:
-            dandelion.metadata[col] = adata.obs[col]
+        if col not in dandelion._metadata.columns:
+            dandelion._metadata[col] = adata.obs[col]
 
     # --- Extract clone-level connection info ---
     if clone_key in adata.uns:
@@ -2769,9 +2772,11 @@ def concat(
     # first, obtain all the metadata column names
     all_meta_cols = set()
     for vdj_ in vdjs_:
-        all_meta_cols.update(set(vdj_.metadata.columns))
+        all_meta_cols.update(set(vdj_._metadata.columns))
 
-    genotyped_v_call = [True for vdj in vdjs_ if "v_call_genotyped" in vdj.data]
+    genotyped_v_call = [
+        True for vdj in vdjs_ if "v_call_genotyped" in vdj._data
+    ]
     if len(genotyped_v_call) > 0:
         if len(genotyped_v_call) != len(vdjs_):
             if verbose:
@@ -2780,13 +2785,15 @@ def concat(
                     "For consistency, 'v_call_genotyped' will be used where available. Filling missing values from 'v_call'."
                 )
             for i in range(0, len(vdjs_)):
-                if "v_call_genotyped" not in vdjs_[i].data:
-                    vdjs_[i].data["v_call_genotyped"] = vdjs_[i].data["v_call"]
+                if "v_call_genotyped" not in vdjs_[i]._data:
+                    vdjs_[i]._data["v_call_genotyped"] = vdjs_[i]._data[
+                        "v_call"
+                    ]
 
-    arrays_ = [vdj.data for vdj in vdjs_]
+    arrays_ = [vdj._data for vdj in vdjs_]
     vdj_concat = Dandelion(pd.concat(arrays_), verbose=False)
     # find out if there are missing metadata in the initialised vdj_concat.metadata
-    vdj_meta_cols = set(vdj_concat.metadata.columns)
+    vdj_meta_cols = set(vdj_concat._metadata.columns)
     # find out what are the missing columns from all_meta_cols
     missing_meta_cols = all_meta_cols - vdj_meta_cols
     if len(missing_meta_cols) > 0:
@@ -2794,24 +2801,24 @@ def concat(
         # now, for each missing column, we need to fill in the values from the original vdjs_ using .at to avoid alignment issues
         for col in missing_meta_cols:
             # create an empty series with None first - sanitisation later will take care of the dtypes
-            vdj_concat.metadata[col] = pd.Series(
-                [None] * vdj_concat.metadata.shape[0],
-                index=vdj_concat.metadata.index,
+            vdj_concat._metadata[col] = pd.Series(
+                [None] * vdj_concat._metadata.shape[0],
+                index=vdj_concat._metadata.index,
             )
             for vdj_ in vdjs_:
-                for idx in vdj_.metadata.index:
-                    if idx in vdj_concat.metadata.index:
-                        if col in vdj_.metadata.columns:
-                            vdj_concat.metadata.at[idx, col] = vdj_.metadata.at[
-                                idx, col
-                            ]
-    # now check the dtype of each of the vdj_concat.metadata columns. if it's object, change pd.null to ""
-    for col in vdj_concat.metadata:
-        if vdj_concat.metadata[col].dtype == object:
-            vdj_concat.metadata[col] = sanitize_column(
-                vdj_concat.metadata[col], "string"
+                for idx in vdj_._metadata.index:
+                    if idx in vdj_concat._metadata.index:
+                        if col in vdj_._metadata.columns:
+                            vdj_concat._metadata.at[idx, col] = (
+                                vdj_._metadata.at[idx, col]
+                            )
+    # now check the dtype of each of the vdj_concat._metadata columns. if it's object, change pd.null to ""
+    for col in vdj_concat._metadata:
+        if vdj_concat._metadata[col].dtype == object:
+            vdj_concat._metadata[col] = sanitize_column(
+                vdj_concat._metadata[col], "string"
             )
     # finally, reorder the metadata and data according to the original order
-    vdj_concat.metadata = vdj_concat.metadata.loc[metadata_index_order]
+    vdj_concat._metadata = vdj_concat._metadata.loc[metadata_index_order]
 
     return vdj_concat

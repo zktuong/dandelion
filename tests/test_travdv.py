@@ -16,8 +16,8 @@ def test_loadtravdv(airr_travdv):
 def test_loadtravdv2(airr_travdv):
     """test_loadtravdv2"""
     vdj = ddl.Dandelion(airr_travdv)
-    assert vdj.data.shape[0] == 6
-    assert all([i == "TRD" for i in vdj.data["locus"]])
+    assert vdj._data.shape[0] == 6
+    assert all([i == "TRD" for i in vdj._data["locus"]])
 
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_travdv")
@@ -63,7 +63,7 @@ def test_loadtravdv_reannotated(create_testfolder):
     vdj = ddl.Dandelion(
         create_testfolder / "dandelion" / "filtered_contig_dandelion.tsv"
     )
-    assert len([i for i in vdj.data["locus"] if i == "TRD"]) == 0
+    assert len([i for i in vdj._data["locus"] if i == "TRD"]) == 0
 
 
 @pytest.mark.usefixtures("create_testfolder", "dummy_adata_travdv")
@@ -72,6 +72,6 @@ def test_travdv_filter(create_testfolder, dummy_adata_travdv):
     vdj = ddl.Dandelion(
         create_testfolder / "dandelion" / "filtered_contig_dandelion.tsv"
     )
-    assert len([i for i in vdj.data["locus"] if i == "TRD"]) == 0
+    assert len([i for i in vdj._data["locus"] if i == "TRD"]) == 0
     vdj2, adata = ddl.pp.check_contigs(vdj, dummy_adata_travdv)
-    assert vdj2.data.shape[0] > 0
+    assert vdj2._data.shape[0] > 0

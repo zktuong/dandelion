@@ -117,7 +117,7 @@ def barplot(
 
     """
     if isinstance(vdj_data, Dandelion):
-        data = vdj_data.metadata.copy()
+        data = vdj_data._metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
 
@@ -232,7 +232,7 @@ def stackedbarplot(
         stacked barplot.
     """
     if isinstance(vdj_data, Dandelion):
-        data = vdj_data.metadata.copy()
+        data = vdj_data._metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
     # quick fix to prevent dropping of nan
@@ -463,8 +463,8 @@ def spectratype(
     tuple[Figure, Axes]
         spectratype plot.
     """
-    data = vdj_data.data.copy()
-    if "ambiguous" in vdj_data.data:
+    data = vdj_data._data.copy()
+    if "ambiguous" in data:
         data = data[data["ambiguous"] == "F"].copy()
 
     if type(locus) is not list:

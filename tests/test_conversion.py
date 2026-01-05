@@ -25,10 +25,10 @@ def test_setup(
     vdj2 = ddl.pp.check_contigs(airr_reannotated2)
     assert airr_reannotated.shape[0] == 8
     assert airr_reannotated2.shape[0] == 15
-    assert vdj.data.shape[0] == 8
-    assert vdj2.data.shape[0] == 14
-    assert vdj.metadata.shape[0] == 5
-    assert vdj2.metadata.shape[0] == 8
+    assert vdj._data.shape[0] == 8
+    assert vdj2._data.shape[0] == 14
+    assert vdj._metadata.shape[0] == 5
+    assert vdj2._metadata.shape[0] == 8
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test2.h5ddl"

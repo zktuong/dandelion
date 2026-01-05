@@ -209,8 +209,8 @@ class DandelionPolars:
                 self._metadata_name_col
             ].clone()
         elif isinstance(self._data, pd.DataFrame):
-            self._original_sequence_ids = self.data[self._data_name_col].copy()
-            self._original_cell_ids = self.data[self._metadata_name_col].copy()
+            self._original_sequence_ids = self._data[self._data_name_col].copy()
+            self._original_cell_ids = self._data[self._metadata_name_col].copy()
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
         """Report."""
@@ -693,7 +693,7 @@ class DandelionPolars:
                     )
                 )
         self._data = load_polars(self._data)
-        if self._metadata is not None:
+        if self.metadata is not None:
             self.update_metadata(**kwargs)
 
     def _clean_sequence_id(
@@ -901,7 +901,7 @@ class DandelionPolars:
         is_pandas = isinstance(self._data, pd.DataFrame)
         # strip alleles from VDJ and constant gene calls
         for col in ["v_call", "v_call_genotyped", "d_call", "j_call", "c_call"]:
-            if col in self.data:
+            if col in self._data:
                 if is_pandas:
                     self._data[col] = self._data[col].str.replace(
                         r"\*.*", "", regex=True
@@ -2373,7 +2373,7 @@ class DandelionPolars:
                 **save_args,
             )
         if self.metadata is not None:
-            metadata = self.metadata.copy()
+            metadata = self._metadata.copy()
             metadata, metadata_dtypes = sanitize_data_for_saving(metadata)
             # Convert the DataFrame to a NumPy structured array
             structured_metadata_array = np.array(
@@ -2533,11 +2533,11 @@ class DandelionPolars:
             "raw_clonotype_id": clone_key,
             "raw_consensus_id": clone_key,
         }
-        if "complete_vdj" not in self.data.columns:
+        if "complete_vdj" not in self._data.columns:
             column_map.pop("full_length")
-        if "is_cell_10x" not in self.data.columns:
+        if "is_cell_10x" not in self._data.columns:
             column_map.pop("is_cell")
-        if "high_confidence_10x" not in self.data.columns:
+        if "high_confidence_10x" not in self._data.columns:
             column_map.pop("high_confidence")
         anno = []
         bool_map = {
@@ -2548,7 +2548,7 @@ class DandelionPolars:
             "TRUE": "True",
             "FALSE": "False",
         }
-        for _, r in self.data.iterrows():
+        for _, r in self._data.iterrows():
             info = []
             for v in column_map.values():
                 if v in r.index:

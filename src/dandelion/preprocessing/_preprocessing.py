@@ -1,4 +1,5 @@
 import os
+import json
 import re
 import shutil
 import tempfile
@@ -7,6 +8,8 @@ import warnings
 import anndata as ad
 import numpy as np
 import pandas as pd
+
+# import polars as pl
 
 from anndata import AnnData
 from Bio import Align
@@ -50,6 +53,14 @@ from dandelion.utilities._core import (
     write_fasta,
     check_travdv,
 )
+
+# from dandelion.utilities._polars import (
+# DandelionPolars,
+# load_polars,
+# _check_travdv_polars,
+# _sanitize_data_polars,
+# _write_airr,
+# )
 from dandelion.utilities._io import (
     fasta_iterator,
     read_10x_vdj,
@@ -68,6 +79,7 @@ from dandelion.utilities._utilities import (
     present,
     all_missing,
     sanitize_data,
+    sanitize_column,
     lib_type,
     set_igblast_env,
     set_blast_env,
@@ -624,7 +636,7 @@ def assign_isotype(
     logg.info("Loading 10X annotations \n")
     if _10xfile is not None:
         dat_10x = read_10x_vdj(_10xfile)
-        res_10x = pd.DataFrame(dat_10x.data["c_call"].replace("", "None"))
+        res_10x = pd.DataFrame(dat_10x._data["c_call"].replace("", "None"))
     else:  # pragma: no cover
         res_10x = pd.DataFrame(dat["c_call"])
         res_10x["c_call"] = "None"
@@ -1157,7 +1169,7 @@ def ensure_columns_transferred(
         if dat_10x is not None:
             for col in ["consensus_count", "umi_count"]:
                 if all_missing(db_pass[col]):
-                    db_pass[col] = pd.Series(dat_10x.data[col])
+                    db_pass[col] = pd.Series(dat_10x._data[col])
         db_pass = sanitize_data(db_pass)
         db_pass.to_csv(passfile, sep="\t", index=False)
     if db_fail is not None:
@@ -1169,7 +1181,7 @@ def ensure_columns_transferred(
         if dat_10x is not None:
             for col in ["consensus_count", "umi_count"]:
                 if all_missing(db_fail[col]):
-                    db_fail[col] = pd.Series(dat_10x.data[col])
+                    db_fail[col] = pd.Series(dat_10x._data[col])
         db_fail = sanitize_data(db_fail)
         db_fail.to_csv(failfile, sep="\t", index=False)
 
@@ -1809,6 +1821,7 @@ def reassign_alleles(
 
 def create_germlines(
     vdj_data: Dandelion | pd.DataFrame | str,
+    # vdj_data: DandelionPolars | pd.DataFrame | str,
     germline: str | None = None,
     org: Literal["human", "mouse"] = "human",
     db: Literal["imgt", "ogrdb"] = "imgt",
@@ -1843,6 +1856,7 @@ def create_germlines(
     additional_args: list[str] = [],
     save: str | None = None,
 ) -> Dandelion:
+    # ) -> DandelionPolars:
     """
     Run CreateGermlines.py to reconstruct the germline V(D)J sequence.
 
@@ -1874,12 +1888,14 @@ def create_germlines(
     """
     start = logg.info("Reconstructing germline sequences")
     if not isinstance(vdj_data, Dandelion):
+        # if not isinstance(vdj_data, DandelionPolars):
         tmpfile = (
             Path(vdj_data)
             if os.path.isfile(vdj_data)
             else Path(tempfile.TemporaryDirectory().name) / "tmp.tsv"
         )
         if isinstance(vdj_data, pd.DataFrame):
+            # _write_airr(data=vdj_data.germline, save=tmpfile)
             write_airr(data=vdj_data.germline, save=tmpfile)
         creategermlines(
             airr_file=tmpfile,
@@ -1919,9 +1935,10 @@ def create_germlines(
     # return as Dandelion object
     germpass_outfile = tmpfile.parent / (tmpfile.stem + "_germ-pass.tsv")
     if isinstance(vdj_data, Dandelion):
+        # if isinstance(vdj_data, DandelionPolars):
         vdj_data.__init__(
             data=germpass_outfile,
-            metadata=vdj_data.metadata,
+            metadata=vdj_data._metadata,
             germline=vdj_data.germline,
             layout=vdj_data.layout,
             graph=vdj_data.graph,
@@ -1930,6 +1947,7 @@ def create_germlines(
         out_vdj = vdj_data.copy()
     else:
         out_vdj = Dandelion(germpass_outfile, verbose=False)
+        # out_vdj = DandelionPolars(germpass_outfile, verbose=False)
         out_vdj.store_germline_reference(
             corrected=genotyped_fasta, germline=germline, org=org
         )
@@ -2224,7 +2242,6 @@ def assign_DJ(
         blast_result=blast_out.drop_duplicates(
             subset="sequence_id", keep="first"
         ),
-        eval_threshold=evalue,
         call=call,
         overwrite=overwrite,
     )
@@ -2337,15 +2354,15 @@ def run_blastn(
             bdb = bdb / "database" / (db + "_" + org + "_" + loci + "_" + call)
     else:
         env, bdb, fasta = set_blast_env(blast_db=database, input_file=fasta)
-        if database is None:
-            bdb = bdb / org / (org + "_BCR_C.fasta")
-        else:
-            if not bdb.stem.endswith("_" + loci + "_" + call):
-                bdb = (
-                    bdb
-                    / "database"
-                    / (db + "_" + org + "_" + loci + "_" + call)
-                )
+        # if database is None:
+        #     bdb = bdb / org / (org + "_BCR_C.fasta")
+        # else:
+        #     if not bdb.stem.endswith("_" + loci + "_" + call):
+        #         bdb = (
+        #             bdb
+        #             / "database"
+        #             / (db + "_" + org + "_" + loci + "_" + call)
+        #         )
     cmd = [
         "blastn",
         "-db",
@@ -2414,7 +2431,6 @@ def transfer_assignment(
     passfile: str,
     failfile: str,
     blast_result: pd.DataFrame,
-    eval_threshold: float,
     call: Literal["v", "d", "j", "c"] = "c",
     overwrite: bool = False,
 ):
@@ -2428,8 +2444,6 @@ def transfer_assignment(
         path to db-fail.tsv file.
     blast_result : pd.DataFrame
         path to blastn results file.
-    eval_threshold : float
-        e-value threshold to filter.
     call : Literal["v", "d", "j", "c"], optional
         which gene call.
     overwrite : bool, optional
@@ -2962,6 +2976,7 @@ def transfer_assignment(
 
 def check_contigs(
     data: Dandelion | pd.DataFrame | str,
+    # data: DandelionPolars | pd.DataFrame | str,
     adata: AnnData | None = None,
     productive_only: bool = True,
     library_type: Literal["ig", "tr-ab", "tr-gd"] | None = None,
@@ -2977,6 +2992,7 @@ def check_contigs(
     verbose: bool = True,
     **kwargs,
 ) -> tuple[Dandelion, AnnData]:
+    # ) -> tuple[DandelionPolars, AnnData]:
     """
     Check contigs for whether they can be considered as ambiguous or not.
 
@@ -3057,9 +3073,12 @@ def check_contigs(
     """
     start = logg.info("Filtering contigs")
     if isinstance(data, Dandelion):
-        dat_ = load_data(data.data)
+        dat_ = load_data(data._data)
+    # if isinstance(data, DandelionPolars):
+    # dat_ = load_polars(data._data, as_pandas=True)
     else:
         dat_ = load_data(data)
+        # dat_ = load_polars(data, as_pandas=True)
     # ensure that "unknown" are switched to blanks
     dat_.replace("unknown", "", inplace=True)
 
@@ -3067,6 +3086,7 @@ def check_contigs(
         acceptable = lib_type(library_type)
     else:
         if isinstance(data, Dandelion):
+            # if isinstance(data, DandelionPolars):
             if data.library_type is not None:
                 acceptable = lib_type(data.library_type)
             else:
@@ -3144,7 +3164,8 @@ def check_contigs(
     else:
         if save is not None:
             if save.endswith(".tsv"):
-                write_airr(dat, str(save))
+                # _write_airr(dat, str(save))
+                write_airr(dat, save)
             else:
                 raise ValueError(
                     "{} not suitable. Please provide a file name that ends with .tsv".format(
@@ -3168,7 +3189,9 @@ def check_contigs(
 
     logg.info("Initializing Dandelion object")
     out_dat = Dandelion(data=dat, verbose=False, **kwargs)
+    # out_dat = DandelionPolars(data=dat, verbose=False, **kwargs)
     if isinstance(data, Dandelion):
+        # if isinstance(data, DandelionPolars):
         out_dat.germline = data.germline
     if adata_provided:
         transfer(adata_, out_dat)
@@ -4335,17 +4358,15 @@ def multimapper(filename: str) -> pd.DataFrame:
 
         return pd.Series(
             {
-                "multimappers": ";".join(group["j_call"]),
+                "multimappers": json.dumps(list(group["j_call"])),
                 "multiplicity": group.shape[0],
-                "sequence_start_multimappers": ";".join(
-                    group["j_sequence_start"].astype(str)
+                "sequence_start_multimappers": json.dumps(
+                    list(group["j_sequence_start"])
                 ),
-                "sequence_end_multimappers": ";".join(
-                    group["j_sequence_end"].astype(str)
+                "sequence_end_multimappers": json.dumps(
+                    list(group["j_sequence_end"])
                 ),
-                "support_multimappers": ";".join(
-                    group["j_support"].astype(str)
-                ),
+                "support_multimappers": json.dumps(list(group["j_support"])),
             }
         )
 
@@ -4353,6 +4374,8 @@ def multimapper(filename: str) -> pd.DataFrame:
     mapped = df_new.groupby("sequence_id").apply(process_group).reset_index()
     # Set the index explicitly
     mapped.set_index("sequence_id", drop=True, inplace=True)
+    # change multiplicity to integer
+    mapped["multiplicity"] = mapped["multiplicity"].astype("Int64")
     mapped = mapped.reindex(tmp.index)
 
     return mapped
@@ -4423,11 +4446,13 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                 dbpass = load_data(filePath1)
                 for col in jmm_transfer_cols:
                     update_j_col_df(dbpass, jmulti, col)
+                # _write_airr(dbpass, filePath1)
                 write_airr(dbpass, filePath1)
             if filePath1g is not None:
                 dbpassg = load_data(filePath1g)
                 for col in jmm_transfer_cols:
                     update_j_col_df(dbpassg, jmulti, col)
+                # _write_airr(dbpassg, filePath1g)
                 write_airr(dbpassg, filePath1g)
             if filePath2 is not None:
                 dbfail = load_data(filePath2)
@@ -4435,18 +4460,18 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                     update_j_col_df(dbfail, jmulti, col)
                 for i in dbfail.index:
                     if not present(dbfail.loc[i, "v_call"]):
-                        jmmappers = dbfail.at[i, "j_call_multimappers"].split(
-                            ";"
+                        jmmappers = safe_json_load(
+                            dbfail.at[i, "j_call_multimappers"]
                         )
-                        jmmappersstart = dbfail.at[
-                            i, "j_call_sequence_start_multimappers"
-                        ].split(";")
-                        jmmappersend = dbfail.at[
-                            i, "j_call_sequence_end_multimappers"
-                        ].split(";")
-                        jmmapperssupport = dbfail.at[
-                            i, "j_call_support_multimappers"
-                        ].split(";")
+                        jmmappersstart = safe_json_load(
+                            dbfail.at[i, "j_call_sequence_start_multimappers"]
+                        )
+                        jmmappersend = safe_json_load(
+                            dbfail.at[i, "j_call_sequence_end_multimappers"]
+                        )
+                        jmmapperssupport = safe_json_load(
+                            dbfail.at[i, "j_call_support_multimappers"]
+                        )
                         if len(jmmappers) > 1:
                             dbfail.at[i, "j_call"] = jmmappers[0]
                             dbfail.at[i, "j_sequence_start"] = float(
@@ -4458,6 +4483,7 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                             dbfail.at[i, "j_support"] = float(
                                 jmmapperssupport[0]
                             )
+                # _write_airr(dbfail, filePath2)
                 write_airr(dbfail, filePath2)
             if filePath3 is not None:
                 dball = load_data(filePath3)
@@ -4465,18 +4491,18 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                     update_j_col_df(dball, jmulti, col)
                 for i in dball.index:
                     if not present(dball.loc[i, "v_call"]):
-                        jmmappers = dball.at[i, "j_call_multimappers"].split(
-                            ";"
+                        jmmappers = safe_json_load(
+                            dball.at[i, "j_call_multimappers"]
                         )
-                        jmmappersstart = dball.at[
-                            i, "j_call_sequence_start_multimappers"
-                        ].split(";")
-                        jmmappersend = dball.at[
-                            i, "j_call_sequence_end_multimappers"
-                        ].split(";")
-                        jmmapperssupport = dball.at[
-                            i, "j_call_support_multimappers"
-                        ].split(";")
+                        jmmappersstart = safe_json_load(
+                            dball.at[i, "j_call_sequence_start_multimappers"]
+                        )
+                        jmmappersend = safe_json_load(
+                            dball.at[i, "j_call_sequence_end_multimappers"]
+                        )
+                        jmmapperssupport = safe_json_load(
+                            dball.at[i, "j_call_support_multimappers"]
+                        )
                         if len(jmmappers) > 1:
                             dball.at[i, "j_call"] = jmmappers[0]
                             dball.at[i, "j_sequence_start"] = float(
@@ -4488,11 +4514,13 @@ def update_j_multimap(data: list[str], filename_prefix: list[str]):
                             dball.at[i, "j_support"] = float(
                                 jmmapperssupport[0]
                             )
+                # _write_airr(dball, filePath3)
                 write_airr(dball, filePath3)
             if filePath4 is not None:
                 dandy = load_data(filePath4)
                 for col in jmm_transfer_cols:
                     update_j_col_df(dandy, jmulti, col)
+                # _write_airr(dandy, filePath4)
                 write_airr(dandy, filePath4)
 
 
@@ -4561,6 +4589,11 @@ def update_j_col_df(airrdata: pd.DataFrame, jmulti: pd.DataFrame, col: str):
     df["j_call_" + col] = df[col]
     df = df[["j_call_" + col]]
     airrdata.update(df[["j_call_" + col]])
+    if col == "multiplicity":
+        airrdata["j_call_" + col] = airrdata["j_call_" + col].replace("", 0)
+        airrdata["j_call_" + col] = sanitize_column(
+            airrdata["j_call_" + col], "integer"
+        )
 
 
 def mark_ntop_contigs(
@@ -4646,7 +4679,7 @@ def mask_dj(
                     "" if s > j_evalue_threshold else c
                     for c, s in zip(dat["j_call"], dat["j_support_blastn"])
                 ]
-
+            # _write_airr(dat, filePath)
             write_airr(dat, filePath)
 
 
@@ -4705,7 +4738,7 @@ def change_file_location(
             ]
             for x in cols_to_merge:
                 tmp[x] = pd.Series(airr_output[x])
-
+            # _write_airr(tmp, filePath)
             write_airr(tmp, filePath)
             fp = Path(filePath)
             shutil.copyfile(fp, fp.parent.parent / fp.name)
@@ -4773,12 +4806,14 @@ def make_all(
         if filePath1 is not None:
             df1 = pd.read_csv(filePath1, sep="\t")
             df1 = check_complete(df1)
+            # _write_airr(df1, filePath1)
             write_airr(df1, filePath1)
             if filePath2 is not None:
                 df2 = pd.read_csv(filePath2, sep="\t")
                 df2 = check_complete(df2)
                 df = pd.concat([df1, df2])
                 if loci == "tr":
+                    # _write_airr(
                     write_airr(
                         df,
                         filePath1.parent
@@ -4788,14 +4823,17 @@ def make_all(
                         ),
                     )
                 else:
+                    # _write_airr(
                     write_airr(
                         df,
                         filePath1.parent
                         / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
                     )
+                # _write_airr(df2, filePath2)
                 write_airr(df2, filePath2)
             else:
                 if loci == "tr":
+                    # _write_airr(
                     write_airr(
                         df1,
                         filePath1.parent
@@ -4805,6 +4843,7 @@ def make_all(
                         ),
                     )
                 else:
+                    # _write_airr(
                     write_airr(
                         df1,
                         filePath1.parent
@@ -4856,3 +4895,39 @@ def check_complete(df: pd.DataFrame) -> pd.DataFrame:
             df.at[i, "productive"] = "F"
             df.at[i, "complete_vdj"] = "F"
     return df
+
+
+def safe_json_load(s: list | str | None) -> list:
+    """Safely load json arrays."""
+    if not s:  # empty string or None
+        return []  # fallback empty list
+    return json.loads(s)
+
+
+def assert_dj_numeric_sequence_cols(
+    data: pd.DataFrame,
+) -> None:
+    """Assert that specified columns in the DataFrame are numeric.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        The DataFrame to check.
+
+    Raises
+    ------
+    ValueError
+        If any of the specified columns contain non-numeric values.
+    """
+    for call in ["d", "j"]:
+        for col in [
+            call + "_sequence_start",
+            call + "_sequence_end",
+            call + "_support",
+            call + "_sequence_start_blastn",
+            call + "_sequence_end_blastn",
+            call + "_support_igblastn",
+        ]:
+            if col in data.columns:
+                data[col] = pd.to_numeric(data[col], errors="coerce")
+    return data

@@ -9,8 +9,8 @@ def test_setup(create_testfolder, airr_reannotated, dummy_adata):
     """test setup"""
     vdj, adata = ddl.pp.check_contigs(airr_reannotated, dummy_adata)
     assert airr_reannotated.shape[0] == 8
-    assert vdj.data.shape[0] == 8
-    assert vdj.metadata.shape[0] == 5
+    assert vdj._data.shape[0] == 8
+    assert vdj._metadata.shape[0] == 5
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     vdj.write_h5ddl(f)
@@ -25,8 +25,8 @@ def test_find_clones(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.find_clones(vdj)
-    assert not vdj.data.clone_id.empty
-    assert not vdj.metadata.clone_id.empty
+    assert not vdj._data.clone_id.empty
+    assert not vdj._metadata.clone_id.empty
     vdj.write_h5ddl(f)
     with pytest.raises(KeyError):
         ddl.tl.find_clones(vdj, key="random_column")
@@ -36,8 +36,8 @@ def test_find_clones(create_testfolder):
 def test_find_clonesfromfile(airr_reannotated):
     """test find clones"""
     vdj = ddl.tl.find_clones(airr_reannotated)
-    assert not vdj.data.clone_id.empty
-    assert not vdj.metadata.clone_id.empty
+    assert not vdj._data.clone_id.empty
+    assert not vdj._metadata.clone_id.empty
     vdj2 = ddl.tl.find_clones(airr_reannotated, by_alleles=True)
-    assert not vdj2.data.clone_id.empty
-    assert not vdj2.metadata.clone_id.empty
+    assert not vdj2._data.clone_id.empty
+    assert not vdj2._metadata.clone_id.empty

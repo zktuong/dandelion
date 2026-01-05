@@ -172,7 +172,7 @@ def generate_network(
         compute_layout = False
 
     if distance_mode == "clone" or compute_graph or compute_layout:
-        if clone_key not in vdj_data.data:
+        if clone_key not in vdj_data._data:
             raise ValueError(
                 "Data does not contain clone information. Please run ddl.tl.find_clones."
             )
@@ -204,7 +204,7 @@ def generate_network(
 
         key_ = key if key is not None else "sequence_alignment_aa"
 
-        if key_ not in vdj_data.data:
+        if key_ not in vdj_data._data:
             raise ValueError(f"key {key_} not found in data.")
 
         if lazy:
@@ -226,14 +226,14 @@ def generate_network(
                     force_replace=force_replace,
                     random_state=random_state,
                 )
-            dat = vdj_data.data.copy()
+            dat = vdj_data._data.copy()
         else:
-            if "ambiguous" in vdj_data.data:
-                dat = vdj_data.data[
-                    vdj_data.data["ambiguous"].isin(FALSES)
+            if "ambiguous" in vdj_data._data:
+                dat = vdj_data._data[
+                    vdj_data._data["ambiguous"].isin(FALSES)
                 ].copy()
             else:
-                dat = vdj_data.data.copy()
+                dat = vdj_data._data.copy()
 
         dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
         dat_l = dat[dat["locus"].isin(["IGK", "IGL", "TRA", "TRG"])].copy()
@@ -244,7 +244,7 @@ def generate_network(
         querier = Query(dat_, verbose=verbose)
         dat_seq = querier.retrieve(query=key_, retrieve_mode="split")
         # ensure that dat_seq matches order of vdj_data.metadata
-        dat_seq = dat_seq.reindex(vdj_data.metadata.index)
+        dat_seq = dat_seq.reindex(vdj_data._metadata.index)
         dat_seq.columns = [re.sub(key_ + "_", "", i) for i in dat_seq.columns]
         if compute_graph or compute_layout or distance_mode == "clone":
             dat_clone = querier.retrieve(
@@ -344,24 +344,27 @@ def generate_network(
             tmp_clusterdist = Tree()
             cluster_dist = {}
             overlap = []
-            for i in vdj_data.metadata.index:
-                if len(vdj_data.metadata.loc[i, str(clone_key)].split("|")) > 1:
+            for i in vdj_data._metadata.index:
+                if (
+                    len(vdj_data._metadata.loc[i, str(clone_key)].split("|"))
+                    > 1
+                ):
                     overlap.append(
                         [
                             c
-                            for c in vdj_data.metadata.loc[
+                            for c in vdj_data._metadata.loc[
                                 i, str(clone_key)
                             ].split("|")
                             if c != "None"
                         ]
                     )
-                    for c in vdj_data.metadata.loc[i, str(clone_key)].split(
+                    for c in vdj_data._metadata.loc[i, str(clone_key)].split(
                         "|"
                     ):
                         if c != "None":
                             tmp_clusterdist[c][i].value = 1
                 else:
-                    cx = vdj_data.metadata.loc[i, str(clone_key)]
+                    cx = vdj_data._metadata.loc[i, str(clone_key)]
                     if cx != "None":
                         tmp_clusterdist[cx][i].value = 1
             tmp_clusterdist2 = {}
@@ -377,7 +380,7 @@ def generate_network(
                 idxs = [
                     i
                     for i in tmp_clusterdist2[c_]
-                    if i in vdj_data.metadata.index
+                    if i in vdj_data._metadata.index
                 ]
                 if c_ in list(flatten(overlap)):
                     for ol in overlap:
@@ -444,10 +447,10 @@ def generate_network(
                     edge_list[c]["weight"] = edge_list[c]["weight"] - 1
                     edge_list[c].loc[edge_list[c]["weight"] < 0, "weight"] = 0
 
-            clone_ref = dict(vdj_data.metadata[clone_key])
+            clone_ref = dict(vdj_data._metadata[clone_key])
             clone_ref = {k: r for k, r in clone_ref.items() if r != "None"}
             tmp_clone_tree = Tree()
-            for x in vdj_data.metadata.index:
+            for x in vdj_data._metadata.index:
                 if x in clone_ref:
                     if "|" in clone_ref[x]:
                         for x_ in clone_ref[x].split("|"):
@@ -553,7 +556,9 @@ def generate_network(
                 Gcoo.data[mask] - 1
             )  # -1 to revert back to original distance
             tmp_totaldiststack = {
-                vdj_data.metadata.index[r] + "|" + vdj_data.metadata.index[c]: w
+                vdj_data._metadata.index[r]
+                + "|"
+                + vdj_data._metadata.index[c]: w
                 for r, c, w in zip(rows, cols, weights)
             }
             tmp_totaldiststack = pd.DataFrame(
@@ -615,7 +620,7 @@ def generate_network(
 
             # final layout + graph creation (unchanged)
             g, g_, lyt, lyt_ = generate_layout(
-                vertices=vdj_data.metadata.index.tolist(),
+                vertices=vdj_data._metadata.index.tolist(),
                 edges=edge_list_final,
                 min_size=min_size,
                 weight=None,
@@ -658,7 +663,7 @@ def generate_network(
     if sample is not None:
         out = Dandelion(
             data=dat_,
-            metadata=vdj_data.metadata,
+            metadata=vdj_data._metadata,
             clone_key=clone_key,
             layout=layout,
             graph=graph,
@@ -672,8 +677,8 @@ def generate_network(
             return out, gex_data
     else:
         vdj_data.__init__(
-            data=vdj_data.data,
-            metadata=vdj_data.metadata,
+            data=vdj_data._data,
+            metadata=vdj_data._metadata,
             clone_key=clone_key,
             layout=layout,
             graph=graph,
@@ -857,7 +862,7 @@ def clone_degree(vdj_data: Dandelion, weight: str | None = None) -> Dandelion:
             G = vdj_data.graph[0]
             cd = pd.DataFrame.from_dict(G.degree(weight=weight))
             cd.set_index(0, inplace=True)
-            vdj_data.metadata["clone_degree"] = pd.Series(cd[1])
+            vdj_data._metadata["clone_degree"] = pd.Series(cd[1])
     else:
         raise TypeError("Input object must be of {}".format(Dandelion))
 
@@ -889,7 +894,7 @@ def clone_centrality(vdj_data: Dandelion):
             cc = pd.DataFrame.from_dict(
                 cc, orient="index", columns=["clone_centrality"]
             )
-            vdj_data.metadata["clone_centrality"] = pd.Series(
+            vdj_data._metadata["clone_centrality"] = pd.Series(
                 cc["clone_centrality"]
             )
     else:

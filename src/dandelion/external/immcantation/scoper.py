@@ -99,7 +99,7 @@ def identical_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
 
     # sanitize before passing to R
@@ -137,7 +137,7 @@ def identical_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
         clone_key=clone_key,
         retrieve=clone_key,
@@ -242,7 +242,7 @@ def hierarchical_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -281,7 +281,7 @@ def hierarchical_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
         clone_key=clone_id,
         retrieve=clone_id,
@@ -404,7 +404,7 @@ def spectral_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -449,7 +449,7 @@ def spectral_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
         clone_key=clone_id,
         retrieve=clone_id,

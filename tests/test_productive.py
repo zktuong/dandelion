@@ -14,7 +14,7 @@ def test_productive_ratio(
     annot_file = create_testfolder / "test_filtered_contig_annotations.csv"
     annotation_10x_mouse.to_csv(annot_file, index=False)
     vdj = ddl.read_10x_vdj(create_testfolder, filename_prefix="filtered")
-    vdj.data["ambiguous"] = "F"
+    vdj._data["ambiguous"] = "F"
     group = cycle(["A", "B", "C", "D", "E", "F", "G", "H", "I"])
     groups = [next(group) for i in dummy_adata_mouse.obs_names]
     dummy_adata_mouse.obs["group"] = groups

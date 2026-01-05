@@ -507,23 +507,23 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     """
     pd.set_option("future.no_silent_downcasting", True)
     if dtype == "boolean":
-        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        series = series.apply(lambda x: "" if check_missing(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
         return series.apply(sanitize_boolean)
     elif dtype == "string":
-        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        series = series.apply(lambda x: "" if check_missing(x) else x)
         return (
             series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
             .astype(str)
             .apply(clean_unicode)
         )
     elif dtype in ["number"]:
-        series = series.apply(lambda x: np.nan if pd.isna(x) else x)
+        series = series.apply(lambda x: np.nan if check_missing(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
         # for dtype to be float
         return series.astype("float64").fillna(np.nan)
     elif dtype in ["integer"]:
-        series = series.apply(lambda x: "" if pd.isna(x) else int(x))
+        series = series.apply(lambda x: "" if check_missing(x) else int(x))
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
         return series.astype(str).apply(clean_unicode)
     return series

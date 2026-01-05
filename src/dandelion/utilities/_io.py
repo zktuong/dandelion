@@ -249,7 +249,7 @@ def read_h5ddl(
 
     res = Dandelion(**constructor, verbose=verbose)
     # ensure that the metadata is decoded
-    res.metadata = decode(res.metadata)
+    res._metadata = decode(res._metadata)
 
     return res
 
@@ -1090,7 +1090,7 @@ def read_h5ddl_legacy(
 
     res = Dandelion(**constructor, verbose=False)
     # ensure that the metadata is decoded
-    res.metadata = decode(res.metadata)
+    res._metadata = decode(res._metadata)
 
     return res
 

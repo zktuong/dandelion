@@ -87,7 +87,7 @@ def quantify_mutations(
     sh = importr("shazam")
     base = importr("base")
     if isinstance(data, Dandelion):
-        dat = load_data(data.data)
+        dat = load_data(data._data)
     else:
         dat = load_data(data)
 
@@ -178,12 +178,11 @@ def quantify_mutations(
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat_[x] = [str(r) for r in res[x]]
-            data.data[x] = pd.Series(dat_[x])
+            data._data[x] = pd.Series(dat_[x])
         if split_locus is False:
-            metadata_ = data.data[["cell_id"] + list(cols_to_return)]
+            metadata_ = data._data[["cell_id"] + list(cols_to_return)]
         else:
-            metadata_ = data.data[["locus", "cell_id"] + list(cols_to_return)]
-
+            metadata_ = data._data[["locus", "cell_id"] + list(cols_to_return)]
         for x in cols_to_return:
             metadata_[x] = metadata_[x].astype(float)
 
@@ -192,7 +191,7 @@ def quantify_mutations(
         else:
             metadata_ = metadata_.groupby(["locus", "cell_id"]).sum()
             metadatas = []
-            for x in list(set(data.data["locus"])):
+            for x in list(set(data._data["locus"])):
                 tmp = metadata_.iloc[
                     metadata_.index.isin([x], level="locus"), :
                 ]
@@ -207,12 +206,12 @@ def quantify_mutations(
             )
 
         metadata_.index.name = None
-        data.data = sanitize_data(data.data)
-        if data.metadata is None:
-            data.metadata = metadata_
+        data._data = sanitize_data(data._data)
+        if data._metadata is None:
+            data._metadata = metadata_
         else:
             for x in metadata_.columns:
-                data.metadata[x] = pd.Series(metadata_[x])
+                data._metadata[x] = pd.Series(metadata_[x])
         logg.info(
             " finished",
             time=start,
@@ -369,7 +368,7 @@ def calculate_threshold(
             )
         )
     if isinstance(data, Dandelion):
-        dat = load_data(data.data)
+        dat = load_data(data._data)
     elif isinstance(data, pd.DataFrame) or os.path.isfile(str(data)):
         dat = load_data(data)
         warnings.filterwarnings("ignore")

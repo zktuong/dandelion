@@ -129,43 +129,45 @@ class Dandelion:
                 acceptable = None
 
             if acceptable is not None:
-                self.data = self.data[self.data.locus.isin(acceptable)].copy()
+                self._data = self._data[
+                    self._data.locus.isin(acceptable)
+                ].copy()
 
             try:
-                self.data = check_travdv(self.data)
+                self._data = check_travdv(self._data)
             except:
                 pass
             if (
                 pd.Series(["cell_id", "umi_count", "productive"])
-                .isin(self.data.columns)
+                .isin(self._data.columns)
                 .all()
             ):  # sort so that the productive contig with the largest umi is first
-                self.data.sort_values(
+                self._data.sort_values(
                     by=["cell_id", "productive", "umi_count"],
                     inplace=True,
                     ascending=[True, False, False],
                 )
-            # self.data = sanitize_data(self.data) # this is too slow. and unnecessary at this point.
-            self.n_contigs = self.data.shape[0]
+            # self._data = sanitize_data(self._data) # this is too slow. and unnecessary at this point.
+            self.n_contigs = self._data.shape[0]
             if metadata is None:
                 if initialize is True:
                     self._ensure_sanitized_data(verbose=verbose)
                     self.update_metadata(**kwargs)
                 try:
-                    self.n_obs = self.metadata.shape[0]
+                    self.n_obs = self._metadata.shape[0]
                 except:
                     self.n_obs = 0
             else:
-                self.metadata = metadata
-                self.n_obs = self.metadata.shape[0]
+                self._metadata = metadata
+                self.n_obs = self._metadata.shape[0]
         else:
             self.n_contigs = 0
             self.n_obs = 0
 
-        self._original_data_ids = self.data.index.copy()
-        self._original_metadata_ids = self.metadata.index.copy()
-        self._original_sequence_ids = self.data["sequence_id"].copy()
-        self._original_cell_ids = self.data["cell_id"].copy()
+        self._original_data_ids = self._data.index.copy()
+        self._original_metadata_ids = self._metadata.index.copy()
+        self._original_sequence_ids = self._data["sequence_id"].copy()
+        self._original_cell_ids = self._data["cell_id"].copy()
 
     def _gen_repr(self, n_obs, n_contigs) -> str:
         """Report."""
@@ -294,7 +296,7 @@ class Dandelion:
     @property
     def data_names(self) -> pd.Index:
         """Names of observations (alias for `.data.index`)."""
-        return self.data.index
+        return self._data.index
 
     @data_names.setter
     def data_names(self, names: list[str]):
@@ -315,7 +317,7 @@ class Dandelion:
     @property
     def metadata_names(self) -> pd.Index:
         """Names of observations (alias for `.metadata.index`)."""
-        return self.metadata.index
+        return self._metadata.index
 
     @metadata_names.setter
     def metadata_names(self, names: list[str]):
@@ -325,18 +327,18 @@ class Dandelion:
 
     def _ensure_sanitized_data(self, verbose: bool = False) -> None:
         """Ensure that the data is sanitized."""
-        if not self._is_sanitized(self.data):
+        if not self._is_sanitized(self._data):
             if verbose:
                 logg.info(
                     "The AIRR data needs to undergo sanitization, apologies for any delays..."
                 )
-            self._data = sanitize_data(self.data)
+            self._data = sanitize_data(self._data)
 
     def _is_sanitized(self, df):
         """Check if the data is sanitized."""
         check = []
         for col in CHECK_COLS:
-            if col in self.data:
+            if col in self._data:
                 # check that in these columns, all values are str 'T' or 'F'
                 if not all(df[col].isin(TRUES + FALSES)):
                     check.append(False)
@@ -474,7 +476,7 @@ class Dandelion:
                     x + sep + value for x in cleaned_other
                 ]
         self._data = load_data(self._data)
-        if self._metadata is not None:
+        if self.metadata is not None:
             self.update_metadata(**kwargs)
 
     def _clean_sequence_id(
@@ -662,7 +664,7 @@ class Dandelion:
         """Disambiguate VDJ and C gene calls when there's multiple calls separated by commas and strip the alleles."""
         # strip alleles from VDJ and constant gene calls
         for col in ["v_call", "v_call_genotyped", "d_call", "j_call", "c_call"]:
-            if col in self.data:
+            if col in self._data:
                 self._data[col] = self._data[col].str.replace(
                     r"\*.*", "", regex=True
                 )
@@ -675,23 +677,23 @@ class Dandelion:
 
         new_cols_added = []
 
-        for col in self.metadata.columns:
+        for col in self._metadata.columns:
             # skip blacklisted columns
             if col in skip:
                 continue
 
             # skip columns that already exist in data
-            if col in self.data.columns:
+            if col in self._data.columns:
                 continue
 
             # skip if base column already exists (for _VDJ, _VJ, _B, _abT, _gdT variants, _status, _main, etc.)
             base_col = col.split("_")[0]
-            if base_col in self.data.columns:
+            if base_col in self._data.columns:
                 continue
 
             # create a mapping dictionary and assign new column
-            mapping = self.metadata[col].to_dict()
-            self.data[col] = self.data["cell_id"].map(mapping)
+            mapping = self._metadata[col].to_dict()
+            self._data[col] = self._data["cell_id"].map(mapping)
             new_cols_added.append(col)
 
     def _initialize_metadata(
@@ -735,10 +737,10 @@ class Dandelion:
             )
         self._update_rearrangement_status(v_call_key)
 
-        if "ambiguous" in self.data:
-            dataq = self.data[self.data["ambiguous"].isin(FALSES)]
+        if "ambiguous" in self._data:
+            dataq = self._data[self._data["ambiguous"].isin(FALSES)]
         else:
-            dataq = self.data
+            dataq = self._data
         if self.querier is None:
             querier = Query(dataq)
             self.querier = querier
@@ -747,7 +749,7 @@ class Dandelion:
                 if reinitialize:
                     querier = Query(dataq)
                 else:
-                    if any(~self.metadata_names.isin(self.data.cell_id)):
+                    if any(~self.metadata_names.isin(self._data.cell_id)):
                         querier = Query(dataq)
                         self.querier = querier
                     else:
@@ -757,7 +759,7 @@ class Dandelion:
 
         meta_ = defaultdict(dict)
         for k, v in init_dict.copy().items():
-            if all_missing(self.data[k]):
+            if all_missing(self._data[k]):
                 init_dict.pop(k)
                 continue
             meta_[k] = querier.retrieve(**v)
@@ -779,7 +781,7 @@ class Dandelion:
         reqcols1 = [
             "locus_VDJ",
         ]
-        vcall = get_vcall_key(self.data, v_call_key)
+        vcall = get_vcall_key(self._data, v_call_key)
 
         # remap v_call_genotyped_* to just v_call_* for column names in tmp_metadata if vcall == "v_call_genotyped"
         if vcall == "v_call_genotyped":
@@ -955,7 +957,7 @@ class Dandelion:
         vdj_gene_calls = ["v_call", "d_call", "j_call"]
         if collapse_alleles:
             for x in vdj_gene_calls:
-                if x in self.data:
+                if x in self._data:
                     for c in tmp_metadata:
                         if x in c:
                             tmp_metadata[c] = [
@@ -1030,19 +1032,19 @@ class Dandelion:
         )
         # if metadata already exist, just overwrite the default columns?
         if self.metadata is not None:
-            if any(~self.metadata_names.isin(self.data.cell_id)):
-                self.metadata = tmp_metadata.copy()  # reindex and replace.
+            if any(~self.metadata_names.isin(self._data.cell_id)):
+                self._metadata = tmp_metadata.copy()  # reindex and replace.
             for col in tmp_metadata:
-                self.metadata[col] = pd.Series(tmp_metadata[col])
+                self._metadata[col] = pd.Series(tmp_metadata[col])
         else:
-            self.metadata = tmp_metadata.copy()
+            self._metadata = tmp_metadata.copy()
 
     def _update_rearrangement_status(self, v_call_key: str) -> None:
         """Check rearrangement status."""
-        vcall = get_vcall_key(self.data, v_call_key)
+        vcall = get_vcall_key(self._data, v_call_key)
         contig_status = []
         for v, j, c in zip(
-            self.data[vcall], self.data["j_call"], self.data["c_call"]
+            self._data[vcall], self._data["j_call"], self._data["c_call"]
         ):
             if present(v):
                 if present(j):
@@ -1060,7 +1062,7 @@ class Dandelion:
                     contig_status.append("unknown")
             else:
                 contig_status.append("unknown")
-        self.data["rearrangement_status"] = contig_status
+        self._data["rearrangement_status"] = contig_status
 
     def compute(self):
         """Convert self.distances from a lazy array to a concrete numpy array."""
@@ -1364,9 +1366,9 @@ class Dandelion:
             "d_sequence_alignment_aa",
             "j_sequence_alignment_aa",
         ]
-        mutations = [x for x in mutations if x in self.data]
-        vdjlengths = [x for x in vdjlengths if x in self.data]
-        seqinfo = [x for x in seqinfo if x in self.data]
+        mutations = [x for x in mutations if x in self._data]
+        vdjlengths = [x for x in vdjlengths if x in self._data]
+        seqinfo = [x for x in seqinfo if x in self._data]
 
         if option == "all":
             if len(mutations) > 0:
@@ -1626,7 +1628,7 @@ class Dandelion:
         clonekey = clone_key if clone_key is not None else "clone_id"
         v_call_key = "v_call"
         if genotyped_v_call:
-            if f"{v_call_key}_genotyped" in self.data:
+            if f"{v_call_key}_genotyped" in self._data:
                 v_call_key = f"{v_call_key}_genotyped"
 
         cols = [
@@ -1643,13 +1645,13 @@ class Dandelion:
             "junction_aa",
         ]
 
-        if "umi_count" not in self.data:
+        if "umi_count" not in self._data:
             raise ValueError(
                 "Unable to initialize metadata due to missing keys. "
                 "Please ensure either 'umi_count' or 'duplicate_count' is in the input data."
             )
 
-        if not all([c in self.data for c in cols]):
+        if not all([c in self._data for c in cols]):
             raise ValueError(
                 "Unable to initialize metadata due to missing keys. "
                 "Please ensure the input data contains all the following columns: {}".format(
@@ -1657,17 +1659,17 @@ class Dandelion:
                 )
             )
 
-        if "sample_id" in self.data:
+        if "sample_id" in self._data:
             cols = ["sample_id"] + cols
 
         for c in ["sequence_id", "cell_id"]:
             cols.remove(c)
 
-        if clonekey in self.data:
-            if not all_missing2(self.data[clonekey]):
+        if clonekey in self._data:
+            if not all_missing2(self._data[clonekey]):
                 cols = [clonekey] + cols
 
-        metadata_status = self.metadata
+        metadata_status = self._metadata
         if (metadata_status is None) or reinitialize:
             self._initialize_metadata(
                 cols,
@@ -1679,18 +1681,18 @@ class Dandelion:
                 custom_isotype_dict,
             )
 
-        tmp_metadata = self.metadata.copy()
+        tmp_metadata = self._metadata.copy()
 
         if retrieve is not None:
             ret_dict = {}
             if type(retrieve) is str:
                 retrieve = [retrieve]
             if self.querier is None:
-                querier = Query(self.data)
+                querier = Query(self._data)
                 self.querier = querier
             else:
                 if any([r not in self.querier.data for r in retrieve]):
-                    querier = Query(self.data)
+                    querier = Query(self._data)
                     self.querier = querier
                 else:
                     querier = self.querier
@@ -1713,7 +1715,7 @@ class Dandelion:
 
             retrieve_ = defaultdict(dict)
             for k, v in ret_dict.items():
-                if k in self.data.columns:
+                if k in self._data.columns:
                     if by_celltype:
                         retrieve_[k] = querier.retrieve_celltype(**v)
                     else:
@@ -1761,15 +1763,15 @@ class Dandelion:
             ]:
                 if dcol in tmp_metadata:
                     tmp_metadata.drop(dcol, axis=1, inplace=True)
-            self.metadata = tmp_metadata.copy()
+            self._metadata = tmp_metadata.copy()
         # move clonekey and {clonekey}_rank to the front
-        if clonekey in self.metadata:
+        if clonekey in self._metadata:
             clonekey_rank = clonekey + "_rank"
-            self.metadata = self.metadata[
+            self._metadata = self._metadata[
                 [clonekey, clonekey_rank]
                 + [
                     c
-                    for c in self.metadata.columns
+                    for c in self._metadata.columns
                     if c not in [clonekey, clonekey_rank]
                 ]
             ]
@@ -1819,7 +1821,7 @@ class Dandelion:
         **kwargs
             passed to `pandas.DataFrame.to_csv`.
         """
-        data = sanitize_data(self.data)
+        data = sanitize_data(self._data)
         data.to_csv(filename, sep="\t", index=False, **kwargs)
 
     def write_h5ddl(
@@ -1859,7 +1861,7 @@ class Dandelion:
         clear_h5file(filename)
 
         # now to actually saving
-        data = self.data.copy()
+        data = self._data.copy()
         data = sanitize_data(data)
         data, data_dtypes = sanitize_data_for_saving(data)
         # Convert the DataFrame to a NumPy structured array
@@ -1873,7 +1875,7 @@ class Dandelion:
                 **save_args,
             )
         if self.metadata is not None:
-            metadata = self.metadata.copy()
+            metadata = self._metadata.copy()
             metadata, metadata_dtypes = sanitize_data_for_saving(metadata)
             # Convert the DataFrame to a NumPy structured array
             structured_metadata_array = np.array(
@@ -2011,7 +2013,7 @@ class Dandelion:
         out_fasta = folder / f"{filename_prefix}_contig.fasta"
         out_anno_path = folder / f"{filename_prefix}_contig_annotations.csv"
 
-        seqs = self.data[sequence_key].to_dict()
+        seqs = self._data[sequence_key].to_dict()
         write_fasta(seqs, out_fasta=out_fasta)
 
         # also create the contig_annotations.csv
@@ -2035,11 +2037,11 @@ class Dandelion:
             "raw_clonotype_id": clone_key,
             "raw_consensus_id": clone_key,
         }
-        if "complete_vdj" not in self.data.columns:
+        if "complete_vdj" not in self._data.columns:
             column_map.pop("full_length")
-        if "is_cell_10x" not in self.data.columns:
+        if "is_cell_10x" not in self._data.columns:
             column_map.pop("is_cell")
-        if "high_confidence_10x" not in self.data.columns:
+        if "high_confidence_10x" not in self._data.columns:
             column_map.pop("high_confidence")
         anno = []
         bool_map = {
@@ -2050,7 +2052,7 @@ class Dandelion:
             "TRUE": "True",
             "FALSE": "False",
         }
-        for _, r in self.data.iterrows():
+        for _, r in self._data.iterrows():
             info = []
             for v in column_map.values():
                 if v in r.index:
@@ -2902,7 +2904,7 @@ def write_h5ddl_legacy(
     """
     clear_h5file(filename)
     # now to actually saving
-    data = self.data.copy()
+    data = self._data.copy()
     data = sanitize_data(data)
     data, _ = sanitize_data_for_saving(data)
     data.to_hdf(
@@ -2911,7 +2913,7 @@ def write_h5ddl_legacy(
         **kwargs,
     )
     if self.metadata is not None:
-        metadata = self.metadata.copy()
+        metadata = self._metadata.copy()
         for col in metadata.columns:
             if pd.__version__ < "2.1.0":
                 weird = (

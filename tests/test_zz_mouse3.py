@@ -92,8 +92,10 @@ def test_checkcontigs(create_testfolder, processed_files, dummy_adata_mouse):
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_mouse)
     f1 = create_testfolder / "test.h5ddl"
+    # f1 = create_testfolder / "test.zipddl"
     f2 = create_testfolder / "test.h5ad"
     vdj.write_h5ddl(f1)
+    # vdj.write_zipddl(f1)
     adata.write_h5ad(f2)
 
 

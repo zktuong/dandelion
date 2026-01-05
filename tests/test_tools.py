@@ -21,10 +21,10 @@ def test_setup(
     vdj2 = ddl.pp.check_contigs(airr_reannotated2)
     assert airr_reannotated.shape[0] == 8
     assert airr_reannotated2.shape[0] == 15
-    assert vdj.data.shape[0] == 8
-    assert vdj2.data.shape[0] == 14
-    assert vdj.metadata.shape[0] == 5
-    assert vdj2.metadata.shape[0] == 8
+    assert vdj._data.shape[0] == 8
+    assert vdj2._data.shape[0] == 14
+    assert vdj._metadata.shape[0] == 5
+    assert vdj2._metadata.shape[0] == 8
     assert adata.n_obs == 5
     f = create_testfolder / "test.h5ddl"
     f2 = create_testfolder / "test2.h5ddl"
@@ -44,12 +44,12 @@ def test_find_clones(create_testfolder):
     vdj2 = ddl.read_h5ddl(f2)
     ddl.tl.find_clones(vdj)
     ddl.tl.find_clones(vdj2)
-    assert not vdj.data.clone_id.empty
-    assert not vdj.metadata.clone_id.empty
-    assert not vdj2.data.clone_id.empty
-    assert not vdj2.metadata.clone_id.empty
-    assert len({x for x in vdj.metadata["clone_id"] if pd.notnull(x)}) == 5
-    assert len({x for x in vdj2.metadata["clone_id"] if pd.notnull(x)}) == 5
+    assert not vdj._data.clone_id.empty
+    assert not vdj._metadata.clone_id.empty
+    assert not vdj2._data.clone_id.empty
+    assert not vdj2._metadata.clone_id.empty
+    assert len({x for x in vdj._metadata["clone_id"] if pd.notnull(x)}) == 5
+    assert len({x for x in vdj2._metadata["clone_id"] if pd.notnull(x)}) == 5
     vdj.write_h5ddl(f)
     vdj2.write_h5ddl(f2)
 
@@ -60,9 +60,9 @@ def test_clone_size(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.clone_size(vdj)
-    assert not vdj.metadata.clone_id_size.empty
+    assert not vdj._metadata.clone_id_size.empty
     ddl.tl.clone_size(vdj, max_size=3)
-    assert not vdj.metadata.clone_id_size.empty
+    assert not vdj._metadata.clone_id_size.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -89,9 +89,9 @@ def test_generate_network(create_testfolder, resample, expected):
         assert vdj2.n_obs == expected
         assert vdj2.layout is not None
         assert vdj2.graph is not None
-    vdj.data["clone_id"] = "1"
-    vdj = ddl.Dandelion(vdj.data)
-    assert vdj.data.clone_id.dtype == "object"
+    vdj._data["clone_id"] = "1"
+    vdj = ddl.Dandelion(vdj._data)
+    assert vdj._data.clone_id.dtype == "object"
     ddl.tl.generate_network(vdj, layout_method="mod_fr")
     assert vdj.layout is not None
 
@@ -102,8 +102,8 @@ def test_find_clones_key(create_testfolder):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     ddl.tl.find_clones(vdj, key_added="test_clone")
-    assert not vdj.metadata.test_clone.empty
-    assert vdj.data.test_clone.dtype == "object"
+    assert not vdj._metadata.test_clone.empty
+    assert vdj._data.test_clone.dtype == "object"
     ddl.tl.generate_network(vdj, clone_key="test_clone", layout_method="mod_fr")
     assert vdj.layout is not None
     assert vdj.graph is not None
@@ -156,8 +156,8 @@ def test_diversity_shannon(create_testfolder, normalize):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     # create random 3 sample ids to vdj.metadata
-    vdj.metadata["sample_id"] = [
-        f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
     ]
     vdj.update_data()
     res, _ = ddl.tl.clone_diversity(
@@ -181,8 +181,8 @@ def test_diversity_min_size_too_small(create_testfolder, method):
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
     # create random 3 sample ids to vdj.metadata
-    vdj.metadata["sample_id"] = [
-        f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
     ]
     vdj.update_data()
     with pytest.raises(ValueError):
@@ -205,8 +205,8 @@ def test_diversity_min_size_ok(create_testfolder, method):
     f = create_testfolder / "test2.h5ddl"
     vdj = ddl.read_h5ddl(f)
     # create random 3 sample ids to vdj.metadata
-    vdj.metadata["sample_id"] = [
-        f"sample_{i%3}" for i in range(vdj.metadata.shape[0])
+    vdj._metadata["sample_id"] = [
+        f"sample_{i%3}" for i in range(vdj._metadata.shape[0])
     ]
     vdj.update_data()
     res, _ = ddl.tl.clone_diversity(
@@ -228,8 +228,8 @@ def test_setup2(create_testfolder, json_10x_cr6, dummy_adata_cr6):
         json.dump(json_10x_cr6, outfile)
     vdj = ddl.read_10x_vdj(create_testfolder)
     vdj, adata = ddl.pp.check_contigs(vdj, dummy_adata_cr6)
-    assert vdj.data.shape[0] == 19
-    assert vdj.metadata.shape[0] == 10
+    assert vdj._data.shape[0] == 19
+    assert vdj._metadata.shape[0] == 10
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="sequence", layout_method="mod_fr")
     ddl.tl.transfer(adata, vdj)
@@ -255,7 +255,7 @@ def test_diversity_rarefaction_ddl(mock_show, create_testfolder):
     """test rarefaction3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
@@ -270,7 +270,7 @@ def test_diversity_gini2(create_testfolder, use_network):
     """test gini more"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
@@ -295,7 +295,7 @@ def test_diversity_gini3(create_testfolder, metric):
     """test gini more"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
@@ -316,7 +316,7 @@ def test_diversity2a(create_testfolder):
     """test div"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
@@ -336,7 +336,7 @@ def test_diversity2b(create_testfolder):
     """test div2"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],
@@ -352,7 +352,7 @@ def test_diversity2c(create_testfolder):
     """test div3"""
     f = create_testfolder / "test.h5ddl"
     vdj = ddl.read_h5ddl(f)
-    vdj.data["sample_id"] = "sample_test"
+    vdj._data["sample_id"] = "sample_test"
     vdj.update_metadata(
         retrieve=["sample_id"],
         retrieve_mode=["merge and unique only"],

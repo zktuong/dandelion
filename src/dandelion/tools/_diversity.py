@@ -128,7 +128,7 @@ def clone_rarefaction(
     if isinstance(vdj_data, AnnData):
         metadata = vdj_data.obs.copy()
     elif isinstance(vdj_data, Dandelion):
-        metadata = vdj_data.metadata.copy()
+        metadata = vdj_data._metadata.copy()
     elif hasattr(vdj_data, "mod"):
         metadata = vdj_data.mod["airr"].copy()
 
@@ -646,7 +646,7 @@ def _prepare_diversity_groups(
     if isinstance(data, AnnData):
         _metadata = data.obs.copy()
     elif isinstance(data, Dandelion):
-        _metadata = data.metadata.copy()
+        _metadata = data._metadata.copy()
     else:
         raise TypeError("data must be an AnnData or Dandelion object")
 
@@ -703,10 +703,10 @@ def _bootstrap_network(
             expanded_only=expanded_only,
             contracted=contracted,
         )
-        resample_sized.metadata["clone_network_vertex_size_gini"] = pd.Series(
+        resample_sized._metadata["clone_network_vertex_size_gini"] = pd.Series(
             g_c_v_res
         )
-        resample_sized.metadata["clone_network_cluster_size_gini"] = pd.Series(
+        resample_sized._metadata["clone_network_cluster_size_gini"] = pd.Series(
             g_c_c_res
         )
     elif met == "clone_centrality":
@@ -716,7 +716,7 @@ def _bootstrap_network(
     else:
         raise ValueError("Unknown metric.")
     # ---- Clone size gini
-    _dat = resample_sized.metadata.copy()
+    _dat = resample_sized._metadata.copy()
     _tab = _dat[clonekey].value_counts()
     drop_nan_values(_tab)
     # cluster gini
@@ -736,8 +736,8 @@ def _bootstrap_network(
     if met == "clone_network":
         vertex_gini = _dat[met + "_vertex_size_gini"].mean()
     else:
-        connected = resample_sized.metadata[met][
-            resample_sized.metadata[met] > 0
+        connected = resample_sized._metadata[met][
+            resample_sized._metadata[met] > 0
         ]
         graphcounts = np.array(connected.value_counts())
         vertex_gini = (

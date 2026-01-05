@@ -106,6 +106,6 @@ def test_filtercontigs(
     dat = pd.read_csv(f, sep="\t")
     vdj, adata = ddl.pp.check_contigs(dat, dummy_adata_tr)
     assert dat.shape[0] == expected
-    assert vdj.data.shape[0] == expected
-    assert vdj.metadata.shape[0] == expected
+    assert vdj._data.shape[0] == expected
+    assert vdj._metadata.shape[0] == expected
     assert adata.n_obs == 3

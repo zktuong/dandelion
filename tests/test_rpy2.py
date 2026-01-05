@@ -35,12 +35,12 @@ def test_mutation(create_testfolder, airr_reannotated):
         pytest.skip("R package 'shazam' not installed")
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
-    assert not vdj.data.mu_count.empty
+    assert not vdj._data.mu_count.empty
     try:
         ddl.pp.quantify_mutations(f, frequency=True)
     except:
         pytest.skip("R package 'shazam' not installed")
-    assert not vdj.data.mu_freq.empty
+    assert not vdj._data.mu_freq.empty
 
 
 @patch("matplotlib.pyplot.show")
@@ -68,7 +68,7 @@ def test_create_germlines(create_testfolder, database_paths):
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
     ddl.pp.create_germlines(vdj, germline=database_paths["germline"])
-    assert not vdj.data.germline_alignment_d_mask.empty
+    assert not vdj._data.germline_alignment_d_mask.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -79,9 +79,9 @@ def test_manual_threshold_and_define_clones(create_testfolder):
     out = pd.read_csv(f, sep="\t")
     vdj = ddl.Dandelion(out)
     ddl.tl.define_clones(vdj, dist=0.1)
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
     ddl.tl.define_clones(vdj, dist=0.1, key_added="changeo_clone")
-    assert not vdj.data.changeo_clone.empty
+    assert not vdj._data.changeo_clone.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -105,14 +105,14 @@ def test_scoper_i(create_testfolder):
     """test identical clones from scoper"""
     f = create_testfolder / "test.tsv"
     vdj = ddl.Dandelion(f)
-    assert "clone_id" not in vdj.data
+    assert "clone_id" not in vdj._data
     from dandelion.external.immcantation.scoper import identical_clones
 
     try:
         identical_clones(vdj)
     except:
         pytest.skip("R package 'scoper' not installed")
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -121,14 +121,14 @@ def test_scoper_h(create_testfolder):
     """test hierarchical clones from scoper"""
     f = create_testfolder / "test.tsv"
     vdj = ddl.Dandelion(f)
-    assert "clone_id" not in vdj.data
+    assert "clone_id" not in vdj._data
     from dandelion.external.immcantation.scoper import hierarchical_clones
 
     try:
         hierarchical_clones(vdj, threshold=0.15)
     except:
         pytest.skip("R package 'scoper' not installed")
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
 
 
 @pytest.mark.usefixtures("create_testfolder")
@@ -137,28 +137,28 @@ def test_scoper_h(create_testfolder):
     """test spectral clones from scoper"""
     f = create_testfolder / "test.tsv"
     vdj = ddl.Dandelion(f)
-    assert "clone_id" not in vdj.data
+    assert "clone_id" not in vdj._data
     from dandelion.external.immcantation.scoper import spectral_clones
 
     try:
         spectral_clones(vdj, method="novj")
     except:
         pytest.skip("R package 'scoper' not installed")
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
 
     vdj = ddl.Dandelion(f)
-    assert "clone_id" not in vdj.data
+    assert "clone_id" not in vdj._data
     try:
         spectral_clones(vdj, method="novj", threshold=0.15)
     except:
         pytest.skip("R package 'scoper' not installed")
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
 
     vdj = ddl.Dandelion(f)
-    assert "clone_id" not in vdj.data
+    assert "clone_id" not in vdj._data
     try:
         spectral_clones(vdj, method="vj", threshold=0.15)
     except:
         pytest.skip("R package 'scoper' not installed")
 
-    assert not vdj.data.clone_id.empty
+    assert not vdj._data.clone_id.empty
