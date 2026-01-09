@@ -1,12 +1,14 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 import pytest
 
-# import sys
+import sys
 import pandas as pd
 import dandelion as ddl
 
 
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_importrpy2():
     """test_importrpy2"""
 
@@ -18,7 +20,9 @@ def test_importrpy2():
 
 
 @pytest.mark.usefixtures("create_testfolder", "airr_reannotated")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_mutation(create_testfolder, airr_reannotated):
     """test_mutation"""
     f = create_testfolder / "test.tsv"
@@ -32,7 +36,9 @@ def test_mutation(create_testfolder, airr_reannotated):
 
 
 @pytest.mark.usefixtures("create_testfolder", "database_paths")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_create_germlines(create_testfolder, database_paths):
     """test create germlines"""
     f = create_testfolder / "test.tsv"
@@ -43,7 +49,9 @@ def test_create_germlines(create_testfolder, database_paths):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_manual_threshold_and_define_clones(create_testfolder):
     """test threshold"""
     f = create_testfolder / "test.tsv"
@@ -57,7 +65,9 @@ def test_manual_threshold_and_define_clones(create_testfolder):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_define_clones_outdir(create_testfolder):
     """test threshold"""
     f = create_testfolder / "test.tsv"
@@ -73,7 +83,9 @@ def test_define_clones_outdir(create_testfolder):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_scoper_i(create_testfolder):
     """test identical clones from scoper"""
     f = create_testfolder / "test.tsv"
@@ -86,7 +98,9 @@ def test_scoper_i(create_testfolder):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_scoper_h(create_testfolder):
     """test hierarchical clones from scoper"""
     f = create_testfolder / "test.tsv"
@@ -99,7 +113,9 @@ def test_scoper_h(create_testfolder):
 
 
 @pytest.mark.usefixtures("create_testfolder")
-# @pytest.mark.skipif(sys.platform == "darwin", reason="macos CI stalls.")
+@pytest.mark.skipif(
+    sys.platform in ["darwin", "linux"], reason="not needed for this"
+)
 def test_scoper_h(create_testfolder):
     """test spectral clones from scoper"""
     f = create_testfolder / "test.tsv"

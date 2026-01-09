@@ -121,7 +121,7 @@ docs = [
   "recommonmark>=0.7",
 ]
 scirpy = ["scirpy>=0.21", "awkward>=2.1", "mudata>=0.2"]
-scrubet = ["scrublet>=0.2", "annoy<1.17.0"]
+scrublet = ["scrublet>=0.2", "annoy<1.17.0"]
 palantir = ["palantir>=1.0", "pertpy>=1.0", "jax>=0.3"]
 
 [tool.setuptools]
