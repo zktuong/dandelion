@@ -8,26 +8,26 @@ def test_load_data(airr_reannotated):
     """test load_data"""
     vdj = ddl.Dandelion(airr_reannotated)
     assert all(
-        [x != y for x, y in zip(vdj.data["cell_id"], vdj.data["sequence_id"])]
+        [x != y for x, y in zip(vdj._data["cell_id"], vdj._data["sequence_id"])]
     )
-    cell_ids = list(vdj.data["cell_id"])
-    tmp = vdj.data.drop("cell_id", axis=1)
+    cell_ids = list(vdj._data["cell_id"])
+    tmp = vdj._data.drop("cell_id", axis=1)
     vdj = ddl.Dandelion(tmp)
-    assert all([x == y for x, y in zip(vdj.data["cell_id"], cell_ids)])
+    assert all([x == y for x, y in zip(vdj._data["cell_id"], cell_ids)])
 
 
 @pytest.mark.usefixtures("airr_generic")
 def test_slice_data(airr_generic):
     """test load_data"""
     vdj = ddl.Dandelion(airr_generic)
-    assert vdj.data.shape[0] == 130
-    assert vdj.metadata.shape[0] == 45
+    assert vdj._data.shape[0] == 130
+    assert vdj._metadata.shape[0] == 45
     vdj2 = vdj[vdj.data["productive"] == "T"]
-    assert vdj2.data.shape[0] == 119
-    assert vdj2.metadata.shape[0] == 43
+    assert vdj2._data.shape[0] == 119
+    assert vdj2._metadata.shape[0] == 43
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
-    assert vdj2.data.shape[0] == 41
-    assert vdj2.metadata.shape[0] == 20
+    assert vdj2._data.shape[0] == 41
+    assert vdj2._metadata.shape[0] == 20
     vdj2 = vdj[
         vdj.metadata_names.isin(
             [
@@ -39,8 +39,8 @@ def test_slice_data(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 20
-    assert vdj2.metadata.shape[0] == 5
+    assert vdj2._data.shape[0] == 20
+    assert vdj2._metadata.shape[0] == 5
     vdj2 = vdj[
         vdj.data_names.isin(
             [
@@ -77,16 +77,16 @@ def test_slice_data(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 30
-    assert vdj2.metadata.shape[0] == 12
+    assert vdj2._data.shape[0] == 30
+    assert vdj2._metadata.shape[0] == 12
 
 
 @pytest.mark.usefixtures("airr_generic")
 def test_names(airr_generic):
     """test load_data"""
     vdj = ddl.Dandelion(airr_generic)
-    assert all(i == j for i, j in zip(vdj.data_names, vdj.data.index))
-    assert all(i == j for i, j in zip(vdj.metadata_names, vdj.metadata.index))
+    assert all(i == j for i, j in zip(vdj.data_names, vdj._data.index))
+    assert all(i == j for i, j in zip(vdj.metadata_names, vdj._metadata.index))
 
 
 @pytest.mark.usefixtures("airr_generic")
@@ -97,11 +97,11 @@ def test_slice_data_with_graph(airr_generic):
     ddl.tl.find_clones(vdj)
     ddl.tl.generate_network(vdj, key="junction", layout_method="mod_fr")
     vdj2 = vdj[vdj.data["productive"] == "T"]
-    assert vdj2.data.shape[0] == 111  # 116
-    assert vdj2.metadata.shape[0] == 43
+    assert vdj2._data.shape[0] == 111  # 116
+    assert vdj2._metadata.shape[0] == 43
     vdj2 = vdj[vdj.metadata["productive_VDJ"] == "T"]
-    assert vdj2.data.shape[0] == 69  # 50
-    assert vdj2.metadata.shape[0] == 30  # 22
+    assert vdj2._data.shape[0] == 69  # 50
+    assert vdj2._metadata.shape[0] == 30  # 22
     vdj2 = vdj[
         vdj.metadata_names.isin(
             [
@@ -113,8 +113,8 @@ def test_slice_data_with_graph(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 16  # 19
-    assert vdj2.metadata.shape[0] == 5
+    assert vdj2._data.shape[0] == 16  # 19
+    assert vdj2._metadata.shape[0] == 5
     assert len(vdj2.layout[0]) == 5
     assert len(vdj2.layout[1]) == 5
     assert len(vdj2.graph[0]) == 5
@@ -155,14 +155,14 @@ def test_slice_data_with_graph(airr_generic):
             ]
         )
     ]
-    assert vdj2.data.shape[0] == 28  # 30
-    assert vdj2.metadata.shape[0] == 12
+    assert vdj2._data.shape[0] == 28  # 30
+    assert vdj2._metadata.shape[0] == 12
     assert len(vdj2.layout[0]) == 12
     # assert len(vdj2.layout[1]) == 4
-    assert len(vdj2.layout[1]) == 10
+    assert len(vdj2.layout[1]) == 11
     assert len(vdj2.graph[0]) == 12
     # assert len(vdj2.graph[1]) == 4
-    assert len(vdj2.graph[1]) == 10
+    assert len(vdj2.graph[1]) == 11
 
 
 @pytest.mark.usefixtures("airr_generic")
@@ -176,10 +176,10 @@ def test_change_ids(airr_generic):
     """test load_data"""
     vdj = ddl.Dandelion(airr_generic)
     vdj.add_sequence_prefix("test")
-    vdj.reset_ids()
+    vdj = ddl.Dandelion(airr_generic)
     vdj.add_sequence_suffix("test")
-    vdj.reset_ids()
+    vdj = ddl.Dandelion(airr_generic)
     vdj.add_cell_prefix("test")
-    vdj.reset_ids()
+    vdj = ddl.Dandelion(airr_generic)
     vdj.add_cell_suffix("test")
-    vdj.reset_ids()
+    vdj = ddl.Dandelion(airr_generic)

@@ -1,19 +1,26 @@
 #!/usr/bin/env python
 from dandelion.tools._tools import (
+    concat,
     find_clones,
     productive_ratio,
     transfer,
     define_clones,
     clone_size,
     clone_overlap,
+    clone_view,
     vj_usage_pca,
+    vdj_sample,
+    to_ak,
+    from_ak,
+    to_scirpy,
+    from_scirpy,
 )
 from dandelion.tools._network import (
-    extract_edge_weights,
     clone_degree,
     clone_centrality,
     generate_network,
 )
+from dandelion.tools._layout import extract_edge_weights
 from dandelion.tools._diversity import clone_diversity, clone_rarefaction
 from dandelion.tools._trajectory import (
     setup_vdj_pseudobulk,
@@ -21,11 +28,10 @@ from dandelion.tools._trajectory import (
     pseudotime_transfer,
     project_pseudotime_to_cell,
     pseudobulk_gex,
-    bin_expression,
-    chatterjee_corr,
 )
 
 __all__ = [
+    "concat",
     "find_clones",
     "transfer",
     "define_clones",
@@ -45,6 +51,10 @@ __all__ = [
     "pseudotime_transfer",
     "project_pseudotime_to_cell",
     "pseudobulk_gex",
-    "bin_expression",
-    "chatterjee_corr",
+    "clone_view",
+    "vdj_sample",
+    "to_ak",
+    "from_ak",
+    "to_scirpy",
+    "from_scirpy",
 ]

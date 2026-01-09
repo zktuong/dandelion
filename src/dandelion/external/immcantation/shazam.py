@@ -24,10 +24,9 @@ from plotnine import (
     save_as_pdf_pages,
 )
 
-from dandelion.utilities._core import Dandelion
+from dandelion.utilities._core import Dandelion, load_data
+from dandelion.utilities._io import write_airr
 from dandelion.utilities._utilities import (
-    load_data,
-    write_airr,
     sanitize_data,
     sanitize_data_for_saving,
 )
@@ -52,7 +51,7 @@ def quantify_mutations(
     Parameters
     ----------
     data : Dandelion | str
-        `Dandelion` object, file path to AIRR file.
+        Dandelion object, file path to AIRR file.
     split_locus : bool, optional
         whether to return the results for heavy chain and light chain separately.
     sequence_column : str | None, optional
@@ -88,7 +87,7 @@ def quantify_mutations(
     sh = importr("shazam")
     base = importr("base")
     if isinstance(data, Dandelion):
-        dat = load_data(data.data)
+        dat = load_data(data._data)
     else:
         dat = load_data(data)
 
@@ -179,12 +178,11 @@ def quantify_mutations(
             res[x] = list(pd_df[x])
             # TODO: str will make it work for the back and forth conversion with rpy2. but maybe can use a better option
             dat_[x] = [str(r) for r in res[x]]
-            data.data[x] = pd.Series(dat_[x])
+            data._data[x] = pd.Series(dat_[x])
         if split_locus is False:
-            metadata_ = data.data[["cell_id"] + list(cols_to_return)]
+            metadata_ = data._data[["cell_id"] + list(cols_to_return)]
         else:
-            metadata_ = data.data[["locus", "cell_id"] + list(cols_to_return)]
-
+            metadata_ = data._data[["locus", "cell_id"] + list(cols_to_return)]
         for x in cols_to_return:
             metadata_[x] = metadata_[x].astype(float)
 
@@ -193,7 +191,7 @@ def quantify_mutations(
         else:
             metadata_ = metadata_.groupby(["locus", "cell_id"]).sum()
             metadatas = []
-            for x in list(set(data.data["locus"])):
+            for x in list(set(data._data["locus"])):
                 tmp = metadata_.iloc[
                     metadata_.index.isin([x], level="locus"), :
                 ]
@@ -208,12 +206,12 @@ def quantify_mutations(
             )
 
         metadata_.index.name = None
-        data.data = sanitize_data(data.data)
-        if data.metadata is None:
-            data.metadata = metadata_
+        data._data = sanitize_data(data._data)
+        if data._metadata is None:
+            data._metadata = metadata_
         else:
             for x in metadata_.columns:
-                data.metadata[x] = pd.Series(metadata_[x])
+                data._metadata[x] = pd.Series(metadata_[x])
         logg.info(
             " finished",
             time=start,
@@ -246,7 +244,6 @@ def calculate_threshold(
     mode: Literal["single-cell", "heavy"] = "single-cell",
     manual_threshold: float | None = None,
     VJthenLen: bool = False,
-    onlyHeavy: bool = False,
     model: (
         Literal[
             "ham",
@@ -274,9 +271,9 @@ def calculate_threshold(
     plot_group: str | None = None,
     figsize: tuple[float, float] = (4.5, 2.5),
     save_plot: str | None = None,
-    ncpu: int = 1,
+    n_cpus: int = 1,
     **kwargs,
-) -> Dandelion:
+) -> float:
     """
     Calculating nearest neighbor distances for tuning clonal assignment with `shazam`.
 
@@ -310,9 +307,6 @@ def calculate_threshold(
         If False, perform partition as a 1-stage process during which V gene, J gene, and junction length
         are used to create partitions simultaneously.
         Defaults to False.
-    onlyHeavy : bool, optional
-        use only the IGH (BCR) or TRB/TRD (TCR) sequences for grouping. Only applicable to single-cell mode.
-        See groupGenes for further details.
     model : Literal["ham", "aa", "hh_s1f", "hh_s5f", "mk_rs1nf", "hs1f_compat", "m1n_compat", ] | None, optional
         underlying SHM model, which must be one of "ham","aa","hh_s1f","hh_s5f","mk_rs1nf","hs1f_compat","m1n_compat".
     normalize_method : Literal["len"] | None, optional
@@ -347,22 +341,22 @@ def calculate_threshold(
         size of plot.
     save_plot : str | None, optional
         if specified, plot will be save with this path.
-    ncpu : int, optional
+    n_cpus : int, optional
         number of cpus to run `distToNearest`. defaults to 1.
     **kwargs
         passed to shazam's `distToNearest <https://shazam.readthedocs.io/en/stable/topics/distToNearest/>`__.
 
     Returns
     -------
-    Dandelion
-        Dandelion object with `.threshold` slot filled.
+    float
+        threshold value for clonal assignment in DefineClones.
 
     Raises
     ------
     ValueError
         if automatic thresholding failed.
     """
-    start = logg.info("Calculating threshold")
+    logg.info("Calculating threshold")
     try:
         from rpy2.robjects.packages import importr
         from rpy2.rinterface import NULL
@@ -374,7 +368,7 @@ def calculate_threshold(
             )
         )
     if isinstance(data, Dandelion):
-        dat = load_data(data.data)
+        dat = load_data(data._data)
     elif isinstance(data, pd.DataFrame) or os.path.isfile(str(data)):
         dat = load_data(data)
         warnings.filterwarnings("ignore")
@@ -407,10 +401,9 @@ def calculate_threshold(
                 locusColumn="locus",
                 VJthenLen=VJthenLen,
                 vCallColumn=v_call,
-                onlyHeavy=onlyHeavy,
                 normalize=norm_,
                 model=model_,
-                nproc=ncpu,
+                nproc=n_cpus,
                 **kwargs,
             )
         except:
@@ -418,6 +411,8 @@ def calculate_threshold(
                 "Rerun this after filtering. For now, switching to heavy mode."
             )
             dat_h = dat[dat["locus"].isin(["IGH", "TRB", "TRD"])].copy()
+            # drop "cell_id" column as it causes issues
+            dat_h = dat_h.drop("cell_id", axis=1)
             dat_h_r = safe_py2rpy(dat_h)
 
             dist_ham = sh.distToNearest(
@@ -425,7 +420,7 @@ def calculate_threshold(
                 vCallColumn=v_call,
                 model=model_,
                 normalize=norm_,
-                nproc=ncpu,
+                nproc=n_cpus,
                 **kwargs,
             )
     dist_ham = safe_rpy2py(dist_ham)
@@ -551,27 +546,8 @@ def calculate_threshold(
         if save_plot is not None:
             save_as_pdf_pages([p], filename=save_plot, verbose=False)
         p.show()
-    else:
-        logg.info(
-            "Automatic Threshold : "
-            + str(np.around(threshold, decimals=2))
-            + "\n method = "
-            + str(threshold_method_)
-        )
-    if isinstance(data, Dandelion):
-        data.threshold = tr
-        logg.info(
-            " finished",
-            time=start,
-            deep=(
-                "Updated Dandelion object: \n"
-                "   'threshold', threshold value for tuning clonal assignment\n"
-            ),
-        )
-    else:
-        output = Dandelion(dat)
-        output.threshold = tr
-        return output
+
+    return tr
 
 
 def safe_py2rpy(df: pd.DataFrame) -> "rpy2 object":

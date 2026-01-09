@@ -6,7 +6,7 @@ import pytest
 @pytest.mark.usefixtures("create_testfolder")
 def test_loadtravdv(airr_travdv):
     """test_loadtravdv"""
-    temp = ddl.utilities._utilities.check_travdv(airr_travdv)
+    temp = ddl.utilities._core.check_travdv(airr_travdv)
     assert temp.shape[0] == 6
     assert all([i == "TRA" for i in airr_travdv["locus"]])
     assert all([i == "TRD" for i in temp["locus"]])
@@ -16,15 +16,15 @@ def test_loadtravdv(airr_travdv):
 def test_loadtravdv2(airr_travdv):
     """test_loadtravdv2"""
     vdj = ddl.Dandelion(airr_travdv)
-    assert vdj.data.shape[0] == 6
-    assert all([i == "TRD" for i in vdj.data["locus"]])
+    assert vdj._data.shape[0] == 6
+    assert all([i == "TRD" for i in vdj._data["locus"]])
 
 
 @pytest.mark.usefixtures("create_testfolder", "fasta_10x_travdv")
 def test_write_fasta_tr(create_testfolder, fasta_10x_travdv):
     """testwrite_fasta_tr"""
     out_fasta = create_testfolder / "filtered_contig.fasta"
-    ddl.utl.write_fasta(fasta_dict=fasta_10x_travdv, out_fasta=out_fasta)
+    ddl.utl._core.write_fasta(fasta_dict=fasta_10x_travdv, out_fasta=out_fasta)
     assert len(list(create_testfolder.iterdir())) == 1
 
 
@@ -63,7 +63,7 @@ def test_loadtravdv_reannotated(create_testfolder):
     vdj = ddl.Dandelion(
         create_testfolder / "dandelion" / "filtered_contig_dandelion.tsv"
     )
-    assert len([i for i in vdj.data["locus"] if i == "TRD"]) == 0
+    assert len([i for i in vdj._data["locus"] if i == "TRD"]) == 0
 
 
 @pytest.mark.usefixtures("create_testfolder", "dummy_adata_travdv")
@@ -72,6 +72,6 @@ def test_travdv_filter(create_testfolder, dummy_adata_travdv):
     vdj = ddl.Dandelion(
         create_testfolder / "dandelion" / "filtered_contig_dandelion.tsv"
     )
-    assert len([i for i in vdj.data["locus"] if i == "TRD"]) == 0
+    assert len([i for i in vdj._data["locus"] if i == "TRD"]) == 0
     vdj2, adata = ddl.pp.check_contigs(vdj, dummy_adata_travdv)
-    assert vdj2.data.shape[0] > 0
+    assert vdj2._data.shape[0] > 0

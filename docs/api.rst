@@ -9,7 +9,6 @@ Preprocessing: `pp`
    assign_isotypes
    check_contigs
    create_germlines
-   filter_contigs
    format_fasta
    format_fastas
    reannotate_genes
@@ -22,27 +21,25 @@ Tools: `tl`
 .. autosummary::
    :toctree: .
 
-
-   transfer
-   find_clones
-   define_clones
-   generate_network
    clone_centrality
    clone_degree
    clone_diversity
    clone_overlap
    clone_rarefaction
    clone_size
+   define_clones
    extract_edge_weights
+   find_clones
+   generate_network
    productive_ratio
-   vj_usage_pca
-   setup_vdj_pseudobulk
-   vdj_pseudobulk
+   project_pseudotime_to_cell
    pseudobulk_gex
    pseudotime_transfer
-   project_pseudotime_to_cell
-   bin_expression
-   chatterjee_corr
+   setup_vdj_pseudobulk
+   transfer
+   vdj_pseudobulk
+   vdj_sample
+   vj_usage_pca
 
 
 Plotting: `pl`
@@ -70,6 +67,7 @@ Utilities: `utl`
    concat
    load_data
    read_h5ddl
+   read_h5ddl_legacy
    read_pkl
    read_airr
    read_10x_airr
@@ -80,6 +78,15 @@ Utilities: `utl`
    from_scirpy
    makeblastdb
 
+Tutorial
+========
+.. module:: dandelion.tutorial
+
+.. autosummary::
+   :toctree: .
+
+   setup_dandelion_tutorial_bcr
+   setup_dandelion_tutorial_tcr
 
 Dandelion
 =========
@@ -110,6 +117,7 @@ dandelion.Dandelion
    add_sequence_prefix
    add_sequence_suffix
    copy
+   compute
    reset_ids
    simplify
    store_germline_reference

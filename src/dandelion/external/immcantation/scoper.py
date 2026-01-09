@@ -4,9 +4,8 @@ import pandas as pd
 
 from typing import Literal
 
-from dandelion.utilities._core import Dandelion
+from dandelion.utilities._core import Dandelion, load_data
 from dandelion.utilities._utilities import (
-    load_data,
     sanitize_data,
     sanitize_data_for_saving,
 )
@@ -100,7 +99,7 @@ def identical_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
 
     # sanitize before passing to R
@@ -138,9 +137,8 @@ def identical_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_key,
         retrieve=clone_key,
         retrieve_mode="merge and unique only",
@@ -244,7 +242,7 @@ def hierarchical_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -283,9 +281,8 @@ def hierarchical_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_id,
         retrieve=clone_id,
         retrieve_mode="merge and unique only",
@@ -407,7 +404,7 @@ def spectral_clones(
         )
     scp = importr("scoper")
 
-    db = load_data(vdj_data.data)
+    db = load_data(vdj_data._data)
     warnings.filterwarnings("ignore")
     db = sanitize_data(db)
     if remove_ambiguous:
@@ -452,9 +449,8 @@ def spectral_clones(
     )
     results_dataframe = r["as.data.frame"](results)
     df = safe_rpy2py(results_dataframe)
-    vdj_data.data = df.copy()
+    vdj_data._data = df.copy()
     vdj_data.update_metadata(
-        reinitialize=True,
         clone_key=clone_id,
         retrieve=clone_id,
         retrieve_mode="merge and unique only",

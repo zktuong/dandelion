@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import bz2
 import gzip
 import h5py
@@ -6,22 +5,29 @@ import json
 import os
 import pickle
 import re
-import shutil
 
 import _pickle as cPickle
 import networkx as nx
 import numpy as np
 import pandas as pd
 
-from anndata import AnnData
 from collections import defaultdict, OrderedDict
 from pathlib import Path
 from scanpy import logging as logg
-from typing import Literal
+from scipy.sparse import csr_matrix
 
-from dandelion.tools._tools import transfer as tf
-from dandelion.utilities._core import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion, load_data
+from dandelion.utilities._utilities import (
+    DEFAULT_PREFIX,
+    deprecated,
+    isGZIP,
+    isBZIP,
+    present,
+    all_missing,
+    sanitize_blastn,
+    sanitize_data,
+    Contig,
+)
 
 pickle.HIGHEST_PROTOCOL = 4
 
@@ -127,7 +133,7 @@ def fasta_iterator(fh: str) -> tuple[str, str]:
 
 def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     """
-    Read in and returns a `Dandelion` class saved using pickle format.
+    Read in and returns a Dandelion class saved using pickle format.
 
     Parameters
     ----------
@@ -137,7 +143,7 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     Returns
     -------
     Dandelion
-        saved `Dandelion` object in pickle format.
+        saved Dandelion object in pickle format.
     """
     if isBZIP(str(filename)):
         data = bz2.BZ2File(filename, "rb")
@@ -151,62 +157,82 @@ def read_pkl(filename: str = "dandelion_data.pkl.pbz2") -> Dandelion:
     return data
 
 
-def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
+def decode(df):
+    """Decode byte strings in a DataFrame."""
+    for col in df:
+        if df[col].dtype == object:
+            df[col] = df[col].apply(
+                lambda x: x.decode("utf-8") if isinstance(x, bytes) else x
+            )
+    return df
+
+
+def read_h5ddl(
+    filename: Path | str = "dandelion_data.h5ddl",
+    distance_zarr: Path | str | None = None,
+    verbose: bool = False,
+) -> Dandelion:
     """
-    Read in and returns a `Dandelion` class from .h5ddl format.
+    Read in and returns a Dandelion class from .h5ddl format.
 
     Parameters
     ----------
     filename : Path | str, optional
         path to `.h5ddl` file
+    distance_zarr : Path | str | None, optional
+        path to Zarr array for distances if computed lazily.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object.
+        Dandelion object.
 
     Raises
     ------
     AttributeError
         if `data` not found in `.h5ddl` file.
     """
-    data = load_data(_read_h5_group(filename, group="data"))
+    data = decode(load_data(_read_h5_group(filename, group="data")))
+    # final decode to ensure all byte strings are converted to str
     metadata = _read_h5_group(filename, group="metadata")
-    try:
-        metadata_names = _read_h5_group(filename, group="metadata_names")
-        metadata.index = metadata_names
-    except KeyError:  # pragma: no cover
-        pass
+    metadata_names = _read_h5_group(filename, group="metadata_names")
+    metadata.index = metadata_names
 
     try:
-        g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0")
-        g_1 = _read_h5_csr_matrix(filename, group="graph/graph_1")
+        g_0 = _read_h5_csr_matrix(filename, group="graph/graph_0", as_df=True)
+        g_1 = _read_h5_csr_matrix(filename, group="graph/graph_1", as_df=True)
         graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
         graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
         graph = (graph0, graph1)
-    except:
+    except KeyError:
         pass
+
+    try:
+        distances = _read_h5_csr_matrix(
+            filename, group="distances", as_df=False
+        )
+        distances._index_names = metadata.index
+    except KeyError:
+        if distance_zarr is not None:
+            import dask.array as da
+
+            distances = da.from_zarr(str(distance_zarr) + "/distance_matrix")
 
     try:
         layout0 = _read_h5_dict(filename, group="layout/layout_0")
         layout1 = _read_h5_dict(filename, group="layout/layout_1")
         layout = (layout0, layout1)
-    except:
+    except KeyError:
         pass
 
     try:
         germline = _read_h5_zip(
             filename, group="germline", key_group="keys", value_group="values"
         )
-    except:
-
+    except KeyError:
         pass
-
-    try:
-        with h5py.File(filename, "r") as hf:
-            threshold = float(np.array(hf["threshold"]))
-    except:
-        threshold = None
 
     constructor = {}
     constructor["data"] = data
@@ -218,15 +244,13 @@ def read_h5ddl(filename: Path | str = "dandelion_data.h5ddl") -> Dandelion:
         constructor["layout"] = layout
     if "graph" in locals():
         constructor["graph"] = graph
-    try:
-        res = Dandelion(**constructor)
-    except:
-        res = Dandelion(**constructor, initialize=False)
+    if "distances" in locals():
+        constructor["distances"] = distances
 
-    if "threshold" in locals():
-        res.threshold = threshold
-    else:
-        pass
+    res = Dandelion(**constructor, verbose=verbose)
+    # ensure that the metadata is decoded
+    res._metadata = decode(res._metadata)
+
     return res
 
 
@@ -236,6 +260,7 @@ def read_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Reads a standard single-cell AIRR rearrangement file.
@@ -256,13 +281,15 @@ def read_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object from AIRR file.
+        Dandelion object from AIRR file.
     """
-    vdj = Dandelion(file)
+    vdj = Dandelion(file, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -284,6 +311,7 @@ def read_bd_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     Read the TCR or BCR `_AIRR.tsv` produced from BD Rhapsody technology.
@@ -301,13 +329,15 @@ def read_bd_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object from BD AIRR file.
+        Dandelion object from BD AIRR file.
     """
-    vdj = Dandelion(file)
+    vdj = Dandelion(file, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -329,6 +359,8 @@ def read_parse_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
+    **kwargs,
 ) -> Dandelion:
     """
     Read the TCR or BCR `_annotation_airr.tsv` produced from Parse Biosciences Evercode technology.
@@ -349,11 +381,15 @@ def read_parse_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
+    **kwargs
+        additional keyword arguments passed to Dandelion.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object from Parse AIRR file.
+        Dandelion object from Parse AIRR file.
     """
     data = load_data(file)
     data.drop("cell_id", axis=1, inplace=True)  # it's the wrong cell_id
@@ -366,7 +402,7 @@ def read_parse_airr(
             "cdr3_aa": "junction_aa",
         }
     )
-    vdj = Dandelion(data)
+    vdj = Dandelion(data, verbose=verbose, **kwargs)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -388,9 +424,10 @@ def read_10x_airr(
     suffix: str | None = None,
     sep: str = "_",
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
-    Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a `Dandelion` object.
+    Read the `airr_rearrangement.tsv` produced from Cell Ranger directly and returns a Dandelion object.
 
     This is not to be used for any airr rearrangement file, but specifically for the one produced by 10x Genomics.
     For standard airr rearrangement files e.g. `all_contig_dandelion.tsv`, use `ddl.Dandelion` or `ddl.read_airr` directly.
@@ -408,11 +445,13 @@ def read_10x_airr(
     remove_trailing_hyphen_number : bool, optional
         whether or not to remove the trailing hyphen number e.g. '-1' from the
         cell/contig barcodes.
+    verbose : bool, optional
+        whether or not to print messages during creation of the Dandelion object.
 
     Returns
     -------
     Dandelion
-        `Dandelion` object from 10x AIRR file.
+        Dandelion object from 10x AIRR file.
     """
     dat = load_data(file)
     # get all the v,d,j,c calls
@@ -445,7 +484,7 @@ def read_10x_airr(
     null_columns = [col for col in dat.columns if all_missing(dat[col])]
     if len(null_columns) > 0:
         dat.drop(null_columns, inplace=True, axis=1)
-    vdj = Dandelion(dat)
+    vdj = Dandelion(dat, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -469,6 +508,7 @@ def read_10x_vdj(
     sep: str = "_",
     remove_malformed: bool = True,
     remove_trailing_hyphen_number: bool = False,
+    verbose: bool = False,
 ) -> Dandelion:
     """
     A parser to read .csv and .json files directly from folder containing 10x cellranger-outputs.
@@ -500,7 +540,7 @@ def read_10x_vdj(
     Returns
     -------
     Dandelion
-        `Dandelion` object holding the parsed data.
+        Dandelion object holding the parsed data.
 
     Raises
     ------
@@ -636,7 +676,9 @@ def read_10x_vdj(
     # quick check if locus is malformed
     if remove_malformed:
         res = res[~res["locus"].str.contains("[|]")]
-    vdj = Dandelion(res)
+    # change all unknowns to blanks
+    res.replace("unknown", "", inplace=True)
+    vdj = Dandelion(res, verbose=verbose)
     if suffix is not None:
         vdj.add_sequence_suffix(
             suffix,
@@ -802,448 +844,6 @@ def parse_annotation(data: pd.DataFrame) -> defaultdict:
     return out
 
 
-def change_file_location(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-) -> None:
-    """
-    Move file from tmp folder to dandelion folder.
-
-    Only used for TCR data.
-
-    Parameters
-    ----------
-    data : list[Path | str]
-        list of data folders containing the .tsv files. if provided as a single string, it will first be converted to a
-        list; this allows for the function to be run on single/multiple samples.
-    filename_prefix : list[str] | str | None, optional
-        list of prefixes of file names preceding '_contig'. None defaults to 'all'.
-    """
-    fileformat = "blast"
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    informat_dict = {
-        "changeo": "_igblast_db-pass.tsv",
-        "blast": "_igblast_db-pass.tsv",
-        "airr": "_igblast_gap.tsv",
-    }
-    filePath = None
-
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with=informat_dict[fileformat],
-            sub_dir="tmp",
-        )
-        if filePath is not None:
-            tmp = check_travdv(filePath)
-            _airrfile = str(filePath).replace("_db-pass.tsv", ".tsv")
-            airr_output = load_data(_airrfile)
-            cols_to_merge = [
-                "junction_aa_length",
-                "fwr1_aa",
-                "fwr2_aa",
-                "fwr3_aa",
-                "fwr4_aa",
-                "cdr1_aa",
-                "cdr2_aa",
-                "cdr3_aa",
-                "sequence_alignment_aa",
-                "v_sequence_alignment_aa",
-                "d_sequence_alignment_aa",
-                "j_sequence_alignment_aa",
-            ]
-            for x in cols_to_merge:
-                tmp[x] = pd.Series(airr_output[x])
-
-            write_airr(tmp, filePath)
-            fp = Path(filePath)
-            shutil.copyfile(fp, fp.parent.parent / fp.name)
-
-
-def move_to_tmp(
-    data: list[Path | str], filename_prefix: list[str] | str | None = None
-) -> None:
-    """Move file to tmp."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        filePath1 = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_annotations.csv",
-        )
-        filePath2 = check_filepath(
-            data[i], filename_prefix=filename_prefix[i], ends_with=".fasta"
-        )
-        for fp in [filePath1, filePath2]:
-            fp = Path(fp)
-            shutil.move(fp, fp.parent / "tmp" / fp.name)
-
-
-def make_all(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-    loci: Literal["ig", "tr"] = "tr",
-) -> None:
-    """Construct db-all tsv file."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        if loci == "tr":
-            filePath1 = check_filepath(
-                data[i],
-                filename_prefix=filename_prefix[i],
-                ends_with="_igblast_db-pass.tsv",
-                sub_dir="tmp",
-            )
-        else:
-            filePath1 = check_filepath(
-                data[i],
-                filename_prefix=filename_prefix[i],
-                ends_with="_igblast_db-pass_genotyped.tsv",
-                sub_dir="tmp",
-            )
-            if filePath1 is None:
-                filePath1 = check_filepath(
-                    data[i],
-                    filename_prefix=filename_prefix[i],
-                    ends_with="_igblast_db-pass.tsv",
-                    sub_dir="tmp",
-                )
-                out_ex = "db-pass.tsv"
-            else:
-                out_ex = "db-pass_genotyped.tsv"
-        filePath2 = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_igblast_db-fail.tsv",
-            sub_dir="tmp",
-        )
-        if filePath1 is not None:
-            df1 = pd.read_csv(filePath1, sep="\t")
-            df1 = check_complete(df1)
-            write_airr(df1, filePath1)
-            if filePath2 is not None:
-                df2 = pd.read_csv(filePath2, sep="\t")
-                df2 = check_complete(df2)
-                df = pd.concat([df1, df2])
-                if loci == "tr":
-                    write_airr(
-                        df,
-                        filePath1.parent
-                        / (
-                            filePath1.name.rsplit("db-pass.tsv")[0]
-                            + "db-all.tsv"
-                        ),
-                    )
-                else:
-                    write_airr(
-                        df,
-                        filePath1.parent
-                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
-                    )
-                write_airr(df2, filePath2)
-            else:
-                if loci == "tr":
-                    write_airr(
-                        df1,
-                        filePath1.parent
-                        / (
-                            filePath1.name.rsplit("db-pass.tsv")[0]
-                            + "db-all.tsv"
-                        ),
-                    )
-                else:
-                    write_airr(
-                        df1,
-                        filePath1.parent
-                        / (filePath1.name.rsplit(out_ex)[0] + "db-all.tsv"),
-                    )
-
-
-def rename_dandelion(
-    data: list[Path | str],
-    filename_prefix: list[str] | str | None = None,
-    ends_with: str = "_igblast_db-pass_genotyped.tsv",
-    sub_dir: str | None = None,
-) -> None:
-    """Rename final dandlion file."""
-    data, filename_prefix = check_data(data, filename_prefix)
-
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with=ends_with,
-            sub_dir=sub_dir,
-        )  # must be whatever's after contig
-        if sub_dir is None:
-            fp = filePath.parent / filePath.name.rsplit(ends_with)[0]
-        else:
-            fp = filePath.parent.parent / filePath.name.rsplit(ends_with)[0]
-        shutil.move(filePath, Path(str(fp) + "_dandelion.tsv"))
-
-
-def check_complete(df: pd.DataFrame) -> pd.DataFrame:
-    """check if contig contains cdr3.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        airr data frame.
-
-    Returns
-    -------
-    pd.DataFrame
-        completed airr data frame
-    """
-    if "complete_vdj" not in df:
-        df["complete_vdj"] = ""
-    for i in df.index:
-        junc = df.loc[i, "junction"]
-        if not present(junc):
-            df.at[i, "productive"] = "F"
-            df.at[i, "complete_vdj"] = "F"
-    return df
-
-
-def from_ak(airr: "Array") -> pd.DataFrame:
-    """
-    Convert an AIRR-formatted array to a pandas DataFrame.
-
-    Parameters
-    ----------
-    airr : Array
-        The AIRR-formatted array to be converted.
-
-    Returns
-    -------
-    pd.DataFrame
-        The converted pandas DataFrame.
-
-    Raises
-    ------
-    KeyError
-        If `sequence_id` not found in the data.
-    """
-    import awkward as ak
-
-    df = ak.to_dataframe(airr)
-    # check if 'sequence_id' column does not exist or if any value in 'sequence_id' is NaN
-    if "sequence_id" not in df.columns or df["sequence_id"].isnull().any():
-        df_reset = df.reset_index()
-
-        # create a new 'sequence_id' column
-        df_reset["sequence_id"] = df_reset.apply(
-            lambda row: f"{row['cell_id']}_contig_{row['subentry'] + 1}", axis=1
-        )
-
-        # set 'entry' and 'subentry' back as the index
-        df = df_reset.set_index(["entry", "subentry"])
-
-    if "sequence_id" in df.columns:
-        df.set_index("sequence_id", drop=False, inplace=True)
-    if "cell_id" not in df.columns:
-        df["cell_id"] = [c.split("_contig")[0] for c in df["sequence_id"]]
-
-    return df
-
-
-def to_ak(
-    data: pd.DataFrame,
-    **kwargs,
-) -> tuple["Array", pd.DataFrame]:
-    """
-    Convert data from a DataFrame to an AnnData object with AIRR format.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        The input DataFrame containing the data.
-    **kwargs
-        Additional keyword arguments passed to `scirpy.io.read_airr`.
-
-    Returns
-    -------
-    tuple[Array, pd.DataFrame]
-        A tuple containing the AIRR-formatted data as an ak.Array and the cell-level attributes as a pd.DataFrame.
-    """
-
-    try:
-        import scirpy as ir
-    except:
-        raise ImportError("Please install scirpy to use this function.")
-
-    adata = ir.io.read_airr(data, **kwargs)
-
-    return adata.obsm["airr"], adata.obs
-
-
-def _create_anndata(
-    airr: "Array",
-    obs: pd.DataFrame,
-    adata: AnnData | None = None,
-) -> AnnData:
-    """
-    Create an AnnData object with the given AIRR array and observation data.
-
-    Parameters
-    ----------
-    airr : Array
-        The AIRR array.
-    obs : pd.DataFrame
-        The observation data.
-    adata : AnnData | None, optional
-        An existing AnnData object to update. If None, a new AnnData object will be created.
-
-    Returns
-    -------
-    AnnData
-        The AnnData object with the AIRR array and observation data.
-    """
-    obsm = {"airr": airr}
-    temp = AnnData(X=None, obs=obs, obsm=obsm)
-
-    if adata is None:
-        adata = temp
-    else:
-        cell_names = adata.obs_names.intersection(temp.obs_names)
-        adata = adata[adata.obs_names.isin(cell_names)].copy()
-        temp = temp[temp.obs_names.isin(cell_names)].copy()
-        adata.obsm = dict() if adata.obsm is None else adata.obsm
-        adata.obsm.update(temp.obsm)
-
-    return adata
-
-
-def _create_mudata(
-    gex: AnnData,
-    adata: AnnData,
-    key: tuple[str, str] = ("gex", "airr"),
-) -> MuData:
-    """
-    Create a MuData object from the given AnnData objects.
-
-    Parameters
-    ----------
-    gex : AnnData
-        The AnnData object containing gene expression data.
-    adata : AnnData
-        The AnnData object containing additional data.
-    key : tuple[str, str], optional
-        The keys to use for the gene expression and additional data in the MuData object. Defaults to ("gex", "airr").
-
-    Returns
-    -------
-    MuData
-        The created MuData object.
-
-    Raises
-    ------
-    ImportError
-        If the mudata package is not installed.
-    """
-
-    try:
-        import mudata
-    except ImportError:
-        raise ImportError("Please install mudata. pip install mudata")
-    if gex is not None:
-        return mudata.MuData({key[0]: gex, key[1]: adata})
-    return mudata.MuData({key[1]: adata})
-
-
-def to_scirpy(
-    data: Dandelion,
-    transfer: bool = False,
-    to_mudata: bool = True,
-    gex_adata: AnnData | None = None,
-    key: tuple[str, str] = ("gex", "airr"),
-    **kwargs,
-) -> AnnData | MuData:
-    """
-    Convert Dandelion data to scirpy-compatible format.
-
-    Parameters
-    ----------
-    data : Dandelion
-        The Dandelion object containing the data to be converted.
-    transfer : bool, optional
-        Whether to transfer additional information from Dandelion to the converted data. Defaults to False.
-    to_mudata : bool, optional
-        Whether to convert the data to MuData format instead of AnnData. Defaults to True.
-        If converting to AnnData, it will assert that the same cell_ids and .obs_names are present in the `gex_adata` provided.
-    gex_adata : AnnData, optional
-        An existing AnnData object to be used as the base for the converted data if provided.
-    key : tuple[str, str], optional
-        A tuple specifying the keys for the 'gex' and 'airr' fields in the converted data. Defaults to ("gex", "airr").
-    **kwargs
-        Additional keyword arguments passed to `scirpy.io.read_airr`.
-
-    Returns
-    -------
-    AnnData | MuData
-        The converted data in either AnnData or MuData format.
-    """
-
-    if "umi_count" not in data.data and "duplicate_count" in data.data:
-        data.data["umi_count"] = data.data["duplicate_count"]
-    for h in [
-        "sequence",
-        "rev_comp",
-        "sequence_alignment",
-        "germline_alignment",
-        "v_cigar",
-        "d_cigar",
-        "j_cigar",
-    ]:
-        if h not in data.data:
-            data.data[h] = None
-
-    airr, obs = to_ak(data.data, **kwargs)
-    if to_mudata:
-        adata = _create_anndata(
-            airr,
-            obs,
-        )
-        if transfer:
-            tf(adata, data)  # need to make a version that is not so verbose?
-
-        return _create_mudata(gex_adata, adata, key)
-    else:
-        adata = _create_anndata(airr, obs, gex_adata)
-
-        if transfer:
-            tf(adata, data)
-        return adata
-
-
-def from_scirpy(data: AnnData | MuData) -> Dandelion:
-    """
-    Convert data from scirpy format to Dandelion format.
-
-    Parameters
-    ----------
-    data : AnnData | MuData
-        The input data in scirpy format.
-
-    Returns
-    -------
-    Dandelion
-        The converted data in Dandelion format.
-    """
-
-    if not isinstance(data, AnnData):
-        data = data.mod["airr"]
-    data = data.copy()
-    data.obsm["airr"]["cell_id"] = data.obs.index
-    data = from_ak(data.obsm["airr"])
-
-    return Dandelion(data)
-
-
 def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     """
     Read a specific group from an H5 file.
@@ -1265,52 +865,46 @@ def _read_h5_group(filename: Path | str, group: str) -> pd.DataFrame:
     KeyError
         If the specified group is not found in the H5 file.
     """
-    try:
-        with h5py.File(filename, "r") as hf:
-            data_group = hf[group]
-            structured_data_array = data_group[:]
-            decoded = {}
-            if structured_data_array.dtype.names is not None:
-                for col in structured_data_array.dtype.names:
-                    dtype = structured_data_array.dtype[col]
-                    if dtype.char == "S":  # Check if dtype is byte strings
-                        # Decode byte strings
-                        decoded.update(
-                            {
-                                col: np.array(
-                                    [
-                                        (
-                                            x.astype(str)
-                                            if isinstance(x, bytes)
-                                            else x
-                                        )
-                                        for x in structured_data_array[col]
-                                    ]
-                                )
-                            }
-                        )
-                    else:
-                        decoded.update({col: structured_data_array[col]})
-                # Create a DataFrame from the structured array
-                data = pd.DataFrame(decoded)
-            else:
-                data = np.array(
-                    [
-                        x.astype(str) if isinstance(x, bytes) else x
-                        for x in structured_data_array
-                    ]
-                )
-    except TypeError:
-        try:
-            data = pd.read_hdf(filename, group)
-        except:
-            raise KeyError(
-                f"{str(filename)} does not contain attribute `{group}`"
+    with h5py.File(filename, "r") as hf:
+        data_group = hf[group]
+        structured_data_array = data_group[:]
+        decoded = {}
+        if structured_data_array.dtype.names is not None:
+            for col in structured_data_array.dtype.names:
+                dtype = structured_data_array.dtype[col]
+                if dtype.char == "S":  # Check if dtype is byte strings
+                    # Decode byte strings
+                    decoded.update(
+                        {
+                            col: np.array(
+                                [
+                                    (
+                                        x.astype(str)
+                                        if isinstance(x, bytes)
+                                        else x
+                                    )
+                                    for x in structured_data_array[col]
+                                ]
+                            )
+                        }
+                    )
+                else:
+                    decoded.update({col: structured_data_array[col]})
+            # Create a DataFrame from the structured array
+            data = pd.DataFrame(decoded)
+        else:
+            data = np.array(
+                [
+                    x.astype(str) if isinstance(x, bytes) else x
+                    for x in structured_data_array
+                ]
             )
     return data
 
 
-def _read_h5_csr_matrix(filename: Path | str, group: str) -> pd.DataFrame:
+def _read_h5_csr_matrix(
+    filename: Path | str, group: str, as_df: bool = True
+) -> pd.DataFrame:
     """
     Read a group from an H5 file originally stored as a compressed sparse matrix.
 
@@ -1326,26 +920,20 @@ def _read_h5_csr_matrix(filename: Path | str, group: str) -> pd.DataFrame:
     pd.DataFrame
         The data from the specified group as a pandas dataframe.
     """
-    try:
-        with h5py.File(filename, "r") as f:
-            data = f[f"{group}/data"][:]
-            indices = f[f"{group}/indices"][:]
-            indptr = f[f"{group}/indptr"][:]
-            shape = tuple(f[f"{group}/shape"][:])
-            # Reconstruct CSR matrix
-            loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
-            df = pd.DataFrame(loaded_matrix.toarray())
-            df_col = _read_h5_group(filename, f"{group}/column")
-            df_index = _read_h5_group(filename, f"{group}/index")
-            df.columns = df_col
-            df.index = df_index
-    except TypeError:
-        try:
-            data = pd.read_hdf(filename, group)
-        except:
-            raise KeyError(
-                f"{str(filename)} does not contain attribute `{group}`"
-            )
+    with h5py.File(filename, "r") as f:
+        data = f[f"{group}/data"][:]
+        indices = f[f"{group}/indices"][:]
+        indptr = f[f"{group}/indptr"][:]
+        shape = tuple(f[f"{group}/shape"][:])
+        # Reconstruct CSR matrix
+        loaded_matrix = csr_matrix((data, indices, indptr), shape=shape)
+        if not as_df:
+            return loaded_matrix
+        df = pd.DataFrame(loaded_matrix.toarray())
+        df_col = _read_h5_group(filename, f"{group}/column")
+        df_index = _read_h5_group(filename, f"{group}/index")
+        df.columns = df_col
+        df.index = df_index
     return df
 
 
@@ -1430,18 +1018,143 @@ def _read_h5_zip(
         The dictionary data from the specified groups.
     """
     with h5py.File(filename, "r") as hf:
-        try:
-            keys = [
-                key.decode("utf-8") for key in hf[f"{group}/{key_group}"][:]
-            ]
-            values = [
-                value.decode("utf-8")
-                for value in hf[f"{group}/{value_group}"][:]
-            ]
-            # Reconstruct the dictionary
-            out_dict = dict(zip(keys, values))
-        except:
-            out_dict = {}
-            for g in hf[group].attrs:
-                out_dict.update({g: hf[group].attrs[g]})
+        keys = [key.decode("utf-8") for key in hf[f"{group}/{key_group}"][:]]
+        values = [
+            value.decode("utf-8") for value in hf[f"{group}/{value_group}"][:]
+        ]
+        # Reconstruct the dictionary
+        out_dict = dict(zip(keys, values))
     return out_dict
+
+
+@deprecated(
+    deprecated_in="1.0.0",
+    removed_in="1.1.0",
+    details="legacy .h5ddl format will no longer be supported.",
+)
+def read_h5ddl_legacy(
+    filename: Path | str = "dandelion_data.h5ddl",
+) -> Dandelion:
+    """
+    Read in and returns a Dandelion class from .h5ddl format saved in legacy (version 3) format.
+
+    Parameters
+    ----------
+    filename : Path | str, optional
+        path to `.h5ddl` file
+
+    Returns
+    -------
+    Dandelion
+        Dandelion object.
+
+    Raises
+    ------
+    AttributeError
+        if `data` not found in `.h5ddl` file.
+    """
+    data = decode(load_data(_read_h5_group_legacy(filename, group="data")))
+    # final decode to ensure all byte strings are converted to str
+    metadata = _read_h5_group_legacy(filename, group="metadata")
+    try:
+        g_0 = _read_h5_group_legacy(filename, group="graph/graph_0")
+        g_1 = _read_h5_group_legacy(filename, group="graph/graph_1")
+        graph0 = _create_graph(g_0, adjust_adjacency=1, fillna=0)
+        graph1 = _create_graph(g_1, adjust_adjacency=1, fillna=0)
+        graph = (graph0, graph1)
+    except KeyError:
+        pass
+
+    try:
+        layout0 = _read_h5_dict(filename, group="layout/layout_0")
+        layout1 = _read_h5_dict(filename, group="layout/layout_1")
+        layout = (layout0, layout1)
+    except KeyError:
+        pass
+
+    try:
+        germline = _read_h5_zip_legacy(filename, group="germline")
+    except KeyError:
+        pass
+
+    constructor = {}
+    constructor["data"] = data
+    if "metadata" in locals():
+        constructor["metadata"] = metadata
+    if "germline" in locals():
+        constructor["germline"] = germline
+    if "layout" in locals():
+        constructor["layout"] = layout
+    if "graph" in locals():
+        constructor["graph"] = graph
+
+    res = Dandelion(**constructor, verbose=False)
+    # ensure that the metadata is decoded
+    res._metadata = decode(res._metadata)
+
+    return res
+
+
+def _read_h5_group_legacy(filename: Path | str, group: str) -> pd.DataFrame:
+    """
+    Read a specific group from an H5 file in legacy format.
+
+    Parameters
+    ----------
+    filename : Path | str
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The data from the specified group as a pandas dataframe.
+
+    Raises
+    ------
+    KeyError
+        If the specified group is not found in the H5 file.
+    """
+    data = pd.read_hdf(filename, group)
+
+    return data
+
+
+def _read_h5_zip_legacy(filename: Path | str, group: str) -> dict:
+    """
+    Read two groups from an H5 file and return them as a dictionary.
+
+    Parameters
+    ----------
+    filename : Path | str
+        The path to the H5 file.
+    group : str
+        The group to read from the H5 file.
+    key_group : str
+        The name of the group containing the keys.
+    value_group : str
+        The name of the group containing the values.
+
+    Returns
+    -------
+    dict
+        The dictionary data from the specified groups.
+    """
+    with h5py.File(filename, "r") as hf:
+        out_dict = {}
+        for g in hf[group].attrs:
+            out_dict.update({g: hf[group].attrs[g]})
+    return out_dict
+
+
+def write_airr(data: pd.DataFrame, save: Path | str) -> None:
+    """Save as airr formatted file."""
+    data = sanitize_data(data)
+    data.to_csv(save, sep="\t", index=False)
+
+
+def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
+    """Write blast output."""
+    data = sanitize_blastn(data)
+    data.to_csv(save, sep="\t", index=False)

@@ -1,258 +1,50 @@
-#!/usr/bin/env python
+from __future__ import annotations
+
+import warnings
+
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-import nxviz as nxv
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    import nxviz as nxv
 import pandas as pd
 import seaborn as sns
 
 from anndata import AnnData
+from collections import defaultdict
+from contextlib import contextmanager
 from itertools import product, cycle
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from nxviz import annotate
-from plotnine import (
-    aes,
-    geom_line,
-    ggplot,
-    ggtitle,
-    labs,
-    options,
-    scale_color_manual,
-    theme_classic,
-    xlab,
-    ylab,
-)
+
 from scanpy.plotting import palettes
 from scanpy.plotting._tools.scatterplots import embedding
-from time import sleep
-from tqdm import tqdm
-from typing import Callable, Literal
+from typing import Callable, Literal, TYPE_CHECKING
 
-from dandelion.tools._diversity import rarefun
-from dandelion.utilities._core import *
-from dandelion.utilities._io import *
-from dandelion.utilities._utilities import *
+from dandelion.utilities._core import Dandelion
 
-
-def clone_rarefaction(
-    vdj_data: AnnData | Dandelion,
-    color: str,
-    clone_key: str | None = None,
-    palette: list[str] | None = None,
-    figsize: tuple[float, float] = (5, 3),
-    chain_status_include: list[
-        Literal[
-            "Single pair",
-            "Orphan VDJ",
-            "Orphan VDJ-exception",
-            "Orphan VJ",
-            "Orphan VJ-exception",
-            "Extra pair",
-            "Extra pair-exception",
-        ]
-    ] = [
-        "Single pair",
-        "Orphan VDJ",
-        "Orphan VDJ-exception",
-        "Extra pair",
-        "Extra pair-exception",
-    ],
-    save: str | None = None,
-) -> ggplot:
-    """
-    Plot rarefaction curve for cell numbers vs clone size.
-
-    Parameters
-    ----------
-    vdj_data : AnnData | Dandelion
-        `AnnData` or `Dandelion` object.
-    color : str
-        Column name to split the calculation of clone numbers for a given number of cells for e.g. sample, patient etc.
-    clone_key : str | None, optional
-        Column name specifying the clone_id column in metadata/obs.
-    palette : list[str] | None, optional
-        Color mapping for unique elements in color. Will try to retrieve from AnnData `.uns` slot if present.
-    figsize : tuple[float, float], optional
-        Size of plot.
-    chain_status_include : list[Literal["Single pair", "Orphan VDJ", "Orphan VDJ-exception", "Orphan VJ", "Orphan VJ-exception", "Extra pair", "Extra pair-exception", ]], optional
-        chain statuses to include.
-    save : str | None, optional
-        Save path.
-
-    Returns
-    -------
-    ggplot
-        rarefaction plot.
-    """
-    if isinstance(vdj_data, AnnData):
-        metadata = vdj_data.obs.copy()
-    elif isinstance(vdj_data, Dandelion):
-        metadata = vdj_data.metadata.copy()
-    if clone_key is None:
-        clonekey = "clone_id"
-    else:
-        clonekey = clone_key
-
-    groups = list(set(metadata[color]))
-    if "contig_QC_pass" in metadata:
-        metadata = metadata[metadata["contig_QC_pass"].isin(TRUES)]
-    elif "chain_status" in metadata:
-        metadata = metadata[metadata["chain_status"].isin(chain_status_include)]
-
-    if type(metadata[clonekey]) == "category":
-        metadata[clonekey] = metadata[clonekey].cat.remove_unused_categories()
-    res = {}
-    for g in groups:
-        _metadata = metadata[metadata[color] == g]
-        res[g] = _metadata[clonekey].value_counts()
-    res_ = pd.DataFrame.from_dict(res, orient="index")
-
-    # remove those with no counts
-    print(
-        "removing due to zero counts:",
-        ", ".join(
-            [res_.index[i] for i, x in enumerate(res_.sum(axis=1) == 0) if x]
-        ),
-    )
-    sleep(0.5)
-    res_ = res_[~(res_.sum(axis=1) == 0)]
-
-    # set up for calculating rarefaction
-    tot = res_.apply(sum, axis=1)
-    # S = res_.apply(lambda x: x[x > 0].shape[0], axis=1)
-    nr = res_.shape[0]
-
-    # append the results to a dictionary
-    rarecurve = {}
-    for i in tqdm(
-        range(0, nr),
-        desc="Calculating rarefaction curve ",
-        bar_format="{l_bar}{bar:10}{r_bar}{bar:-10b}",
-    ):
-        n = np.arange(1, tot[i], step=10)
-        if n[-1:] != tot[i]:
-            n = np.append(n, tot[i])
-        rarecurve[res_.index[i]] = [
-            rarefun(
-                np.array(res_.iloc[i,]),
-                z,
-            )
-            for z in n
-        ]
-    y = pd.DataFrame([rarecurve[c] for c in rarecurve]).T
-    pred = pd.DataFrame(
-        [np.append(np.arange(1, s, 10), s) for s in res_.sum(axis=1)],
-        index=res_.index,
-    ).T
-
-    y = y.melt()
-    pred = pred.melt()
-    pred["yhat"] = y["value"]
-
-    options.figure_size = figsize
-    if palette is None:
-        if isinstance(vdj_data, AnnData):
-            try:
-                pal = vdj_data.uns[str(color) + "_colors"]
-            except:
-                if len(list(set(pred.variable))) <= 20:
-                    pal = palettes.default_20
-                elif len(list(set(pred.variable))) <= 28:
-                    pal = palettes.default_28
-                elif len(list(set(pred.variable))) <= 102:
-                    pal = palettes.default_102
-                else:
-                    pal = cycle(palettes.default_102)
-
-            if pal is not None:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + scale_color_manual(values=(pal))
-                    + geom_line()
-                )
-            else:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + geom_line()
-                )
-        else:
-            if len(list(set(pred.variable))) <= 20:
-                pal = palettes.default_20
-            elif len(list(set(pred.variable))) <= 28:
-                pal = palettes.default_28
-            elif len(list(set(pred.variable))) <= 102:
-                pal = palettes.default_102
-            else:
-                pal = None
-
-            if pal is not None:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + scale_color_manual(values=(pal))
-                    + geom_line()
-                )
-            else:
-                p = (
-                    ggplot(pred, aes(x="value", y="yhat", color="variable"))
-                    + theme_classic()
-                    + xlab("number of cells")
-                    + ylab("number of clones")
-                    + ggtitle("rarefaction curve")
-                    + labs(color=color)
-                    + geom_line()
-                )
-    else:
-        p = (
-            ggplot(pred, aes(x="value", y="yhat", color="variable"))
-            + theme_classic()
-            + xlab("number of cells")
-            + ylab("number of clones")
-            + ggtitle("rarefaction curve")
-            + labs(color=color)
-            + geom_line()
-        )
-    if save:
-        p.save(
-            filename="figures/rarefaction" + str(save),
-            height=plt.rcParams["figure.figsize"][0],
-            width=plt.rcParams["figure.figsize"][1],
-            units="in",
-            dpi=plt.rcParams["savefig.dpi"],
-        )
-
-    return p
+if TYPE_CHECKING:
+    from anndata import AnnData
+    from mudata import MuData
 
 
 def clone_network(
-    adata: AnnData, basis: str = "vdj", edges: bool = True, **kwargs
+    adata: AnnData | MuData, basis: str = "vdj", edges: bool = True, **kwargs
 ) -> None:
     """
     Using scanpy's plotting module to plot the network.
 
     Only thing that is changed is the default options:
-    `basis = 'bcr'` and `edges = True`.
+    `basis = 'vdj'` and `edges = True`.
 
     Parameters
     ----------
-    adata : AnnData
-        AnnData object.
+    adata : AnnData | MuData
+        AnnData or scirpy-formatted MuData object.
     basis : str, optional
         key for embedding.
     edges : bool, optional
@@ -260,7 +52,13 @@ def clone_network(
     **kwargs
         passed `sc.pl.embedding`.
     """
-    embedding(adata, basis=basis, edges=edges, **kwargs)
+    is_mudata = hasattr(adata, "mod")
+    base_adata = adata.mod["airr"] if is_mudata else adata
+
+    with _temporary_obs_columns(
+        base_adata, adata if is_mudata else None, **kwargs
+    ) as kw:
+        embedding(base_adata, basis=basis, edges=edges, **kw)
 
 
 def barplot(
@@ -283,7 +81,7 @@ def barplot(
     Parameters
     ----------
     vdj_data : AnnData | Dandelion
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     color : str
         column name in metadata for plotting in bar plot.
     palette : str, optional
@@ -319,7 +117,7 @@ def barplot(
 
     """
     if isinstance(vdj_data, Dandelion):
-        data = vdj_data.metadata.copy()
+        data = vdj_data._metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
 
@@ -398,7 +196,7 @@ def stackedbarplot(
     Parameters
     ----------
     vdj_data : AnnData | Dandelion
-        `Dandelion` or `AnnData` object.
+        Dandelion or AnnData object.
     color : str
         column name in metadata for plotting in bar plot.
     groupby : str | None
@@ -434,7 +232,7 @@ def stackedbarplot(
         stacked barplot.
     """
     if isinstance(vdj_data, Dandelion):
-        data = vdj_data.metadata.copy()
+        data = vdj_data._metadata.copy()
     elif isinstance(vdj_data, AnnData):
         data = vdj_data.obs.copy()
     # quick fix to prevent dropping of nan
@@ -632,7 +430,7 @@ def spectratype(
     Parameters
     ----------
     vdj_data : Dandelion
-        `Dandelion` object.
+        Dandelion object.
     color : str
         column name in metadata for plotting in bar plot.
     groupby : str
@@ -665,8 +463,8 @@ def spectratype(
     tuple[Figure, Axes]
         spectratype plot.
     """
-    data = vdj_data.data.copy()
-    if "ambiguous" in vdj_data.data:
+    data = vdj_data._data.copy()
+    if "ambiguous" in data:
         data = data[data["ambiguous"] == "F"].copy()
 
     if type(locus) is not list:
@@ -859,7 +657,7 @@ def clone_overlap(
     Parameters
     ----------
     adata : AnnData
-        `AnnData` object.
+        AnnData object.
     groupby : str
         column name in obs for collapsing to nodes in circos plot.
     colorby : str | None, optional
@@ -902,7 +700,7 @@ def clone_overlap(
     KeyError
         if `clone_overlap` not found in `adata.uns`.
     ValueError
-        if input is not `AnnData`.
+        if input is not AnnData.
     """
 
     if clone_key is None:
@@ -1152,3 +950,47 @@ def productive_ratio(
     plt.title(locus)
     # add legend
     plt.legend(handles=legend, **legend_kwargs)
+
+
+@contextmanager
+def _temporary_obs_columns(adata: AnnData, mudata: MuData | None, **kwargs):
+    """Temporarily add columns from submodalities or shared obs to adata.obs."""
+
+    if mudata is None:
+        # plain AnnData, nothing to do
+        yield kwargs
+        return
+
+    added = {}
+    try:
+        for key, value in kwargs.items():
+            if key in {"color", "size", "shape"} and isinstance(value, str):
+                if ":" in value:
+                    # case: "mod:col"
+                    mod, col = value.split(":", 1)
+                    if mod not in mudata.mod:
+                        raise KeyError(f"MuData has no modality '{mod}'")
+                    sub = mudata.mod[mod]
+                    if col not in sub.obs.columns:
+                        raise KeyError(
+                            f"'{col}' not found in mudata.mod['{mod}'].obs"
+                        )
+                    temp_col = f"{mod}:{col}"
+                    adata.obs[temp_col] = sub.obs[col].reindex(adata.obs.index)
+                    kwargs[key] = temp_col
+                    added[temp_col] = None
+                else:
+                    # case: shared obs in mudata.obs
+                    if value not in mudata.obs:
+                        raise KeyError(f"'{value}' not found in mudata.obs")
+                    adata.obs[value] = mudata.obs[value].reindex(
+                        adata.obs.index
+                    )
+                    kwargs[key] = value
+                    added[value] = None
+
+        yield kwargs
+    finally:
+        # cleanup temporary columns
+        for temp_col in added:
+            adata.obs.drop(columns=temp_col, inplace=True, errors="ignore")

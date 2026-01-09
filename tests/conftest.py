@@ -29,6 +29,8 @@ from .fixtures.fixtures import (
     json_10x_cr6,
     processed_files,
     processed_files_tr,
+    vdj_small,
+    vdj_smaller,
 )
 from .fixtures.fixtures_mouse import (
     annotation_10x_mouse,
@@ -72,4 +74,6 @@ __all__ = [
     "database_paths_mouse",
     "dummy_adata_mouse",
     "fasta_10x_mouse",
+    "vdj_small",
+    "vdj_smaller",
 ]

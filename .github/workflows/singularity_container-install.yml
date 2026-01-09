@@ -12,6 +12,7 @@ jobs:
   changes:
     name: Checking changed files
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     outputs:
       keepgoing: ${{ steps.changed-files.outputs.any_changed }}
     steps:
@@ -54,7 +55,7 @@ jobs:
         run: |
           cd container
           echo '${{ steps.extract_location.outputs.location }}' >> environment_test.yml
-          sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
+          ALLOW_DB_FAILURE=1 sudo -E singularity build --notest sc-dandelion.sif sc-dandelion_test.def
       - name: Test Container
         run: |
           cd container

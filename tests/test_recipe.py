@@ -42,14 +42,14 @@ def test_update_plus(airr_reannotated):
     """test_update_plus"""
     vdj = ddl.Dandelion(airr_reannotated)
     vdj.update_plus()
-    assert "mu_count" in vdj.metadata
+    assert "mu_count" in vdj._metadata
     vdj.update_plus(option="sequence")
-    assert "sequence_VDJ" in vdj.metadata
+    assert "sequence_VDJ" in vdj._metadata
     vdj.update_plus(option="cdr3 lengths")
-    assert "junction_aa_length_VDJ" in vdj.metadata
+    assert "junction_aa_length_VDJ" in vdj._metadata
     vdj = ddl.Dandelion(airr_reannotated)
     vdj.update_plus(option="mutations")
-    assert "mu_count" in vdj.metadata
+    assert "mu_count" in vdj._metadata
     vdj.update_plus(option="all")
-    assert "sequence_VDJ" in vdj.metadata
+    assert "sequence_VDJ" in vdj._metadata
     vdj.update_plus(option="cdr3 lengths")

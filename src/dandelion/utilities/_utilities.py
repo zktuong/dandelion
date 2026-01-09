@@ -1,29 +1,28 @@
-#!/usr/bin/env python
+from __future__ import annotations
 import h5py
 import os
 import re
+import unicodedata
 import warnings
 
 import numpy as np
 import pandas as pd
 
-from airr import RearrangementSchema
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from airr import RearrangementSchema
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
 from subprocess import run
-from typing import (
-    TypeVar,
-    Literal,
-    Callable,
-)
+from typing import TypeVar, Literal, Callable
 
 # help silence the dtype warning?
 warnings.filterwarnings("ignore", category=pd.errors.DtypeWarning)
 
 F = TypeVar("F", bound=Callable)  # Define a TypeVar for any callable type
-MuData = TypeVar("mudata._core.mudata.MuData")
-PResults = TypeVar("palantir.presults.PResults")
 
+RECEPTOR_SET = {"B", "abT", "gdT"}
 TRUES = ["T", "t", "True", "true", "TRUE", True, "1"]
 FALSES = ["F", "f", "False", "false", "FALSE", False, "0"]
 HEAVYLONG = ["IGH", "TRB", "TRD"]
@@ -48,22 +47,22 @@ NO_DS = [
     "NZB_BlNJ",
     "SJL_J",
 ]
-EMPTIES = [
-    None,
-    np.nan,
-    pd.NA,
+EMPTIES_STR = [
     "nan",
     "NaN",
     "",
+    "None",
+    "none",
 ]
-DEFAULT_PREFIX = "all"
-BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous"]
+EMPTIES = EMPTIES_STR + [
+    None,
+    np.nan,
+    pd.NA,
+]
 
-# for compatibility with python>=3.10
-try:
-    from collections.abc import Iterable
-except ImportError:
-    from collections.abc import Iterable
+
+DEFAULT_PREFIX = "all"
+BOOLEAN_LIKE_COLUMNS = ["extra", "ambiguous", "full_length", "complete_vdj"]
 
 
 class Tree(defaultdict):
@@ -432,15 +431,16 @@ def sanitize_data_for_saving(
     Parameters
     ----------
     data : pd.DataFrame
-        input dataframe.
+        Input dataframe.
 
     Returns
     -------
     tuple[pd.DataFrame, dict[str, str]]
-        dataframe and corresponding numpy structured dtype.
+        DataFrame and corresponding NumPy structured dtype.
     """
     tmp = data.copy()
     dtype_dict = {}
+
     for col in tmp:
         if col in RearrangementSchema.properties:
             dtype = RearrangementSchema.properties[col]["type"]
@@ -450,7 +450,13 @@ def sanitize_data_for_saving(
             tmp[col] = sanitize_column(tmp[col], dtype)
         else:
             tmp[col] = try_numeric_conversion(tmp[col])
+
         dtype_dict[col] = get_numpy_dtype(tmp[col])
+
+        # 🔧 Fix: ensure string columns use Unicode dtype, not ASCII bytes
+        if tmp[col].dtype == object or tmp[col].dtype == "string":
+            dtype_dict[col] = h5py.string_dtype(encoding="utf-8")
+
     dtypes = [(key, record) for key, record in dtype_dict.items()]
     return tmp, dtypes
 
@@ -475,6 +481,11 @@ def sanitize_boolean(value: str | bool) -> str:
             return "T"
         elif stripped_value in ["false", "f"]:
             return "F"
+    elif isinstance(value, (int, float)):
+        if value == 1:
+            return "T"
+        elif value == 0:
+            return "F"
     return value
 
 
@@ -496,20 +507,36 @@ def sanitize_column(series: pd.Series, dtype: str) -> pd.Series:
     """
     pd.set_option("future.no_silent_downcasting", True)
     if dtype == "boolean":
-        series = series.apply(lambda x: "" if pd.isna(x) else x)
+        series = series.apply(lambda x: "" if check_missing(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
         return series.apply(sanitize_boolean)
     elif dtype == "string":
-        series = series.apply(lambda x: "" if pd.isna(x) else x)
-        return series.replace(
-            [None, np.nan, "nan", "na", "NaN", ""], ""
-        ).astype(str)
-    elif dtype in ["integer", "number"]:
-        series = series.apply(lambda x: np.nan if pd.isna(x) else x)
+        series = series.apply(lambda x: "" if check_missing(x) else x)
+        return (
+            series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+            .astype(str)
+            .apply(clean_unicode)
+        )
+    elif dtype in ["number"]:
+        series = series.apply(lambda x: np.nan if check_missing(x) else x)
         series = series.replace([None, np.nan, "nan", "na", "NaN", ""], np.nan)
         # for dtype to be float
         return series.astype("float64").fillna(np.nan)
+    elif dtype in ["integer"]:
+        series = series.apply(lambda x: "" if check_missing(x) else int(x))
+        series = series.replace([None, np.nan, "nan", "na", "NaN", ""], "")
+        return series.astype(str).apply(clean_unicode)
     return series
+
+
+def clean_unicode(x: str) -> str:
+    """Normalize and ensure valid UTF-8 text."""
+    if not isinstance(x, str):
+        return ""
+    # Normalize to NFKC form (handles Greek/Unicode nicely)
+    x = unicodedata.normalize("NFKC", x)
+    # Remove invalid or unencodable characters safely
+    return x.encode("utf-8", "ignore").decode("utf-8")
 
 
 def try_numeric_conversion(series: pd.Series) -> pd.Series:
@@ -584,11 +611,6 @@ def sanitize_data(data: pd.DataFrame, ignore: str = "clone_id") -> None:
             data[d] = [
                 int(x) if present(x) else "" for x in pd.to_numeric(data[d])
             ]
-    try:
-        data = check_travdv(data)
-    except:
-        pass
-
     if (
         pd.Series(["cell_id", "umi_count", "productive"])
         .isin(data.columns)
@@ -668,87 +690,6 @@ def validate_airr(data: pd.DataFrame) -> None:
     RearrangementSchema.validate_row(contig)
 
 
-def check_travdv(data: pd.DataFrame) -> pd.DataFrame:
-    """Check if locus is TRA/D."""
-    data = load_data(data)
-    contig = [x for x in data["sequence_id"]]
-    v = [x for x in data["v_call"]]
-    d = [x for x in data["d_call"]]
-    j = [x for x in data["j_call"]]
-    c = [x for x in data["c_call"]]
-    l = [x for x in data["locus"]]
-    v_dict = dict(zip(contig, v))
-    d_dict = dict(zip(contig, d))
-    j_dict = dict(zip(contig, j))
-    c_dict = dict(zip(contig, c))
-    l_dict = dict(zip(contig, l))
-    for co in contig:
-        if re.search("TRAV.*/DV", v_dict[co]):
-            if same_call(j_dict[co], c_dict[co], d_dict[co], "TRA"):
-                if not re.search("TRA", l_dict[co]):
-                    l_dict[co] = "TRA"
-            elif same_call(j_dict[co], c_dict[co], d_dict[co], "TRD"):
-                if not re.search("TRD", l_dict[co]):
-                    l_dict[co] = "TRD"
-    data["locus"] = pd.Series(l_dict)
-    return data
-
-
-def load_data(obj: pd.DataFrame | Path | str | None) -> pd.DataFrame:
-    """
-    Read in or copy dataframe object and set sequence_id as index without dropping.
-
-    Parameters
-    ----------
-    obj : pd.DataFrame | Path | str | None
-        file path to .tsv file or pandas DataFrame object.
-
-    Returns
-    -------
-    pd.DataFrame
-
-    Raises
-    ------
-    FileNotFoundError
-        if input is not found.
-    KeyError
-        if `sequence_id` not found in input.
-    """
-    if obj is not None:
-        if os.path.isfile(str(obj)):
-            try:
-                obj_ = pd.read_csv(obj, sep="\t")
-            except FileNotFoundError as e:
-                print(e)
-        elif isinstance(obj, pd.DataFrame):
-            obj_ = obj.copy()
-        else:
-            raise FileNotFoundError(
-                "Either input is not of <class 'pandas.core.frame.DataFrame'> or file does not exist."
-            )
-
-        if "sequence_id" in obj_.columns:
-            # assert that sequence_id is string
-            obj_["sequence_id"] = obj_["sequence_id"].astype(str)
-            obj_.set_index("sequence_id", drop=False, inplace=True)
-            if "cell_id" not in obj_.columns:
-                obj_["cell_id"] = [
-                    c.split("_contig")[0] for c in obj_["sequence_id"]
-                ]
-            # assert that cell_id is string
-            obj_["cell_id"] = obj_["cell_id"].astype(str)
-        else:
-            raise KeyError("'sequence_id' not found in columns of input")
-
-        if "duplicate_count" in obj_.columns:
-            if "umi_count" not in obj_.columns:
-                obj_.rename(
-                    columns={"duplicate_count": "umi_count"}, inplace=True
-                )
-
-        return obj_
-
-
 class ContigDict(dict):
     """Class Object to extract the contigs as a dictionary."""
 
@@ -777,50 +718,9 @@ class Contig:
                 self._contig[key] = ""
 
     @property
-    def contig(self) -> "ContigDict":
+    def contig(self) -> ContigDict:
         """Contig slot."""
         return self._contig
-
-
-def mask_dj(
-    data: list[Path | str],
-    filename_prefix: str,
-    d_evalue_threshold: float,
-    j_evalue_threshold: float,
-) -> None:
-    """Mask d/j assignment."""
-    for i in range(0, len(data)):
-        filePath = check_filepath(
-            data[i],
-            filename_prefix=filename_prefix[i],
-            ends_with="_igblast_db-pass.tsv",
-        )
-        if filePath is not None:
-            dat = load_data(filePath)
-            if "d_support_blastn" in dat:
-                dat["d_call"] = [
-                    "" if s > d_evalue_threshold else c
-                    for c, s in zip(dat["d_call"], dat["d_support_blastn"])
-                ]
-            if "j_support_blastn" in dat:
-                dat["j_call"] = [
-                    "" if s > j_evalue_threshold else c
-                    for c, s in zip(dat["j_call"], dat["j_support_blastn"])
-                ]
-
-            write_airr(dat, filePath)
-
-
-def write_airr(data: pd.DataFrame, save: Path | str) -> None:
-    """Save as airr formatted file."""
-    data = sanitize_data(data)
-    data.to_csv(save, sep="\t", index=False)
-
-
-def write_blastn(data: pd.DataFrame, save: Path | str) -> None:
-    """Write blast output."""
-    data = sanitize_blastn(data)
-    data.to_csv(save, sep="\t", index=False)
 
 
 def deprecated(
@@ -1320,32 +1220,31 @@ def clear_h5file(filename: Path | str) -> None:
             del hf[datasetname]
 
 
-def write_fasta(
-    fasta_dict: dict[str, str], out_fasta: Path | str, overwrite=True
-) -> None:
+def get_vcall_key(data: dict, v_call_key: str) -> str:
     """
-    Generic fasta writer using fasta_iterator
+    Determine which V-call key to use based on the provided data and key.
 
     Parameters
     ----------
-    fasta_dict : dict[str, str]
-        dictionary containing fasta headers and sequences as keys and records respectively.
-    out_fasta : str
-        path to write fasta file to.
-    overwrite : bool, optional
-        whether or not to overwrite the output file (out_fasta).
+    data : dict
+        The data dictionary containing possible keys.
+    v_call_key : str
+        The requested key to check (e.g. "v_call" or "v_call_genotyped").
+
+    Returns
+    -------
+    str
+        The best matching V-call key, following this priority:
+        1. "v_call_genotyped" if it exists in data and matches v_call_key
+        2. "v_call" if it exists in data and matches v_call_key
+        3. v_call_key if it exists in data
+        4. "v_call" as a default fallback
     """
-    if overwrite:
-        fh = open(out_fasta, "w")
-        fh.close()
-    out = ""
-    for l in fasta_dict:
-        out = ">" + l + "\n" + fasta_dict[l] + "\n"
-        write_output(out, out_fasta)
-
-
-def write_output(out: str, file: Path | str) -> None:
-    """General line writer."""
-    fh = open(file, "a")
-    fh.write(out)
-    fh.close()
+    if "v_call_genotyped" in data and v_call_key == "v_call_genotyped":
+        return "v_call_genotyped"
+    elif "v_call" in data and v_call_key == "v_call":
+        return "v_call"
+    elif v_call_key in data:
+        return v_call_key
+    else:
+        return "v_call"

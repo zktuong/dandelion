@@ -16,7 +16,7 @@ except KeyError:
 def test_write_fasta(create_testfolder, fasta_10x):
     """test_write_fasta"""
     fastafilename = str(create_testfolder / "all_contig.fasta")
-    ddl.utl.write_fasta(fasta_dict=fasta_10x, out_fasta=fastafilename)
+    ddl.utl._core.write_fasta(fasta_dict=fasta_10x, out_fasta=fastafilename)
 
 
 @pytest.mark.usefixtures("create_testfolder", "annotation_10x")
