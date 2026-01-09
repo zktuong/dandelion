@@ -95,7 +95,7 @@ jobs:
           post-cleanup: "all"
           create-args: >-
             python=${{ matrix.config.python-version }}
-            blast            
+            blast
             zlib
             xz
 
